@@ -766,7 +766,8 @@ export async function parseHymn(hymnFileName) {
     const himno = {
       titulo: data.title || 'Himno',
       numero: data.number || '',
-      estrofas: []
+      estrofas: [],
+      sections: data.sections || null // Preservar la información de secciones
     };
     
     // Si tiene sections, convertir a estrofas

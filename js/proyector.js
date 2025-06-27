@@ -3,24 +3,45 @@ const channel = new BroadcastChannel('proyector_channel');
 const videoBg = document.getElementById('video-bg');
 const textoPrincipal = document.getElementById('texto-principal');
 const referencia = document.getElementById('referencia');
+const contadorSeccion = document.getElementById('contador-seccion');
+const indicadorEstrofa = document.getElementById('indicador-estrofa');
 
 // 2. Escuchar mensajes
 channel.onmessage = (event) => {
-    const data = event.data; // { tipo, texto, ref, videoSrc, config, soloReferencia }
+    const data = event.data; // { tipo, texto, ref, videoSrc, config, soloReferencia, himnoData }
 
     if (data.tipo === 'update_text') {
         // Aplicar transición suave
         textoPrincipal.classList.add('fade-out');
         referencia.classList.add('fade-out');
+        contadorSeccion.classList.remove('visible');
+        indicadorEstrofa.classList.remove('visible');
         
         setTimeout(() => {
             if (data.soloReferencia) {
                 textoPrincipal.innerHTML = data.texto;
                 referencia.style.display = 'none';
+                // Ocultar indicadores de himno
+                contadorSeccion.style.display = 'none';
+                indicadorEstrofa.style.display = 'none';
             } else {
                 textoPrincipal.innerHTML = data.texto;
-                referencia.textContent = data.ref;
+                // Cambiar referencia a 'Himno xxx - [Nombre del himno]'
+                if (data.himnoData) {
+                    referencia.textContent = `Himno ${data.himnoData.numero} - ${data.himnoData.titulo}`;
+                } else {
+                    referencia.textContent = data.ref;
+                }
                 referencia.style.display = '';
+                
+                // Manejar indicadores de himno
+                if (data.himnoData) {
+                    mostrarIndicadoresHimno(data.himnoData);
+                } else {
+                    // Ocultar indicadores si no es himno
+                    contadorSeccion.style.display = 'none';
+                    indicadorEstrofa.style.display = 'none';
+                }
             }
             
             // Remover clases de fade-out para mostrar el nuevo texto
@@ -50,3 +71,37 @@ channel.onmessage = (event) => {
         }
     }
 };
+
+/**
+ * Muestra los indicadores específicos para himnos
+ * @param {Object} himnoData - Datos del himno { esTitulo, numero, titulo, seccionActual, totalSecciones, verseActual, totalVerses }
+ */
+function mostrarIndicadoresHimno(himnoData) {
+    if (himnoData.esTitulo) {
+        // Es el título del himno - mostrar formato especial
+        textoPrincipal.classList.add('titulo-himno');
+        textoPrincipal.innerHTML = `${himnoData.numero} | ${himnoData.titulo}`;
+        
+        // Ocultar indicadores
+        contadorSeccion.style.display = 'none';
+        indicadorEstrofa.style.display = 'none';
+    } else {
+        // Es una estrofa - mostrar indicadores
+        textoPrincipal.classList.remove('titulo-himno');
+        
+        // Mostrar contador de sección
+        contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
+        contadorSeccion.style.display = '';
+        contadorSeccion.classList.add('visible');
+        
+        // Mostrar indicador de estrofa
+        if (himnoData.verseActual === 'coro') {
+            indicadorEstrofa.textContent = 'Coro';
+        } else {
+            const totalAjustado = Math.max(1, himnoData.totalVerses - 1);
+            indicadorEstrofa.textContent = `Verso ${himnoData.verseActual}/${totalAjustado}`;
+        }
+        indicadorEstrofa.style.display = '';
+        indicadorEstrofa.classList.add('visible');
+    }
+}

@@ -830,6 +830,7 @@ function enviarVersiculoAlProyector(versiculoIndex) {
 function enviarEstrofaAlProyector(estrofaIndex) {
   let texto = '';
   let ref = '';
+  let himnoData = null;
   
   // Extraer número del título
   let numero = himnoActivo.numero;
@@ -841,24 +842,81 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   }
   
   if (estrofaIndex === -1) {
-    // Extraer título sin el prefijo "Himno #X"
+    // Es el título del himno
     let titulo = himnoActivo.titulo;
     if (titulo) {
       titulo = titulo.replace(/^Himno #\d+\s*/, '').trim();
     }
     texto = titulo;
     ref = `Himno ${numero || ''}`;
+    
+    // Datos para el título
+    himnoData = {
+      esTitulo: true,
+      numero: numero ? numero.padStart(3, '0') : '001',
+      titulo: titulo
+    };
   } else {
+    // Es una estrofa
     texto = himnoActivo.estrofas[estrofaIndex];
     ref = `Himno ${numero || ''} - Estrofa ${estrofaIndex + 1}`;
+    
+    // Calcular datos de la estrofa
+    const totalSecciones = himnoActivo.estrofas.length;
+    const seccionActual = estrofaIndex + 1;
+    
+    // Determinar el tipo de estrofa y contar totales
+    let verseActual = '1';
+    let totalVerses = 1;
+    
+    // Si el himno tiene estructura de sections, usar esa información
+    if (himnoActivo.sections) {
+      const sections = Object.values(himnoActivo.sections);
+      const currentSection = sections[estrofaIndex];
+      if (currentSection && currentSection.verse) {
+        verseActual = currentSection.verse;
+        
+        // Contar cuántas estrofas únicas hay (excluyendo coros repetidos)
+        const verses = sections.map(s => s.verse);
+        const uniqueVerses = [...new Set(verses)];
+        totalVerses = uniqueVerses.length;
+        
+        // Si es coro, mostrar solo "Coro"
+        if (verseActual === 'coro') {
+          verseActual = 'coro';
+        } else {
+          // Para estrofas numeradas, mostrar el número actual
+          const verseNumber = parseInt(verseActual);
+          if (!isNaN(verseNumber)) {
+            verseActual = verseNumber.toString();
+          }
+        }
+      }
+    } else {
+      // Estimación basada en el número total de estrofas
+      // Asumir que hay aproximadamente 3-4 estrofas por himno
+      totalVerses = Math.min(4, Math.ceil(totalSecciones / 2));
+      verseActual = Math.min(estrofaIndex + 1, totalVerses).toString();
+    }
+    
+    himnoData = {
+      esTitulo: false,
+      numero: numero ? numero.padStart(3, '0') : '001',
+      titulo: himnoActivo.titulo ? himnoActivo.titulo.replace(/^Himno #\d+\s*/, '').trim() : '',
+      seccionActual: seccionActual,
+      totalSecciones: totalSecciones,
+      verseActual: verseActual,
+      totalVerses: totalVerses
+    };
   }
   
-  // Ya no cambiamos el video aquí, solo el texto
+  // Enviar al proyector con datos adicionales del himno
   channel.postMessage({
     tipo: 'update_text',
     texto: texto,
     ref: ref,
-    soloReferencia: false
+    soloReferencia: false,
+    himnoData: himnoData
   });
 }
 
