@@ -201,6 +201,47 @@ function configurarEventos() {
       elementos.sugerenciasLibros.style.display = 'none';
     }
   });
+
+  // En configurarEventos, agregar este event listener:
+  elementos.buscarLibro.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      // Si ya hay libro, capítulo y versículo válidos, lanzar al proyector
+      const texto = elementos.buscarLibro.value.toLowerCase().trim();
+      // Expresión regular para extraer: libro, capítulo y versículo
+      const regex = /^(\d+\s)?([\wáéíóúüñ]+)(?:[\s,:\.]+(\d+))?(?:[\s,:\.]+(\d+))?$/i;
+      const match = texto.match(regex);
+      let nombreLibro = texto;
+      let cap = null;
+      let vers = null;
+      if (match) {
+        nombreLibro = (match[1] ? match[1] : '') + match[2];
+        nombreLibro = nombreLibro.trim();
+        cap = match[3] ? parseInt(match[3], 10) : null;
+        vers = match[4] ? parseInt(match[4], 10) : null;
+      }
+      const libros = Object.keys(bibliaActual);
+      const libro = libros.find(l => l.toLowerCase() === nombreLibro);
+      if (libro && cap && vers && bibliaActual[libro] && bibliaActual[libro][cap - 1] && bibliaActual[libro][cap - 1][vers - 1]) {
+        libroActivo = libro;
+        capituloActivo = cap - 1;
+        versiculoActivoIndex = vers - 1;
+        renderizarGrillaCapitulos(libro);
+        // Resaltar capítulo
+        elementos.grillaCapitulos.querySelectorAll('button').forEach((btn, idx) => {
+          btn.classList.toggle('selected', idx === capituloActivo);
+        });
+        cargarCapitulo(libro, capituloActivo);
+        renderizarGrillaVersiculos();
+        // Resaltar versículo
+        elementos.grillaVersiculos.querySelectorAll('button').forEach((btn, idx) => {
+          btn.classList.toggle('selected', idx === versiculoActivoIndex);
+        });
+        resaltarCard(versiculoActivoIndex);
+        enviarVersiculoAlProyector(versiculoActivoIndex);
+        e.preventDefault();
+      }
+    }
+  });
 }
 
 /**
@@ -309,12 +350,70 @@ function filtrarLibros() {
     libroSugeridoIndex = -1;
     return;
   }
+
+  // Expresión regular para extraer: libro, capítulo y versículo
+  const regex = /^(\d+\s)?([\wáéíóúüñ]+)(?:[\s,:\.]+(\d+))?(?:[\s,:\.]+(\d+))?$/i;
+  const match = texto.match(regex);
+  let nombreLibro = texto;
+  let cap = null;
+  let vers = null;
+  if (match) {
+    nombreLibro = (match[1] ? match[1] : '') + match[2];
+    nombreLibro = nombreLibro.trim();
+    cap = match[3] ? parseInt(match[3], 10) : null;
+    vers = match[4] ? parseInt(match[4], 10) : null;
+  }
+
+  // Buscar libros que coincidan con el nombre
   const libros = Object.keys(bibliaActual);
   const filtrados = libros.filter(libro => 
-    libro.toLowerCase().includes(texto)
+    libro.toLowerCase().includes(nombreLibro)
   );
-  libroSugeridoIndex = filtrados.length > 0 ? 0 : -1; // Preseleccionar el primero si hay
-  mostrarSugerenciasLibros(filtrados);
+  libroSugeridoIndex = filtrados.length > 0 ? 0 : -1;
+
+  // Si el input termina con un espacio después del nombre del libro (ignorando el espacio entre número y nombre)
+  const terminaConEspacio = /^(\d+\s)?[\wáéíóúüñ]+\s$/i.test(elementos.buscarLibro.value);
+  if (terminaConEspacio) {
+    elementos.sugerenciasLibros.style.display = 'none';
+  } else {
+    mostrarSugerenciasLibros(filtrados);
+  }
+
+  // Selección automática de libro/capítulo/versículo en tiempo real
+  const libro = libros.find(l => l.toLowerCase() === nombreLibro);
+  if (libro) {
+    if (libroActivo !== libro) {
+      libroActivo = libro;
+      renderizarGrillaCapitulos(libro);
+    }
+    if (cap && bibliaActual[libro] && bibliaActual[libro][cap - 1]) {
+      capituloActivo = cap - 1;
+      // Resaltar capítulo
+      elementos.grillaCapitulos.querySelectorAll('button').forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === capituloActivo);
+      });
+      cargarCapitulo(libro, capituloActivo);
+      renderizarGrillaVersiculos();
+      if (vers && bibliaActual[libro][cap - 1][vers - 1]) {
+        versiculoActivoIndex = vers - 1;
+        elementos.grillaVersiculos.querySelectorAll('button').forEach((btn, idx) => {
+          btn.classList.toggle('selected', idx === versiculoActivoIndex);
+        });
+        resaltarCard(versiculoActivoIndex);
+      } else {
+        versiculoActivoIndex = -1;
+        elementos.grillaVersiculos.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+      }
+    } else {
+      capituloActivo = null;
+      elementos.grillaCapitulos.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+      elementos.grillaVersiculos.innerHTML = '';
+    }
+  } else {
+    capituloActivo = null;
+    elementos.grillaCapitulos.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+    elementos.grillaVersiculos.innerHTML = '';
+  }
 }
 
 /**
@@ -783,15 +882,12 @@ function normalizarTexto(texto) {
 /**
  * Busca el archivo de audio correcto para un himno
  * @param {string} numeroFormateado - Número del himno formateado (ej: "001")
- * @param {string} titulo - Título del himno
+ * @param {string} titulo - Título del himno (ya no se usará)
  * @returns {string} Ruta del archivo de audio
  */
 function construirRutaAudio(numeroFormateado, titulo) {
-  // Normalizar el título (sin tildes ni caracteres especiales)
-  const tituloNormalizado = normalizarTexto(titulo);
-  
-  // Construir la ruta del archivo
-  return `assets/himnos/musica/cantado/${numeroFormateado} - ${tituloNormalizado}.mp3`;
+  // Ahora solo usamos el número para la ruta
+  return `assets/himnos/musica/cantado/${numeroFormateado}.mp3`;
 }
 
 /**
@@ -949,6 +1045,13 @@ function ocultarPlayFooter() {
 function manejarTeclasSugerenciasLibros(e) {
   const sugerencias = Array.from(elementos.sugerenciasLibros.querySelectorAll('div'));
   if (elementos.sugerenciasLibros.style.display !== 'block' || sugerencias.length === 0) return;
+  // Si el input termina con un espacio, número, dos puntos, coma o punto después del nombre del libro, ocultar sugerencias y no hacer autocompletado
+  const terminaConCapituloOVersiculo = /^(\d+\s)?[\wáéíóúüñ]+[\s\d:.,]+$/i.test(elementos.buscarLibro.value);
+  if (terminaConCapituloOVersiculo) {
+    elementos.sugerenciasLibros.style.display = 'none';
+    libroSugeridoIndex = -1;
+    return; // No hacer autocompletado ni selección
+  }
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     libroSugeridoIndex = (libroSugeridoIndex + 1) % sugerencias.length;
@@ -960,11 +1063,18 @@ function manejarTeclasSugerenciasLibros(e) {
     actualizarSeleccionSugerenciasLibros(sugerencias);
     return;
   } else if (e.key === 'Enter') {
+    // Solo autocompletar si el input NO termina con un espacio, número, dos puntos, coma o punto después del nombre del libro
+    // (ya está cubierto arriba)
     e.preventDefault();
     if (libroSugeridoIndex >= 0 && libroSugeridoIndex < sugerencias.length) {
       const selectedDiv = sugerencias[libroSugeridoIndex];
-      elementos.buscarLibro.value = selectedDiv.textContent;
+      elementos.buscarLibro.value = selectedDiv.textContent + ' ';
+      elementos.sugerenciasLibros.style.display = 'none';
       seleccionarLibro({ type: 'keydown', selectedDiv });
+      setTimeout(() => {
+        elementos.buscarLibro.focus();
+        elementos.buscarLibro.setSelectionRange(elementos.buscarLibro.value.length, elementos.buscarLibro.value.length);
+      }, 0);
     }
     return;
   }
