@@ -24,13 +24,19 @@ channel.onmessage = (event) => {
                 // Ocultar indicadores de himno
                 contadorSeccion.style.display = 'none';
                 indicadorEstrofa.style.display = 'none';
+                // Quitar clase de versículo bíblico
+                textoPrincipal.classList.remove('versiculo-biblia');
             } else {
                 textoPrincipal.innerHTML = data.texto;
                 // Cambiar referencia a 'Himno xxx - [Nombre del himno]'
                 if (data.himnoData) {
                     referencia.textContent = `Himno ${data.himnoData.numero} - ${data.himnoData.titulo}`;
+                    // Quitar clase de versículo bíblico si es himno
+                    textoPrincipal.classList.remove('versiculo-biblia');
                 } else {
                     referencia.textContent = data.ref;
+                    // Aplicar clase de versículo bíblico si es modo Biblia
+                    textoPrincipal.classList.add('versiculo-biblia');
                 }
                 referencia.style.display = '';
                 

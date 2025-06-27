@@ -3,6 +3,11 @@
   src: url('../assets/fonts/RobotoSlab-Bold.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Qwigley';
+  src: url('../assets/fonts/Handlee-Regular.ttf') format('truetype');
+}
+
 body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; color: white; }
 #video-bg {
   position: fixed;
@@ -91,4 +96,8 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 
 #referencia.fade-out {
   opacity: 0;
+}
+
+#texto-principal.versiculo-biblia {
+  font-family: 'Qwigley', cursive;
 }
