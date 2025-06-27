@@ -1,0 +1,54 @@
+{
+  "title": "Himno #92 Angeles cantando están",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Ángeles cantando están",
+        "bella y celestial canción."
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Sus palabras gozo dan",
+        "a la entera creación."
+      ]
+    },
+    "3": {
+      "verse": "coro",
+      "text": [
+        "Gloria, in excelsis Deo, (*)",
+        "Gloria, in excelsis Deo."
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Hoy anuncian con fervor",
+        "paz y buena voluntad;"
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "pues nació el Salvador",
+        "de la pobre humanidad.",
+        "Nota:"
+      ]
+    },
+    "6": {
+      "verse": "2",
+      "text": [
+        "(*) Gloria a Dios en lo alto."
+      ]
+    },
+    "7": {
+      "verse": "coro",
+      "text": [
+        "Gloria, in excelsis Deo, (*)",
+        "Gloria, in excelsis Deo."
+      ]
+    }
+  }
+}

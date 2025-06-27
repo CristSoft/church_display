@@ -1,0 +1,47 @@
+{
+  "title": "Himno #383 Habla a tu Dios de mañana",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Habla a tu Dios de mañana,",
+        "háblale al mediodía;"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "habla a tu Dios en la noche,",
+        "y dale tu corazón."
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "Oye a tu Dios de mañana,",
+        "óyele al mediodía;"
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "oye a tu Dios en la noche,",
+        "y dale tu corazón."
+      ]
+    },
+    "5": {
+      "verse": "3",
+      "text": [
+        "Venga el Señor de mañana,",
+        "venga en el mediodía;"
+      ]
+    },
+    "6": {
+      "verse": "3",
+      "text": [
+        "venga el Señor en la noche,",
+        "prepara tu corazón."
+      ]
+    }
+  }
+}

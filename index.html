@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Church Display - Control</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <button id="abrirProyector">Abrir Ventana de Proyección</button>
+    <hr>
+    <!-- Switch para Biblia/Himnario -->
+    <div class="switch-container">
+      <label class="switch-label" for="modoSwitch">Himnario</label>
+      <input type="checkbox" id="modoSwitch" class="switch-input">
+      <span class="slider"></span>
+      <label class="switch-label" for="modoSwitch">Biblia</label>
+    </div>
+
+    <!-- Contenedor para la Biblia -->
+    <div id="controlBiblia">
+        <select id="versionBiblia"></select>
+        <input type="text" id="buscarLibro" placeholder="Escribe un libro...">
+        <div id="sugerenciasLibros"></div>
+        <div class="grilla-label">Capítulos</div>
+        <div id="grillaCapitulos"></div>
+        <div class="grilla-label">Versículos</div>
+        <div id="grillaVersiculos"></div>
+    </div>
+
+    <!-- Contenedor para el Himnario -->
+    <div id="controlHimnario" style="display:none;">
+        <input type="text" id="buscarHimno" placeholder="Nº o Título del himno...">
+        <div id="listaHimnos"></div>
+    </div>
+    
+    <!-- Área de vista previa -->
+    <div id="vistaPrevia"></div>
+
+    <!-- Reproductor de audio para himnos -->
+    <audio id="reproductorAudio" controls style="width:100%; margin-top:1em;"></audio>
+
+    <footer class="app-footer">
+      <button id="anterior">Anterior</button>
+      <button id="playHimnoFooter" style="display:none;">▶️ Play</button>
+      <button id="siguiente">Siguiente</button>
+    </footer>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

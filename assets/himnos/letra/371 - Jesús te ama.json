@@ -1,0 +1,57 @@
+{
+  "title": "Himno #371 Jesús te ama",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Gracias te doy por darme esperanza",
+        "que muy pronto volverás."
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Gracias te doy por tu sacrificio",
+        "que me dio la salvación."
+      ]
+    },
+    "3": {
+      "verse": "coro",
+      "text": [
+        "Jesús te ama, Jesús en la cruz lo demostró."
+      ]
+    },
+    "4": {
+      "verse": "coro",
+      "text": [
+        "Jesús hoy te invita: Dame tu corazón."
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "Gracias te doy por darte alabanza",
+        "y feliz poder cantar."
+      ]
+    },
+    "6": {
+      "verse": "2",
+      "text": [
+        "Gracias te doy por la vida eterna",
+        "que en breve he de gozar."
+      ]
+    },
+    "7": {
+      "verse": "coro",
+      "text": [
+        "Jesús te ama, Jesús en la cruz lo demostró."
+      ]
+    },
+    "8": {
+      "verse": "coro",
+      "text": [
+        "Jesús hoy te invita: Dame tu corazón."
+      ]
+    }
+  }
+}

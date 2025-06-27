@@ -1,0 +1,61 @@
+{
+  "title": "Himno #462 Dame a Cristo",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "De mañana al despertar,",
+        "de mañana al despertar,"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "de mañana al despertar,",
+        "dame a Cristo."
+      ]
+    },
+    "3": {
+      "verse": "coro",
+      "text": [
+        "Dame a Cristo,",
+        "dame a Cristo.",
+        "Nada más quiero yo,"
+      ]
+    },
+    "4": {
+      "verse": "coro",
+      "text": [
+        "dame a Cristo."
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "En la noche al descansar,",
+        "en la noche al descansar,"
+      ]
+    },
+    "6": {
+      "verse": "2",
+      "text": [
+        "en la noche al descansar,",
+        "dame a Cristo."
+      ]
+    },
+    "7": {
+      "verse": "coro",
+      "text": [
+        "Dame a Cristo,",
+        "dame a Cristo.",
+        "Nada más quiero yo,"
+      ]
+    },
+    "8": {
+      "verse": "coro",
+      "text": [
+        "dame a Cristo."
+      ]
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "biblias": [
+    "es-DHH.json",
+    "es-NTV.json",
+    "es-rv2015.json",
+    "es-rv2020.json",
+    "es-rv60.json"
+  ],
+  "descripciones": {
+    "es-DHH.json": "Dios Habla Hoy",
+    "es-NTV.json": "Nueva Traducción Viviente",
+    "es-rv2015.json": "Reina Valera 2015",
+    "es-rv2020.json": "Reina Valera 2020",
+    "es-rv60.json": "Reina Valera 1960"
+  }
+}

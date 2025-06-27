@@ -1,0 +1,15 @@
+body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; color: white; }
+#video-bg {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  z-index: -1;
+  object-fit: cover;
+  width: 100vw;
+  height: 100vh;
+}
+#contenido { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: 100vh; background-color: rgba(0, 0, 0, 0.4); /* Sombra para legibilidad */ text-shadow: 2px 2px 8px black; }
+#texto-principal { font-size: 5vw; padding: 0 2em; }
+#referencia { position: absolute; bottom: 20px; font-size: 2vw; }

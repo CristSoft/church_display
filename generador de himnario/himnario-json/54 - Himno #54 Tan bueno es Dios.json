@@ -1,0 +1,41 @@
+{
+  "title": "Himno #54 Tan bueno es Dios",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Tan bueno es Dios, tan bueno es Dios,"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "tan bueno es Dios, bueno para mí."
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "Cristo es real, Cristo es real,"
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Cristo es real, es real en mí."
+      ]
+    },
+    "5": {
+      "verse": "3",
+      "text": [
+        "Pronto él vendrá, pronto él vendrá,"
+      ]
+    },
+    "6": {
+      "verse": "3",
+      "text": [
+        "pronto él vendrá, él vendrá por mí."
+      ]
+    }
+  }
+}

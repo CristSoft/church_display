@@ -1,0 +1,79 @@
+{
+  "title": "Himno #57 Mi Dios me ama",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Mi Dios me ama, él me ha salvado;"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "mi Dios me ama, él me ama a mí."
+      ]
+    },
+    "3": {
+      "verse": "coro",
+      "text": [
+        "Y lo repito:",
+        "Mi Dios me ama,",
+        "mi Dios me ama,",
+        "él me ama a mí."
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Cautivo estuve en el pecado;",
+        "cautivo estuve, sin Salvador."
+      ]
+    },
+    "5": {
+      "verse": "coro",
+      "text": [
+        "Y lo repito:",
+        "Mi Dios me ama,",
+        "mi Dios me ama,",
+        "él me ama a mí."
+      ]
+    },
+    "6": {
+      "verse": "3",
+      "text": [
+        "Envió a Cristo para librarme;",
+        "envió a Cristo y me libró."
+      ]
+    },
+    "7": {
+      "verse": "coro",
+      "text": [
+        "Y lo repito:",
+        "Mi Dios me ama,",
+        "mi Dios me ama,",
+        "él me ama a mí."
+      ]
+    },
+    "8": {
+      "verse": "4",
+      "text": [
+        "Me ha invitado por su Palabra;"
+      ]
+    },
+    "9": {
+      "verse": "4",
+      "text": [
+        "me ha invitado con tierno amor."
+      ]
+    },
+    "10": {
+      "verse": "coro",
+      "text": [
+        "Y lo repito:",
+        "Mi Dios me ama,",
+        "mi Dios me ama,",
+        "él me ama a mí."
+      ]
+    }
+  }
+}

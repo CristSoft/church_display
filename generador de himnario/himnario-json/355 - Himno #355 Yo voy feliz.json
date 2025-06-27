@@ -1,0 +1,89 @@
+{
+  "title": "Himno #355 Yo voy feliz",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Aquel en cuyo corazón",
+        "reside el santo amor,"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "de gozo siempre la canción",
+        "eleva al Salvador."
+      ]
+    },
+    "3": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey,",
+        "mi Salvador, mi Protector."
+      ]
+    },
+    "4": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey;",
+        "mis cargas Jesús me quitó."
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "Jesús me ama, bien lo sé,",
+        "pues oye mi clamor;"
+      ]
+    },
+    "6": {
+      "verse": "2",
+      "text": [
+        "y si lo sigo por la fe",
+        "será mi Redentor."
+      ]
+    },
+    "7": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey,",
+        "mi Salvador, mi Protector."
+      ]
+    },
+    "8": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey;",
+        "mis cargas Jesús me quitó."
+      ]
+    },
+    "9": {
+      "verse": "3",
+      "text": [
+        "La vida aquí terminará,",
+        "el fin ha de llegar;"
+      ]
+    },
+    "10": {
+      "verse": "3",
+      "text": [
+        "mas la promesa fiel será:",
+        "Jesús me salvará."
+      ]
+    },
+    "11": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey,",
+        "mi Salvador, mi Protector."
+      ]
+    },
+    "12": {
+      "verse": "coro",
+      "text": [
+        "Yo voy feliz con Cristo, el Rey;",
+        "mis cargas Jesús me quitó."
+      ]
+    }
+  }
+}

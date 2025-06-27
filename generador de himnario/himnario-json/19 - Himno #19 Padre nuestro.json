@@ -1,0 +1,71 @@
+{
+  "title": "Himno #19 Padre nuestro",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Padre nuestro, Padre nuestro,",
+        "te alabamos porque eres"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "nuestro Padre.",
+        "Elevamos nuestras mentes",
+        "como signo de amor."
+      ]
+    },
+    "3": {
+      "verse": "1",
+      "text": [
+        "Padre nuestro, Padre nuestro."
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Jesucristo, Jesucristo,",
+        "gracias por tu muerte"
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "cruenta en el Calvario.",
+        "Elevamos nuestras voces"
+      ]
+    },
+    "6": {
+      "verse": "2",
+      "text": [
+        "como signo de amor. Jesucristo, Jesucristo."
+      ]
+    },
+    "7": {
+      "verse": "3",
+      "text": [
+        "Santo Espíritu, Santo Espíritu;"
+      ]
+    },
+    "8": {
+      "verse": "3",
+      "text": [
+        "llena nuestros corazones plenamente."
+      ]
+    },
+    "9": {
+      "verse": "3",
+      "text": [
+        "Consagramos nuestras vidas",
+        "como signo de amor."
+      ]
+    },
+    "10": {
+      "verse": "3",
+      "text": [
+        "Santo Espíritu, Santo Espíritu."
+      ]
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "title": "Himno #473 Háblame, y hablaré",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Oh, háblame, y hablaré",
+        "cual eco vivo de tu voz."
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Tal como me buscaste tú,",
+        "iré tras quien errante va."
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "Oh, guíame, y guiaré",
+        "al pie que vacilante va."
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Susténtame, y yo daré",
+        "maná al que hambriento está."
+      ]
+    },
+    "5": {
+      "verse": "3",
+      "text": [
+        "Oh, afírmame, y ayudaré",
+        "a estar en pie en Roca fiel."
+      ]
+    },
+    "6": {
+      "verse": "3",
+      "text": [
+        "Sostenme, y extenderé",
+        "mi mano a quien va a caer."
+      ]
+    }
+  }
+}

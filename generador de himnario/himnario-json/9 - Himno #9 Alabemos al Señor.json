@@ -1,0 +1,32 @@
+{
+  "title": "Himno #9 Alabemos al Señor",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Alabemos al Señor;",
+        "demos gloria al Señor."
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Aleluya, amén, aleluya, amén."
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "Prediquemos de su amor;",
+        "anunciemos su perdón.",
+        "Aleluya, amén,"
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "aleluya, amén."
+      ]
+    }
+  }
+}

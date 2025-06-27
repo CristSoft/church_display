@@ -1,0 +1,47 @@
+{
+  "title": "Himno #345 Canta, y tus penas se irán",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Canta, y tus penas se irán,",
+        "canta, y tus penas se irán;"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Jesús hoy promete quitártelas;",
+        "canta, y tus penas se irán."
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "Ríe, tus cuitas se irán,",
+        "ríe, tus cuitas se irán;"
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "Jesús hoy promete quitártelas;",
+        "ríe, tus cuitas se irán."
+      ]
+    },
+    "5": {
+      "verse": "3",
+      "text": [
+        "Ora, y tus cargas se irán,",
+        "ora, y tus cargas se irán;"
+      ]
+    },
+    "6": {
+      "verse": "3",
+      "text": [
+        "Jesús hoy promete quitártelas;",
+        "ora, y tus cargas se irán."
+      ]
+    }
+  }
+}

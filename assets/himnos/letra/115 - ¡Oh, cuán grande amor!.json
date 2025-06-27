@@ -1,0 +1,40 @@
+{
+  "title": "Himno #115 ¡Oh, cuán grande amor!",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "¡Oh, cuán grande amor!",
+        "¡Oh, cuán grande amor!"
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "¡Oh, qué maravilla!",
+        "Es mío, Señor,",
+        "¡qué maravilla de amor!"
+      ]
+    },
+    "3": {
+      "verse": "2",
+      "text": [
+        "¡Oh, cuán grande amor!",
+        "¡Tan grande es, Señor,"
+      ]
+    },
+    "4": {
+      "verse": "2",
+      "text": [
+        "que a mi alma cautiva",
+        "para el Salvador!"
+      ]
+    },
+    "5": {
+      "verse": "2",
+      "text": [
+        "¡Qué maravilla de amor!"
+      ]
+    }
+  }
+}
