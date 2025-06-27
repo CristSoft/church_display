@@ -435,13 +435,50 @@ function seleccionarVersiculo(event) {
  * Filtra himnos según el texto ingresado
  */
 async function filtrarHimnos() {
-  const texto = elementos.buscarHimno.value.toLowerCase();
-  const filtrados = indiceHimnos.filter(himno => 
-    himno.number.includes(texto) || 
-    himno.title.toLowerCase().includes(texto)
-  );
-  
-  await mostrarListaHimnos(filtrados);
+  const texto = elementos.buscarHimno.value;
+  const textoNormalizado = normalizarTexto(texto.toLowerCase());
+
+  // Si el usuario busca solo por número
+  const esNumero = /^\d+$/.test(textoNormalizado);
+
+  // Preparamos una lista de himnos con su relevancia
+  let himnosConRelevancia = indiceHimnos.map(himno => {
+    const tituloNormalizado = normalizarTexto(himno.title.toLowerCase());
+    let relevancia = 1000; // valor alto por defecto
+    let posicion = tituloNormalizado.length;
+
+    // Coincidencia exacta (título completo)
+    if (tituloNormalizado === textoNormalizado) {
+      relevancia = 0;
+      posicion = 0;
+    } else if (esNumero && himno.number === textoNormalizado.padStart(3, '0')) {
+      // Coincidencia exacta por número
+      relevancia = 0;
+      posicion = 0;
+    } else if (tituloNormalizado.includes(textoNormalizado)) {
+      // Coincidencia parcial en el título
+      relevancia = 1;
+      posicion = tituloNormalizado.indexOf(textoNormalizado);
+    } else if (himno.number.includes(textoNormalizado)) {
+      // Coincidencia parcial en el número
+      relevancia = 2;
+      posicion = 0;
+    }
+    return { ...himno, relevancia, posicion };
+  });
+
+  // Filtrar solo los que tienen alguna coincidencia
+  himnosConRelevancia = himnosConRelevancia.filter(h => h.relevancia < 1000);
+
+  // Ordenar por relevancia y posición de la coincidencia
+  himnosConRelevancia.sort((a, b) => {
+    if (a.relevancia !== b.relevancia) return a.relevancia - b.relevancia;
+    if (a.posicion !== b.posicion) return a.posicion - b.posicion;
+    // Si todo es igual, ordenar por número
+    return a.number.localeCompare(b.number);
+  });
+
+  await mostrarListaHimnos(himnosConRelevancia);
 }
 
 /**
@@ -484,6 +521,21 @@ async function mostrarListaHimnos(himnos) {
 async function seleccionarHimno(event) {
   if (event.target.dataset.himno) {
     const himnoFile = event.target.dataset.himno;
+    // Obtener el título del himno seleccionado desde el elemento
+    const himnoDiv = event.target.closest('div');
+    if (himnoDiv) {
+      // El texto del div es "<strong>NUM</strong> - TÍTULO"
+      // Extraemos el título después del guion
+      const textoDiv = himnoDiv.textContent;
+      const partes = textoDiv.split(' - ');
+      if (partes.length > 1) {
+        elementos.buscarHimno.value = partes[1].trim();
+      } else {
+        elementos.buscarHimno.value = textoDiv.trim();
+      }
+    }
+    // Ocultar la lista de resultados
+    elementos.listaHimnos.innerHTML = '';
     try {
       console.log('Cargando himno:', himnoFile);
       himnoActivo = await parseHymn(himnoFile);
@@ -679,21 +731,21 @@ function enviarEstrofaAlProyector(estrofaIndex) {
  */
 function normalizarTexto(texto) {
   let resultado = texto
+    .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Remover acentos
     .replace(/ñ/g, 'n')
-    .replace(/Ñ/g, 'N')
+    .replace(/Ñ/g, 'n')
     .replace(/[¿¡]/g, '') // Remover signos de interrogación y exclamación iniciales
-    .replace(/[^a-zA-Z0-9\s\-,]/g, '') // Remover caracteres especiales excepto espacios, guiones y comas
+    .replace(/[^a-z0-9\s]/g, '') // Dejar solo letras, números y espacios
     .replace(/\s+/g, ' ') // Reemplazar múltiples espacios con uno solo
     .trim();
-  
+
   // Caso especial específico: solo para "¡Oh, jóvenes, venid!"
-  // "Oh, jovenes, venid" -> "Oh jovenes, venid"
-  if (resultado.toLowerCase() === 'oh, jovenes, venid') {
-    resultado = 'Oh jovenes, venid';
+  if (resultado === 'oh jovenes venid') {
+    resultado = 'oh jovenes venid';
   }
-  
+
   return resultado;
 }
 
