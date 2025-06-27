@@ -98,6 +98,10 @@ hr {
 #sugerenciasLibros div:hover {
   background: #444;
 }
+#sugerenciasLibros div.selected {
+  background: #0057b8;
+  color: #fff;
+}
 
 /* Contenedor de búsqueda de libros */
 #buscarLibro {

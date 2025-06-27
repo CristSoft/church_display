@@ -11,6 +11,9 @@ let versiculoActivoIndex = -1;
 let estrofaActivaIndex = -1;
 let libroActivo = null;
 let himnoActivo = null;
+// Índices de selección para navegación con teclado
+let libroSugeridoIndex = -1;
+let himnoSugeridoIndex = -1;
 
 // Referencias a elementos del DOM
 let elementos = {};
@@ -160,19 +163,24 @@ function configurarEventos() {
 
   // Eventos modo Biblia
   elementos.versionBiblia.addEventListener('change', cambiarVersionBiblia);
-  elementos.buscarLibro.addEventListener('keyup', filtrarLibros);
-  elementos.buscarLibro.addEventListener('focus', () => {
-    if (bibliaActual) {
-      mostrarSugerenciasLibros();
-    }
+  elementos.buscarLibro.addEventListener('keyup', function(e) {
+    if (["ArrowUp", "ArrowDown", "Enter"].includes(e.key)) return;
+    filtrarLibros();
   });
   elementos.sugerenciasLibros.addEventListener('click', seleccionarLibro);
+  // Navegación con teclado en sugerencias de libros
+  elementos.buscarLibro.addEventListener('keydown', manejarTeclasSugerenciasLibros);
   elementos.grillaCapitulos.addEventListener('click', seleccionarCapitulo);
   elementos.grillaVersiculos.addEventListener('click', seleccionarVersiculo);
 
   // Eventos modo Himnario
-  elementos.buscarHimno.addEventListener('keyup', filtrarHimnos);
+  elementos.buscarHimno.addEventListener('keyup', function(e) {
+    if (["ArrowUp", "ArrowDown", "Enter"].includes(e.key)) return;
+    filtrarHimnos();
+  });
   elementos.listaHimnos.addEventListener('click', seleccionarHimno);
+  // Navegación con teclado en lista de himnos
+  elementos.buscarHimno.addEventListener('keydown', manejarTeclasListaHimnos);
 
   // Navegación
   elementos.anterior.addEventListener('click', () => navegar(-1));
@@ -203,13 +211,19 @@ async function cargarDatosIniciales() {
     // Cargar versiones de Biblia
     const versiones = await getBibleVersions();
     elementos.versionBiblia.innerHTML = '<option value="">Selecciona una versión</option>';
-    versiones.forEach(version => {
+    let rv60Index = -1;
+    versiones.forEach((version, idx) => {
       const option = document.createElement('option');
       option.value = version.file;
       option.textContent = version.description;
       elementos.versionBiblia.appendChild(option);
+      if (version.file === 'es-rv60.json') rv60Index = idx + 1; // +1 por el option vacío
     });
-
+    // Seleccionar por defecto Reina Valera 1960 si existe
+    if (rv60Index > 0) {
+      elementos.versionBiblia.selectedIndex = rv60Index;
+      await cambiarVersionBiblia();
+    }
     // Cargar índice de himnos
     indiceHimnos = await getHymnIndex();
   } catch (error) {
@@ -289,19 +303,17 @@ async function cambiarVersionBiblia() {
  */
 function filtrarLibros() {
   if (!bibliaActual) return;
-  
   const texto = elementos.buscarLibro.value.toLowerCase().trim();
-  
   if (texto.length === 0) {
     elementos.sugerenciasLibros.style.display = 'none';
+    libroSugeridoIndex = -1;
     return;
   }
-  
   const libros = Object.keys(bibliaActual);
   const filtrados = libros.filter(libro => 
     libro.toLowerCase().includes(texto)
   );
-  
+  libroSugeridoIndex = filtrados.length > 0 ? 0 : -1; // Preseleccionar el primero si hay
   mostrarSugerenciasLibros(filtrados);
 }
 
@@ -310,25 +322,30 @@ function filtrarLibros() {
  */
 function mostrarSugerenciasLibros(libros = null) {
   elementos.sugerenciasLibros.innerHTML = '';
-  
   if (!bibliaActual) return;
-  
   const librosAMostrar = libros || Object.keys(bibliaActual).slice(0, 10);
-  
-  librosAMostrar.forEach(libro => {
+  librosAMostrar.forEach((libro, idx) => {
     const div = document.createElement('div');
     div.textContent = libro;
     div.dataset.libro = libro;
+    if (idx === libroSugeridoIndex) div.classList.add('selected');
     elementos.sugerenciasLibros.appendChild(div);
   });
-  
   if (librosAMostrar.length > 0) {
     elementos.sugerenciasLibros.style.display = 'block';
-    
     // Posicionar las sugerencias debajo del input
     const inputRect = elementos.buscarLibro.getBoundingClientRect();
     elementos.sugerenciasLibros.style.top = (inputRect.bottom + 5) + 'px';
     elementos.sugerenciasLibros.style.left = inputRect.left + 'px';
+    // Asegurar resaltado visual correcto después de renderizar
+    const sugerencias = Array.from(elementos.sugerenciasLibros.querySelectorAll('div'));
+    sugerencias.forEach((div, idx) => {
+      if (idx === libroSugeridoIndex) {
+        div.classList.add('selected');
+      } else {
+        div.classList.remove('selected');
+      }
+    });
   } else {
     elementos.sugerenciasLibros.style.display = 'none';
   }
@@ -338,12 +355,18 @@ function mostrarSugerenciasLibros(libros = null) {
  * Selecciona un libro
  */
 function seleccionarLibro(event) {
-  if (event.target.dataset.libro) {
-    const libro = event.target.dataset.libro;
+  let target = event.target;
+  // Permitir selección por teclado
+  if (event.type === 'keydown' && event.selectedDiv) {
+    target = event.selectedDiv;
+  }
+  if (target && target.dataset.libro) {
+    const libro = target.dataset.libro;
     libroActivo = libro;
     elementos.buscarLibro.value = libro;
     elementos.sugerenciasLibros.style.display = 'none';
     renderizarGrillaCapitulos(libro);
+    libroSugeridoIndex = -1;
   }
 }
 
@@ -478,6 +501,7 @@ async function filtrarHimnos() {
     return a.number.localeCompare(b.number);
   });
 
+  himnoSugeridoIndex = -1; // Reiniciar selección al filtrar
   await mostrarListaHimnos(himnosConRelevancia);
 }
 
@@ -507,10 +531,11 @@ async function mostrarListaHimnos(himnos) {
     return;
   }
   
-  himnosValidos.forEach(himno => {
+  himnosValidos.forEach((himno, idx) => {
     const div = document.createElement('div');
     div.innerHTML = `<strong>${himno.number}</strong> - ${himno.title}`;
     div.dataset.himno = himno.file;
+    if (idx === himnoSugeridoIndex) div.classList.add('selected');
     elementos.listaHimnos.appendChild(div);
   });
 }
@@ -519,10 +544,15 @@ async function mostrarListaHimnos(himnos) {
  * Selecciona un himno
  */
 async function seleccionarHimno(event) {
-  if (event.target.dataset.himno) {
-    const himnoFile = event.target.dataset.himno;
+  let target = event.target;
+  // Permitir selección por teclado
+  if (event.type === 'keydown' && event.selectedDiv) {
+    target = event.selectedDiv;
+  }
+  if (target && target.dataset.himno) {
+    const himnoFile = target.dataset.himno;
     // Obtener el título del himno seleccionado desde el elemento
-    const himnoDiv = event.target.closest('div');
+    const himnoDiv = target.closest('div');
     if (himnoDiv) {
       // El texto del div es "<strong>NUM</strong> - TÍTULO"
       // Extraemos el título después del guion
@@ -562,6 +592,7 @@ async function seleccionarHimno(event) {
       `;
       ocultarPlayFooter();
     }
+    himnoSugeridoIndex = -1;
   }
 }
 
@@ -912,4 +943,83 @@ document.addEventListener('DOMContentLoaded', inicializar);
 function ocultarPlayFooter() {
   const playBtn = document.getElementById('playHimnoFooter');
   if (playBtn) playBtn.style.display = 'none';
+}
+
+// --- Navegación con teclado en sugerencias de libros ---
+function manejarTeclasSugerenciasLibros(e) {
+  const sugerencias = Array.from(elementos.sugerenciasLibros.querySelectorAll('div'));
+  if (elementos.sugerenciasLibros.style.display !== 'block' || sugerencias.length === 0) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    libroSugeridoIndex = (libroSugeridoIndex + 1) % sugerencias.length;
+    actualizarSeleccionSugerenciasLibros(sugerencias);
+    return;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    libroSugeridoIndex = (libroSugeridoIndex - 1 + sugerencias.length) % sugerencias.length;
+    actualizarSeleccionSugerenciasLibros(sugerencias);
+    return;
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (libroSugeridoIndex >= 0 && libroSugeridoIndex < sugerencias.length) {
+      const selectedDiv = sugerencias[libroSugeridoIndex];
+      elementos.buscarLibro.value = selectedDiv.textContent;
+      seleccionarLibro({ type: 'keydown', selectedDiv });
+    }
+    return;
+  }
+  // Refuerza el resaltado visual en cualquier otra navegación
+  actualizarSeleccionSugerenciasLibros(sugerencias);
+}
+function actualizarSeleccionSugerenciasLibros(sugerencias) {
+  sugerencias.forEach((div, idx) => {
+    if (idx === libroSugeridoIndex) {
+      div.classList.add('selected');
+      // NO actualizar el input aquí para evitar el bug de reseteo de filtro
+      // Scroll automático al seleccionado
+      div.scrollIntoView({ block: 'nearest' });
+    } else {
+      div.classList.remove('selected');
+    }
+  });
+}
+// --- Navegación con teclado en lista de himnos ---
+function manejarTeclasListaHimnos(e) {
+  const himnos = Array.from(elementos.listaHimnos.querySelectorAll('div'));
+  if (elementos.listaHimnos.style.display === 'none' || himnos.length === 0) return;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    himnoSugeridoIndex = (himnoSugeridoIndex + 1) % himnos.length;
+    actualizarSeleccionListaHimnos(himnos);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    himnoSugeridoIndex = (himnoSugeridoIndex - 1 + himnos.length) % himnos.length;
+    actualizarSeleccionListaHimnos(himnos);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (himnoSugeridoIndex >= 0 && himnoSugeridoIndex < himnos.length) {
+      const selectedDiv = himnos[himnoSugeridoIndex];
+      // Simular selección
+      seleccionarHimno({ type: 'keydown', selectedDiv });
+    }
+  }
+}
+function actualizarSeleccionListaHimnos(himnos) {
+  himnos.forEach((div, idx) => {
+    if (idx === himnoSugeridoIndex) {
+      div.classList.add('selected');
+      // Extraer solo el título para el input
+      const textoDiv = div.textContent;
+      const partes = textoDiv.split(' - ');
+      if (partes.length > 1) {
+        elementos.buscarHimno.value = partes[1].trim();
+      } else {
+        elementos.buscarHimno.value = textoDiv.trim();
+      }
+      // Scroll automático al seleccionado
+      div.scrollIntoView({ block: 'nearest' });
+    } else {
+      div.classList.remove('selected');
+    }
+  });
 }
