@@ -15,6 +15,10 @@ let himnoActivo = null;
 // Referencias a elementos del DOM
 let elementos = {};
 
+// Variable global para saber si está sonando el himno
+let himnoSonando = false;
+let fadeOutTimeout = null;
+
 /**
  * Inicializa la aplicación
  */
@@ -36,6 +40,99 @@ async function inicializar() {
     anterior: document.getElementById('anterior'),
     siguiente: document.getElementById('siguiente'),
     reproductorAudio: document.getElementById('reproductorAudio')
+  };
+
+  // --- Configuración Panel ---
+  const btnConfig = document.getElementById('btnConfig');
+  const configModal = document.getElementById('configModal');
+  const cerrarConfig = document.getElementById('cerrarConfig');
+  const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+  const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+  const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
+  const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
+  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+  const opcionSoloReferencia = document.getElementById('opcionSoloReferencia');
+  const sliderFontBibliaContainer = document.getElementById('sliderFontBibliaContainer');
+  const sliderFontHimnarioContainer = document.getElementById('sliderFontHimnarioContainer');
+
+  // Cargar configuración guardada
+  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+  fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+  sliderFontsizeHimnario.value = config.fontsizeHimnario || 5;
+  fontsizeValueHimnario.textContent = (config.fontsizeHimnario || 5) + 'vw';
+  switchSoloReferencia.checked = !!config.soloReferencia;
+
+  // Mostrar/ocultar sliders según modo
+  function actualizarOpcionesModo() {
+    const esModoBiblia = elementos.modoSwitch.checked;
+    opcionSoloReferencia.style.display = esModoBiblia ? '' : 'none';
+    sliderFontBibliaContainer.style.display = esModoBiblia ? '' : 'none';
+    sliderFontHimnarioContainer.style.display = esModoBiblia ? 'none' : '';
+  }
+  actualizarOpcionesModo();
+  elementos.modoSwitch.addEventListener('change', actualizarOpcionesModo);
+
+  // Abrir modal
+  btnConfig.addEventListener('click', () => {
+    configModal.style.display = 'flex';
+  });
+  // Cerrar modal
+  cerrarConfig.addEventListener('click', () => {
+    configModal.style.display = 'none';
+  });
+  configModal.addEventListener('click', (e) => {
+    if (e.target === configModal) configModal.style.display = 'none';
+  });
+
+  // Slider de fuente Biblia
+  sliderFontsizeBiblia.addEventListener('input', () => {
+    fontsizeValueBiblia.textContent = sliderFontsizeBiblia.value + 'vw';
+    config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
+    guardarYEnviarConfig();
+  });
+  // Slider de fuente Himnario
+  sliderFontsizeHimnario.addEventListener('input', () => {
+    fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
+    config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
+    guardarYEnviarConfig();
+  });
+  // Switch solo referencia
+  switchSoloReferencia.addEventListener('change', () => {
+    config.soloReferencia = switchSoloReferencia.checked;
+    guardarYEnviarConfig();
+  });
+  function guardarYEnviarConfig() {
+    localStorage.setItem('proyectorConfig', JSON.stringify(config));
+    // Enviar config al proyector según modo
+    const esModoBiblia = elementos.modoSwitch.checked;
+    const configEnviar = {
+      fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esModoBiblia ? config.soloReferencia : null
+    };
+    channel.postMessage({ tipo: 'config', config: configEnviar });
+  }
+  // Enviar config inicial al abrir proyector
+  if (proyectorWindow && !proyectorWindow.closed) {
+    const esModoBiblia = elementos.modoSwitch.checked;
+    const configEnviar = {
+      fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esModoBiblia ? config.soloReferencia : null
+    };
+    channel.postMessage({ tipo: 'config', config: configEnviar });
+  }
+  // Enviar config cada vez que se abre el proyector
+  const originalAbrirProyector = abrirProyector;
+  window.abrirProyector = function() {
+    originalAbrirProyector();
+    setTimeout(() => {
+      const esModoBiblia = elementos.modoSwitch.checked;
+      const configEnviar = {
+        fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+        soloReferencia: esModoBiblia ? config.soloReferencia : null
+      };
+      channel.postMessage({ tipo: 'config', config: configEnviar });
+    }, 500);
   };
 
   // Inicializar BroadcastChannel
@@ -80,6 +177,12 @@ function configurarEventos() {
   // Navegación
   elementos.anterior.addEventListener('click', () => navegar(-1));
   elementos.siguiente.addEventListener('click', () => navegar(1));
+
+  // Botón de play del himno
+  const playHimnoFooter = document.getElementById('playHimnoFooter');
+  if (playHimnoFooter) {
+    playHimnoFooter.addEventListener('click', reproducirHimno);
+  }
 
   // Delegación de eventos para cards dinámicas
   elementos.vistaPrevia.addEventListener('click', manejarClicCard);
@@ -147,6 +250,14 @@ function cambiarModo() {
       videoSrc: 'assets/videos/himno-bg.mp4' 
     });
   }
+  
+  // Enviar configuración actualizada según el modo
+  const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  const configEnviar = {
+    fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+    soloReferencia: esModoBiblia ? config.soloReferencia : null
+  };
+  channel.postMessage({ tipo: 'config', config: configEnviar });
   
   limpiarVistaPrevia();
 }
@@ -466,14 +577,12 @@ function cargarHimnoEnVistaPrevia() {
 function manejarClicCard(event) {
   const card = event.target.closest('.card');
   if (!card) return;
-  
   const estrofaIndex = parseInt(card.dataset.estrofa);
   const versiculoIndex = parseInt(card.dataset.versiculo);
-  
   if (!isNaN(estrofaIndex)) {
     // Modo Himnario
     estrofaActivaIndex = estrofaIndex;
-    resaltarCard(estrofaIndex);
+    resaltarCard(estrofaIndex + 1);
     enviarEstrofaAlProyector(estrofaIndex);
   } else if (!isNaN(versiculoIndex)) {
     // Modo Biblia
@@ -491,7 +600,6 @@ function resaltarCard(index) {
   document.querySelectorAll('.card.selected').forEach(card => {
     card.classList.remove('selected');
   });
-  
   // Seleccionar nueva card
   const cards = elementos.vistaPrevia.querySelectorAll('.card');
   if (cards[index]) {
@@ -506,13 +614,24 @@ function enviarVersiculoAlProyector(versiculoIndex) {
   const capítulo = bibliaActual[libroActivo][capituloActivo];
   const versiculo = capítulo[versiculoIndex];
   const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
-  
-  // Ya no cambiamos el video aquí, solo el texto
-  channel.postMessage({
-    tipo: 'update_text',
-    texto: versiculo.text,
-    ref: referencia
-  });
+
+  // Leer config
+  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  if (config.soloReferencia) {
+    channel.postMessage({
+      tipo: 'update_text',
+      texto: referencia,
+      ref: '',
+      soloReferencia: true
+    });
+  } else {
+    channel.postMessage({
+      tipo: 'update_text',
+      texto: versiculo.text,
+      ref: referencia,
+      soloReferencia: false
+    });
+  }
 }
 
 /**
@@ -548,7 +667,8 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   channel.postMessage({
     tipo: 'update_text',
     texto: texto,
-    ref: ref
+    ref: ref,
+    soloReferencia: false
   });
 }
 
@@ -592,11 +712,53 @@ function construirRutaAudio(numeroFormateado, titulo) {
 }
 
 /**
- * Reproduce el audio del himno
+ * Cambia el texto del botón play/stop según el estado
+ */
+function actualizarBotonPlayHimno() {
+  const playBtn = document.getElementById('playHimnoFooter');
+  if (!playBtn) return;
+  if (himnoSonando) {
+    playBtn.textContent = '⏹️ Stop';
+  } else {
+    playBtn.textContent = '▶️ Play';
+  }
+}
+
+/**
+ * Reproduce o detiene el audio del himno con fade out
  */
 async function reproducirHimno() {
+  const audio = elementos.reproductorAudio;
+  if (himnoSonando) {
+    // Si está sonando, hacer fade out y detener
+    if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
+    let fadeDuration = 1000; // ms
+    let fadeSteps = 20;
+    let step = 0;
+    let initialVolume = audio.volume;
+    function fade() {
+      step++;
+      audio.volume = initialVolume * (1 - step / fadeSteps);
+      if (step < fadeSteps) {
+        fadeOutTimeout = setTimeout(fade, fadeDuration / fadeSteps);
+      } else {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 1;
+        himnoSonando = false;
+        actualizarBotonPlayHimno();
+        // Quitar selección visual de estrofa y reiniciar índice
+        document.querySelectorAll('.card.selected').forEach(card => {
+          card.classList.remove('selected');
+        });
+        estrofaActivaIndex = -1;
+      }
+    }
+    fade();
+    return;
+  }
+
   if (!himnoActivo) return;
-  
   // Extraer número del título
   let numero = himnoActivo.numero;
   if (!numero && himnoActivo.titulo) {
@@ -605,34 +767,33 @@ async function reproducirHimno() {
       numero = match[1];
     }
   }
-  
-  // Si no se pudo extraer el número, usar 001 como fallback
   if (!numero) {
     numero = '001';
   }
-  
-  // Formatear el número con ceros a la izquierda
   const numeroFormateado = numero.padStart(3, '0');
-  
-  // Extraer título sin el prefijo "Himno #X"
   let titulo = himnoActivo.titulo;
   if (titulo) {
     titulo = titulo.replace(/^Himno #\d+\s*/, '').trim();
   }
-  
   try {
-    // Construir la ruta del archivo de audio
     const audioSrc = construirRutaAudio(numeroFormateado, titulo);
-    
-    // Reproducir el audio
-    elementos.reproductorAudio.src = audioSrc;
-    await elementos.reproductorAudio.play();
-    
+    audio.src = audioSrc;
+    audio.volume = 1;
+    await audio.play();
+    himnoSonando = true;
+    actualizarBotonPlayHimno();
     // Enviar título al proyector
     enviarEstrofaAlProyector(-1);
+    // Cuando termine el audio, volver a mostrar Play
+    audio.onended = () => {
+      himnoSonando = false;
+      actualizarBotonPlayHimno();
+    };
   } catch (error) {
     console.error('Error al reproducir audio:', error);
     alert(`No se pudo reproducir el audio del himno ${numeroFormateado}`);
+    himnoSonando = false;
+    actualizarBotonPlayHimno();
   }
 }
 
@@ -667,7 +828,7 @@ function navegar(direccion) {
     
     if (nuevoIndex >= -1 && nuevoIndex <= maxIndex) {
       estrofaActivaIndex = nuevoIndex;
-      resaltarCard(nuevoIndex + 1); // +1 porque el título está en índice -1
+      resaltarCard(nuevoIndex + 1); // +1 porque el título está en índice 0
       enviarEstrofaAlProyector(nuevoIndex);
     }
   }
@@ -695,19 +856,8 @@ function limpiarGrillas() {
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', inicializar);
 
-// Hacer la función reproducirHimno global para el onclick
-window.reproducirHimno = reproducirHimno;
-
 // Ocultar el botón play del footer si no hay himno activo
 function ocultarPlayFooter() {
   const playBtn = document.getElementById('playHimnoFooter');
   if (playBtn) playBtn.style.display = 'none';
 }
-
-// Al iniciar, ocultar el botón play
-window.addEventListener('DOMContentLoaded', () => {
-  ocultarPlayFooter();
-  // Asignar evento al botón play del footer
-  const playBtn = document.getElementById('playHimnoFooter');
-  if (playBtn) playBtn.onclick = reproducirHimno;
-});

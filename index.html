@@ -8,6 +8,31 @@
 </head>
 <body>
     <button id="abrirProyector">Abrir Ventana de Proyección</button>
+    <!-- Botón de configuración (engranaje) -->
+    <button id="btnConfig" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; z-index: 1001;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 5 15.4a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .66.39 1.25 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.66 0 1.25.39 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.39-1.51 1z"></path></svg>
+    </button>
+    <!-- Modal de configuración -->
+    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
+      <div style="background:#23272b; color:#fff; border-radius:10px; padding:2em; min-width:300px; max-width:90vw; box-shadow:0 8px 32px #000a; position:relative;">
+        <button id="cerrarConfig" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#ffd700; font-size:1.5em; cursor:pointer;">&times;</button>
+        <h2 style="margin-top:0; color:#ffd700;">Configuración</h2>
+        <div id="sliderFontBibliaContainer" style="margin-bottom:1.5em;">
+          <label for="sliderFontsizeBiblia">Tamaño de fuente proyector (Biblia):</label><br>
+          <input type="range" id="sliderFontsizeBiblia" min="2" max="10" step="0.1" value="5">
+          <span id="fontsizeValueBiblia">5vw</span>
+        </div>
+        <div id="sliderFontHimnarioContainer" style="margin-bottom:1.5em;">
+          <label for="sliderFontsizeHimnario">Tamaño de fuente proyector (Himnario):</label><br>
+          <input type="range" id="sliderFontsizeHimnario" min="2" max="10" step="0.1" value="5">
+          <span id="fontsizeValueHimnario">5vw</span>
+        </div>
+        <div id="opcionSoloReferencia" style="margin-bottom:1.5em;">
+          <label for="switchSoloReferencia">Solo mostrar referencia bíblica (modo Biblia):</label>
+          <input type="checkbox" id="switchSoloReferencia">
+        </div>
+      </div>
+    </div>
     <hr>
     <!-- Switch para Biblia/Himnario -->
     <div class="switch-container">
