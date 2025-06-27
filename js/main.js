@@ -507,12 +507,7 @@ function enviarVersiculoAlProyector(versiculoIndex) {
   const versiculo = capítulo[versiculoIndex];
   const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
   
-  // Cambiar video de fondo para versículos
-  channel.postMessage({
-    tipo: 'change_mode',
-    videoSrc: 'assets/videos/verso-bg.mkv'
-  });
-  
+  // Ya no cambiamos el video aquí, solo el texto
   channel.postMessage({
     tipo: 'update_text',
     texto: versiculo.text,
@@ -549,12 +544,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
     ref = `Himno ${numero || ''} - Estrofa ${estrofaIndex + 1}`;
   }
   
-  // Cambiar video de fondo para himnos
-  channel.postMessage({
-    tipo: 'change_mode',
-    videoSrc: 'assets/videos/himno-bg.mp4'
-  });
-  
+  // Ya no cambiamos el video aquí, solo el texto
   channel.postMessage({
     tipo: 'update_text',
     texto: texto,
