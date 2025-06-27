@@ -55,6 +55,17 @@
 
     <!-- Contenedor para el Himnario -->
     <div id="controlHimnario" style="display:none;">
+        <div id="audioModeButtons" style="display: flex; gap: 0.5em; margin-bottom: 0.7em; justify-content: flex-start;">
+          <button id="btnCantado" class="audio-mode-btn" title="Cantado" type="button">
+            <span style="font-size:1.3em;">🎤</span><br><span style="font-size:0.8em;">Cantado</span>
+          </button>
+          <button id="btnInstrumental" class="audio-mode-btn" title="Instrumental" type="button">
+            <span style="font-size:1.3em;">🎹</span><br><span style="font-size:0.8em;">Instrumental</span>
+          </button>
+          <button id="btnSoloLetra" class="audio-mode-btn" title="Solo letra" type="button">
+            <span style="font-size:1.3em;">📄</span><br><span style="font-size:0.8em;">Solo letra</span>
+          </button>
+        </div>
         <input type="text" id="buscarHimno" placeholder="Nº o Título del himno...">
         <div id="listaHimnos"></div>
     </div>

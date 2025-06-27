@@ -331,4 +331,30 @@ hr {
 }
 #opcionSoloReferencia label {
   margin-right: 0.5em;
+}
+
+.audio-mode-btn {
+  background: #23272b;
+  color: #ffd700;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 0.4em 0.7em;
+  font-size: 1em;
+  cursor: pointer;
+  min-width: 60px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border 0.2s, color 0.2s;
+}
+.audio-mode-btn.selected {
+  background: #ffd700;
+  color: #23272b;
+  border-color: #ffd700;
+}
+.audio-mode-btn:not(.selected):hover {
+  background: #2c3136;
+  color: #fff;
 } 

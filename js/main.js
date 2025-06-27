@@ -21,6 +21,8 @@ let elementos = {};
 // Variable global para saber si está sonando el himno
 let himnoSonando = false;
 let fadeOutTimeout = null;
+// Modo de audio: 'cantado', 'instrumental', 'soloLetra'
+let audioMode = 'cantado';
 
 /**
  * Inicializa la aplicación
@@ -42,7 +44,10 @@ async function inicializar() {
     vistaPrevia: document.getElementById('vistaPrevia'),
     anterior: document.getElementById('anterior'),
     siguiente: document.getElementById('siguiente'),
-    reproductorAudio: document.getElementById('reproductorAudio')
+    reproductorAudio: document.getElementById('reproductorAudio'),
+    btnCantado: document.getElementById('btnCantado'),
+    btnInstrumental: document.getElementById('btnInstrumental'),
+    btnSoloLetra: document.getElementById('btnSoloLetra')
   };
 
   // --- Configuración Panel ---
@@ -149,6 +154,9 @@ async function inicializar() {
   
   // Establecer modo inicial
   cambiarModo();
+
+  // Inicializar modo de audio
+  inicializarAudioMode();
 }
 
 /**
@@ -750,7 +758,7 @@ function cargarHimnoEnVistaPrevia() {
 
   // Mostrar el botón play en el footer
   const playBtn = document.getElementById('playHimnoFooter');
-  if (playBtn) playBtn.style.display = '';
+  if (playBtn) playBtn.style.display = (audioMode === 'soloLetra') ? 'none' : '';
 }
 
 /**
@@ -886,8 +894,13 @@ function normalizarTexto(texto) {
  * @returns {string} Ruta del archivo de audio
  */
 function construirRutaAudio(numeroFormateado, titulo) {
-  // Ahora solo usamos el número para la ruta
-  return `assets/himnos/musica/cantado/${numeroFormateado}.mp3`;
+  if (audioMode === 'cantado') {
+    return `assets/himnos/musica/cantado/${numeroFormateado}.mp3`;
+  } else if (audioMode === 'instrumental') {
+    return `assets/himnos/musica/instrumental/${numeroFormateado}.mp3`;
+  } else {
+    return '';
+  }
 }
 
 /**
@@ -896,6 +909,11 @@ function construirRutaAudio(numeroFormateado, titulo) {
 function actualizarBotonPlayHimno() {
   const playBtn = document.getElementById('playHimnoFooter');
   if (!playBtn) return;
+  if (audioMode === 'soloLetra') {
+    playBtn.style.display = 'none';
+    return;
+  }
+  playBtn.style.display = '';
   if (himnoSonando) {
     playBtn.textContent = '⏹️ Stop';
   } else {
@@ -907,6 +925,7 @@ function actualizarBotonPlayHimno() {
  * Reproduce o detiene el audio del himno con fade out
  */
 async function reproducirHimno() {
+  if (audioMode === 'soloLetra') return;
   const audio = elementos.reproductorAudio;
   if (himnoSonando) {
     // Si está sonando, hacer fade out y detener
@@ -1036,9 +1055,9 @@ function limpiarGrillas() {
 document.addEventListener('DOMContentLoaded', inicializar);
 
 // Ocultar el botón play del footer si no hay himno activo
-function ocultarPlayFooter() {
+function ocultarPlayFooter(forceHide = false) {
   const playBtn = document.getElementById('playHimnoFooter');
-  if (playBtn) playBtn.style.display = 'none';
+  if (playBtn) playBtn.style.display = (forceHide || audioMode === 'soloLetra') ? 'none' : '';
 }
 
 // --- Navegación con teclado en sugerencias de libros ---
@@ -1132,4 +1151,33 @@ function actualizarSeleccionListaHimnos(himnos) {
       div.classList.remove('selected');
     }
   });
+}
+
+function inicializarAudioMode() {
+  // Estado inicial
+  actualizarAudioModeUI();
+  // Listeners
+  elementos.btnCantado.addEventListener('click', () => {
+    audioMode = 'cantado';
+    actualizarAudioModeUI();
+    actualizarBotonPlayHimno();
+    if (himnoActivo) ocultarPlayFooter(false);
+  });
+  elementos.btnInstrumental.addEventListener('click', () => {
+    audioMode = 'instrumental';
+    actualizarAudioModeUI();
+    actualizarBotonPlayHimno();
+    if (himnoActivo) ocultarPlayFooter(false);
+  });
+  elementos.btnSoloLetra.addEventListener('click', () => {
+    audioMode = 'soloLetra';
+    actualizarAudioModeUI();
+    ocultarPlayFooter(true);
+  });
+}
+
+function actualizarAudioModeUI() {
+  elementos.btnCantado.classList.toggle('selected', audioMode === 'cantado');
+  elementos.btnInstrumental.classList.toggle('selected', audioMode === 'instrumental');
+  elementos.btnSoloLetra.classList.toggle('selected', audioMode === 'soloLetra');
 }
