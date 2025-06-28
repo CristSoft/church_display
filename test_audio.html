@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Audio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            color: blue;
+            background: #e6f3ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test de Audio - Church Display</h1>
+    
+    <div class="test-section">
+        <h2>1. Habilitar Audio</h2>
+        <p>Haz clic en el botón para habilitar el audio en el navegador:</p>
+        <button onclick="habilitarAudio()">🔊 Habilitar Audio</button>
+        <div id="audio-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Probar Audio Local</h2>
+        <p>Prueba con un archivo de audio local:</p>
+        <button onclick="probarAudioLocal()">🎵 Probar Audio Local</button>
+        <div id="local-audio-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Probar Audio del Himnario</h2>
+        <p>Prueba con un archivo de audio del himnario:</p>
+        <input type="text" id="himno-numero" placeholder="Número del himno (ej: 001)" value="001" style="padding: 5px; margin-right: 10px;">
+        <button onclick="probarAudioHimno()">🎵 Probar Himno</button>
+        <div id="himno-audio-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Verificar Archivos</h2>
+        <p>Verifica si existen archivos de audio:</p>
+        <button onclick="verificarArchivos()">🔍 Verificar Archivos</button>
+        <div id="files-status"></div>
+    </div>
+
+    <script>
+        function mostrarMensaje(elementId, mensaje, tipo = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="${tipo}">${mensaje}</div>`;
+        }
+        
+        function habilitarAudio() {
+            try {
+                // Crear un audio temporal para "despertar" el contexto de audio
+                const tempAudio = new Audio();
+                tempAudio.volume = 0.1;
+                
+                tempAudio.play().then(() => {
+                    mostrarMensaje('audio-status', '✅ Audio habilitado correctamente', 'success');
+                    console.log('✅ Audio habilitado');
+                }).catch(error => {
+                    mostrarMensaje('audio-status', `❌ Error al habilitar audio: ${error.message}`, 'error');
+                    console.error('❌ Error al habilitar audio:', error);
+                });
+            } catch (error) {
+                mostrarMensaje('audio-status', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function probarAudioLocal() {
+            try {
+                // Crear un audio de prueba (beep simple)
+                const audio = new Audio();
+                audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+                
+                audio.addEventListener('canplay', () => {
+                    mostrarMensaje('local-audio-status', '✅ Audio local cargado correctamente', 'success');
+                });
+                
+                audio.addEventListener('play', () => {
+                    mostrarMensaje('local-audio-status', '▶️ Audio local reproduciéndose...', 'info');
+                });
+                
+                audio.addEventListener('ended', () => {
+                    mostrarMensaje('local-audio-status', '⏹️ Audio local terminado', 'info');
+                });
+                
+                audio.addEventListener('error', (e) => {
+                    mostrarMensaje('local-audio-status', `❌ Error en audio local: ${e.message}`, 'error');
+                });
+                
+                audio.play().catch(error => {
+                    mostrarMensaje('local-audio-status', `❌ Error al reproducir audio local: ${error.message}`, 'error');
+                });
+                
+            } catch (error) {
+                mostrarMensaje('local-audio-status', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function probarAudioHimno() {
+            const numero = document.getElementById('himno-numero').value.padStart(3, '0');
+            const ruta = `assets/himnos/musica/cantado/${numero}.mp3`;
+            
+            mostrarMensaje('himno-audio-status', `🔍 Verificando archivo: ${ruta}`, 'info');
+            
+            // Primero verificar si el archivo existe
+            fetch(ruta, { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        mostrarMensaje('himno-audio-status', `✅ Archivo encontrado: ${ruta}`, 'success');
+                        
+                        // Intentar reproducir
+                        const audio = new Audio(ruta);
+                        audio.volume = 0.5;
+                        
+                        audio.addEventListener('canplay', () => {
+                            mostrarMensaje('himno-audio-status', `✅ Himno ${numero} cargado correctamente`, 'success');
+                        });
+                        
+                        audio.addEventListener('play', () => {
+                            mostrarMensaje('himno-audio-status', `▶️ Himno ${numero} reproduciéndose...`, 'info');
+                        });
+                        
+                        audio.addEventListener('ended', () => {
+                            mostrarMensaje('himno-audio-status', `⏹️ Himno ${numero} terminado`, 'info');
+                        });
+                        
+                        audio.addEventListener('error', (e) => {
+                            mostrarMensaje('himno-audio-status', `❌ Error en himno ${numero}: ${e.message}`, 'error');
+                        });
+                        
+                        audio.play().catch(error => {
+                            mostrarMensaje('himno-audio-status', `❌ Error al reproducir himno ${numero}: ${error.message}`, 'error');
+                        });
+                        
+                    } else {
+                        mostrarMensaje('himno-audio-status', `❌ Archivo no encontrado: ${ruta}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    mostrarMensaje('himno-audio-status', `❌ Error al verificar archivo: ${error.message}`, 'error');
+                });
+        }
+        
+        function verificarArchivos() {
+            const himnos = ['001', '002', '003', '004', '005'];
+            let resultados = [];
+            
+            himnos.forEach(numero => {
+                const ruta = `assets/himnos/musica/cantado/${numero}.mp3`;
+                fetch(ruta, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            resultados.push(`✅ Himno ${numero}: Encontrado`);
+                        } else {
+                            resultados.push(`❌ Himno ${numero}: No encontrado`);
+                        }
+                        
+                        if (resultados.length === himnos.length) {
+                            mostrarMensaje('files-status', resultados.join('<br>'), 'info');
+                        }
+                    })
+                    .catch(error => {
+                        resultados.push(`❌ Himno ${numero}: Error - ${error.message}`);
+                        
+                        if (resultados.length === himnos.length) {
+                            mostrarMensaje('files-status', resultados.join('<br>'), 'error');
+                        }
+                    });
+            });
+        }
+        
+        // Habilitar audio al cargar la página
+        window.addEventListener('load', () => {
+            mostrarMensaje('audio-status', 'ℹ️ Haz clic en "Habilitar Audio" para comenzar', 'info');
+        });
+    </script>
+</body>
+</html> 

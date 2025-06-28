@@ -177,7 +177,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
         verso: estrofa.verso,
         estrofaIndex: estrofaIndex,
         totalEstrofas: himnoActivo.estrofas.length,
-        seccionActual: estrofaIndex,
+        seccionActual: estrofaIndex, // El índice real de la estrofa
         totalSecciones: himnoActivo.estrofas.length - 1 // -1 porque la primera es el título
       }
     });
@@ -999,15 +999,15 @@ function cargarHimnoEnVistaPrevia() {
   // Limpiar el título (remover "Himno #" si existe)
   const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
   
-    himnoActivo.estrofas.forEach((estrofa, index) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.estrofa = index;
-    
+  himnoActivo.estrofas.forEach((estrofa, index) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.estrofa = index;
+  
     if (index === 0) {
       // Es el título
       card.innerHTML = `<strong>${himnoActivo.numero} | ${tituloLimpio}</strong>`;
-  } else {
+    } else {
       // Es una estrofa
       const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
       card.innerHTML = `<strong>${versoText}</strong><br>${estrofa.texto}`;
@@ -1019,7 +1019,7 @@ function cargarHimnoEnVistaPrevia() {
     card.addEventListener('click', manejarClicCard);
   });
   
-  // Seleccionar la primera estrofa por defecto
+  // Seleccionar la primera estrofa por defecto (título)
   estrofaActivaIndex = 0;
   resaltarCard(0);
   

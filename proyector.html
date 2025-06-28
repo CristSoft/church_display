@@ -21,6 +21,22 @@
         <p id="texto-principal"></p>
         <footer id="referencia"></footer>
     </div>
+    
+    <!-- Script para habilitar audio -->
+    <script>
+        // Habilitar audio al hacer clic en la página
+        document.addEventListener('click', function() {
+            // Crear un audio temporal para "despertar" el contexto de audio
+            const tempAudio = new Audio();
+            tempAudio.volume = 0;
+            tempAudio.play().then(() => {
+                console.log('✅ Audio habilitado por interacción del usuario');
+            }).catch(error => {
+                console.log('ℹ️ Audio ya habilitado o no disponible');
+            });
+        }, { once: true });
+    </script>
+    
     <script src="js/proyector.js"></script>
 </body>
 </html>

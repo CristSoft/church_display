@@ -167,10 +167,42 @@ function reproducirAudioHimno(ruta, himno, titulo) {
             audioElement.addEventListener('error', (e) => {
                 console.error('❌ Error al reproducir audio:', e);
                 console.error('🔍 Detalles del error:', audioElement.error);
+                console.error('🔍 Código de error:', audioElement.error ? audioElement.error.code : 'N/A');
+                console.error('🔍 Mensaje de error:', audioElement.error ? audioElement.error.message : 'N/A');
+                
+                // Mostrar mensaje de error más detallado
+                let errorMsg = 'Error al reproducir audio';
+                if (audioElement.error) {
+                    switch(audioElement.error.code) {
+                        case 1:
+                            errorMsg = 'Error: Archivo de audio no encontrado';
+                            break;
+                        case 2:
+                            errorMsg = 'Error: Red no disponible';
+                            break;
+                        case 3:
+                            errorMsg = 'Error: Formato de audio no soportado';
+                            break;
+                        case 4:
+                            errorMsg = 'Error: Archivo de audio corrupto';
+                            break;
+                        default:
+                            errorMsg = `Error: ${audioElement.error.message}`;
+                    }
+                }
+                textoPrincipal.innerHTML = `${errorMsg}<br><small>${ruta}</small>`;
             });
             
             audioElement.addEventListener('ended', () => {
                 console.log('⏹️ Audio terminado');
+            });
+            
+            audioElement.addEventListener('load', () => {
+                console.log('📦 Audio cargado completamente');
+            });
+            
+            audioElement.addEventListener('canplaythrough', () => {
+                console.log('🎯 Audio puede reproducirse completamente');
             });
         }
         
@@ -184,22 +216,47 @@ function reproducirAudioHimno(ruta, himno, titulo) {
         audioElement.src = ruta;
         audioElement.volume = 1.0;
         
-        // Intentar reproducir
-        const playPromise = audioElement.play();
-        
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => {
-                    console.log('✅ Audio iniciado correctamente');
-                })
-                .catch(error => {
-                    console.error('❌ Error al iniciar audio:', error);
-                    // Mostrar mensaje de error en el proyector
-                    textoPrincipal.innerHTML = `Error: No se pudo reproducir el audio<br><small>${ruta}</small>`;
-                });
-        }
+        // Verificar si el archivo existe antes de intentar reproducir
+        fetch(ruta, { method: 'HEAD' })
+            .then(response => {
+                if (response.ok) {
+                    console.log('✅ Archivo de audio encontrado, intentando reproducir...');
+                    // Intentar reproducir
+                    const playPromise = audioElement.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log('✅ Audio iniciado correctamente');
+                            })
+                            .catch(error => {
+                                console.error('❌ Error al iniciar audio:', error);
+                                console.error('🔍 Tipo de error:', error.name);
+                                console.error('🔍 Mensaje:', error.message);
+                                
+                                // Mostrar mensaje de error específico
+                                let errorMsg = 'No se pudo reproducir el audio';
+                                if (error.name === 'NotAllowedError') {
+                                    errorMsg = 'Error: Permisos de audio denegados. Haga clic en la página para habilitar audio.';
+                                } else if (error.name === 'NotSupportedError') {
+                                    errorMsg = 'Error: Formato de audio no soportado';
+                                }
+                                
+                                textoPrincipal.innerHTML = `${errorMsg}<br><small>${ruta}</small>`;
+                            });
+                    }
+                } else {
+                    console.error('❌ Archivo de audio no encontrado:', ruta);
+                    textoPrincipal.innerHTML = `Error: Archivo de audio no encontrado<br><small>${ruta}</small>`;
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error al verificar archivo de audio:', error);
+                textoPrincipal.innerHTML = `Error: No se pudo acceder al archivo de audio<br><small>${ruta}</small>`;
+            });
         
     } catch (error) {
         console.error('❌ Error en reproducirAudioHimno:', error);
+        textoPrincipal.innerHTML = `Error: ${error.message}<br><small>${ruta}</small>`;
     }
 }

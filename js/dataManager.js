@@ -770,15 +770,25 @@ async function parseHymn(hymnFileName) {
     const numeroMatch = hymnFileName.match(/^(\d+)/);
     const numero = numeroMatch ? numeroMatch[1] : '';
     
+    // Limpiar el título (remover "Himno #" si existe)
+    const tituloLimpio = (data.title || 'Himno').replace(/^Himno\s*#?\d*\s*/, '').trim();
+    
     // Convertir la estructura de sections a estrofas
     const himno = {
-      titulo: data.title || 'Himno',
+      titulo: tituloLimpio,
       numero: numero, // Usar el número extraído del nombre del archivo
       estrofas: [],
       sections: data.sections || {}
     };
     
-    // Procesar las secciones y convertirlas a estrofas
+    // Agregar el título como primera estrofa (índice 0)
+    himno.estrofas.push({
+      verso: 'titulo',
+      texto: `${numero} | ${tituloLimpio}`,
+      sectionKey: 'titulo'
+    });
+    
+    // Procesar las secciones y convertirlas a estrofas (empezando desde índice 1)
     if (data.sections) {
       const sectionKeys = Object.keys(data.sections).sort((a, b) => parseInt(a) - parseInt(b));
       
@@ -800,7 +810,8 @@ async function parseHymn(hymnFileName) {
     console.log('📖 Himno cargado:', {
       numero: himno.numero,
       titulo: himno.titulo,
-      estrofas: himno.estrofas.length
+      estrofas: himno.estrofas.length,
+      estructura: himno.estrofas.map((e, i) => `${i}: ${e.verso}`)
     });
     
     return himno;

@@ -42,6 +42,14 @@ def diagnostico():
 def test_simple():
     return send_from_directory('.', 'test_simple.html')
 
+@app.route('/test_audio.html')
+def test_audio():
+    return send_from_directory('.', 'test_audio.html')
+
+@app.route('/diagnostico_himnario.html')
+def diagnostico_himnario():
+    return send_from_directory('.', 'diagnostico_himnario.html')
+
 # Eventos de SocketIO
 @socketio.on('connect')
 def handle_connect():
@@ -82,6 +90,8 @@ if __name__ == '__main__':
     print("🧪 Test SocketIO: http://localhost:8080/test_socketio.html")
     print("🔍 Diagnóstico: http://localhost:8080/diagnostico.html")
     print("🧪 Test Simple: http://localhost:8080/test_simple.html")
+    print("🎵 Test Audio: http://localhost:8080/test_audio.html")
+    print("🔍 Diagnóstico Himnario: http://localhost:8080/diagnostico_himnario.html")
     print("⏹️  Presiona Ctrl+C para detener el servidor")
     print("-" * 50)
     
