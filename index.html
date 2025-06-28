@@ -2,15 +2,22 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#181c20">
     <title>Church Display - Control</title>
     <link rel="stylesheet" href="css/style.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
     <button id="abrirProyector">Abrir Ventana de Proyección</button>
+    <!-- Botón de prueba temporal -->
+    <button id="btnPrueba" style="background: #28a745; margin-left: 10px;">🧪 Probar SocketIO</button>
     <!-- Botón de configuración (engranaje) -->
     <button id="btnConfig" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; z-index: 1001;">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 5 15.4a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .66.39 1.25 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.66 0 1.25.39 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.39-1.51 1z"></path></svg>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82-.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09c0 .66.39 1.25 1 1.51a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0 1.82.33c.66 0 1.25.39 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.39-1.51 1z"></path></svg>
     </button>
     <!-- Modal de configuración -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
@@ -82,6 +89,69 @@
       <button id="siguiente">Siguiente</button>
     </footer>
 
-    <script type="module" src="js/main.js"></script>
+    <script src="js/dataManager.js"></script>
+    <script src="js/main.js"></script>
+    
+    <!-- Script de prueba temporal -->
+    <script>
+        console.log('🚀 Script de prueba iniciado');
+        console.log('📱 URL actual:', window.location.href);
+        console.log('🔌 SocketIO disponible:', typeof io !== 'undefined' ? 'Sí' : 'No');
+        
+        // Verificar si main.js se cargó correctamente
+        setTimeout(() => {
+            console.log('🔍 Verificando carga de main.js...');
+            console.log('🔌 Socket global:', typeof window.socket !== 'undefined' ? 'Existe' : 'No existe');
+            console.log('🔌 Socket conectado:', typeof window.socket !== 'undefined' && window.socket ? window.socket.connected : 'N/A');
+            
+            // Verificar si el botón de prueba existe
+            const btnPrueba = document.getElementById('btnPrueba');
+            console.log('🧪 Botón de prueba:', btnPrueba ? 'Existe' : 'No existe');
+            
+            if (btnPrueba) {
+                console.log('🧪 Agregando evento de prueba directo...');
+                btnPrueba.addEventListener('click', function() {
+                    console.log('🧪 Botón clickeado (evento directo)');
+                    console.log('🔍 Estado del socket:', {
+                        existe: typeof window.socket !== 'undefined',
+                        socket: window.socket,
+                        conectado: window.socket ? window.socket.connected : 'N/A'
+                    });
+                    
+                    if (typeof window.socket !== 'undefined' && window.socket && window.socket.connected) {
+                        console.log('✅ Socket disponible, enviando mensaje...');
+                        window.socket.emit('update_text', {
+                            texto: '🧪 Prueba directa desde HTML',
+                            ref: 'Test Directo - ' + new Date().toLocaleTimeString(),
+                            soloReferencia: false
+                        });
+                        console.log('✅ Mensaje enviado (evento directo)');
+                        this.textContent = '✅ Enviado!';
+                        this.style.background = '#28a745';
+                        setTimeout(() => {
+                            this.textContent = '🧪 Probar SocketIO';
+                            this.style.background = '#28a745';
+                        }, 2000);
+                    } else {
+                        console.log('❌ Socket no disponible (evento directo)');
+                        console.log('🔍 Detalles del error:', {
+                            socketDefinido: typeof window.socket !== 'undefined',
+                            socketValor: window.socket,
+                            conectado: window.socket ? window.socket.connected : 'N/A'
+                        });
+                        this.textContent = '❌ Error!';
+                        this.style.background = '#dc3545';
+                        setTimeout(() => {
+                            this.textContent = '🧪 Probar SocketIO';
+                            this.style.background = '#28a745';
+                        }, 2000);
+                    }
+                });
+                console.log('✅ Evento agregado al botón');
+            } else {
+                console.log('❌ No se encontró el botón de prueba');
+            }
+        }, 3000); // Aumentamos el tiempo para dar más tiempo a que cargue main.js
+    </script>
 </body>
 </html>

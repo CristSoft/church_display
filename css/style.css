@@ -357,4 +357,185 @@ hr {
 .audio-mode-btn:not(.selected):hover {
   background: #2c3136;
   color: #fff;
+}
+
+/* Estilos específicos para dispositivos móviles */
+@media (max-width: 768px) {
+  body {
+    padding: 1em 0.5em;
+    font-size: 14px;
+  }
+  
+  /* Botones más grandes para touch */
+  button, select, input[type="text"] {
+    padding: 0.8em 1em;
+    font-size: 16px; /* Evita zoom en iOS */
+    min-height: 44px; /* Tamaño mínimo para touch */
+  }
+  
+  /* Switch más grande */
+  .slider {
+    width: 60px;
+    height: 30px;
+  }
+  
+  .slider::before {
+    width: 22px;
+    height: 22px;
+    top: 4px;
+    left: 4px;
+  }
+  
+  .switch-input:checked + .slider::before {
+    transform: translateX(30px);
+  }
+  
+  /* Sugerencias de libros más anchas */
+  #sugerenciasLibros {
+    width: calc(100% - 2em);
+    max-width: none;
+    left: 1em;
+    right: 1em;
+  }
+  
+  /* Grillas más grandes */
+  #grillaCapitulos, #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 0.5em;
+  }
+  
+  #grillaCapitulos button, #grillaVersiculos button {
+    min-width: 50px;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  /* Lista de himnos más alta */
+  #listaHimnos {
+    max-height: 300px;
+  }
+  
+  /* Vista previa más compacta */
+  #vistaPrevia {
+    min-height: 100px;
+    padding: 0.8em;
+  }
+  
+  .card {
+    padding: 0.8em 1em;
+    font-size: 14px;
+  }
+  
+  /* Footer más espaciado */
+  .app-footer {
+    padding: 1em 0.5em;
+    gap: 0.5em;
+  }
+  
+  .app-footer button {
+    padding: 0.8em 1.2em;
+    font-size: 16px;
+    min-height: 44px;
+  }
+  
+  /* Modal de configuración más compacto */
+  #configModal > div {
+    padding: 1.5em;
+    margin: 1em;
+    max-width: calc(100vw - 2em);
+  }
+  
+  /* Botones de modo de audio más grandes */
+  .audio-mode-btn {
+    padding: 1em 0.8em;
+    min-height: 60px;
+    font-size: 14px;
+  }
+  
+  /* Inputs de búsqueda más anchos */
+  #buscarLibro, #buscarHimno {
+    width: calc(100% - 1em);
+    max-width: none;
+  }
+  
+  /* Select de versión bíblica más ancho */
+  #versionBiblia {
+    width: calc(100% - 1em);
+    max-width: none;
+  }
+}
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  body {
+    padding: 0.5em 0.3em;
+    font-size: 13px;
+  }
+  
+  /* Grillas más compactas */
+  #grillaCapitulos, #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 0.3em;
+  }
+  
+  #grillaCapitulos button, #grillaVersiculos button {
+    min-width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  /* Footer más compacto */
+  .app-footer {
+    padding: 0.8em 0.3em;
+  }
+  
+  .app-footer button {
+    padding: 0.6em 1em;
+    font-size: 14px;
+  }
+  
+  /* Vista previa más compacta */
+  #vistaPrevia {
+    min-height: 80px;
+    padding: 0.6em;
+  }
+  
+  .card {
+    padding: 0.6em 0.8em;
+    font-size: 13px;
+  }
+}
+
+/* Mejoras para orientación horizontal en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 0.5em;
+  }
+  
+  /* Layout más compacto */
+  #controlBiblia, #controlHimnario {
+    margin-bottom: 0.5em;
+  }
+  
+  /* Grillas más pequeñas para aprovechar el espacio */
+  #grillaCapitulos, #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+    gap: 0.2em;
+  }
+  
+  #grillaCapitulos button, #grillaVersiculos button {
+    min-width: 35px;
+    height: 35px;
+    font-size: 12px;
+  }
+  
+  /* Lista de himnos más compacta */
+  #listaHimnos {
+    max-height: 200px;
+  }
+  
+  /* Footer más compacto */
+  .app-footer {
+    padding: 0.5em;
+  }
 } 

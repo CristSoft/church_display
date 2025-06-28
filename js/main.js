@@ -1,9 +1,10 @@
-// main.js
-import { getBibleVersions, parseBible, getHymnIndex, parseHymn } from './dataManager.js';
+// main.js - Script normal (no módulo)
+
+console.log('🚀 main.js iniciando...');
 
 // Variables globales
 let proyectorWindow = null;
-let channel = null;
+let socket = null; // Esta será global
 let bibliaActual = null;
 let indiceHimnos = [];
 let capituloActivo = null;
@@ -24,10 +25,183 @@ let fadeOutTimeout = null;
 // Modo de audio: 'cantado', 'instrumental', 'soloLetra'
 let audioMode = 'cantado';
 
+console.log('📦 Variables globales inicializadas');
+
+/**
+ * Inicializa SocketIO
+ */
+function inicializarSocketIO() {
+  console.log('🔌 Iniciando SocketIO...');
+  console.log('🔍 SocketIO disponible:', typeof io !== 'undefined' ? 'Sí' : 'No');
+  
+  try {
+    // Conectar a SocketIO
+    console.log('📡 Creando conexión SocketIO...');
+    socket = io();
+    // Hacer socket global
+    window.socket = socket;
+    
+    console.log('📡 SocketIO creado:', socket);
+    console.log('🌐 Socket global asignado:', window.socket);
+    
+    // Eventos de conexión
+    socket.on('connect', () => {
+      console.log('✅ Conectado al servidor SocketIO - ID:', socket.id);
+      console.log('🌐 URL del servidor:', window.location.hostname + ':' + window.location.port);
+    });
+    
+    socket.on('disconnect', () => {
+      console.log('❌ Desconectado del servidor SocketIO');
+    });
+    
+    socket.on('connect_error', (error) => {
+      console.error('❌ Error de conexión SocketIO:', error);
+      console.error('🔍 Detalles del error:', {
+        message: error.message,
+        description: error.description,
+        context: error.context
+      });
+    });
+    
+    // Agregar más eventos para debugging
+    socket.on('error', (error) => {
+      console.error('❌ Error general de SocketIO:', error);
+    });
+    
+    console.log('🔌 SocketIO inicializado correctamente');
+  } catch (error) {
+    console.error('❌ Error al inicializar SocketIO:', error);
+  }
+}
+
+/**
+ * Envía mensaje al proyector
+ */
+function enviarMensajeProyector(tipo, data) {
+  console.log('📤 Intentando enviar mensaje:', { tipo, data });
+  console.log('🔌 Estado del socket:', {
+    existe: !!socket,
+    conectado: socket ? socket.connected : false,
+    id: socket ? socket.id : 'N/A'
+  });
+  
+  if (!socket) {
+    console.error('❌ SocketIO no inicializado');
+    return false;
+  }
+  
+  if (!socket.connected) {
+    console.error('❌ SocketIO no conectado');
+    return false;
+  }
+  
+  try {
+    socket.emit(tipo, data);
+    console.log(`✅ Mensaje enviado exitosamente: ${tipo}`, data);
+    return true;
+  } catch (error) {
+    console.error('❌ Error al enviar mensaje:', error);
+    return false;
+  }
+}
+
+/**
+ * Envía un versículo al proyector
+ */
+function enviarVersiculoAlProyector(versiculoIndex) {
+  if (!bibliaActual || !libroActivo || capituloActivo === null || versiculoIndex < 0) {
+    console.warn('⚠️ No hay versículo válido para enviar');
+    return;
+  }
+
+  const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoIndex];
+  const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
+  
+  // Obtener configuración
+  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  if (config.soloReferencia) {
+    enviarMensajeProyector('update_text', {
+      texto: referencia,
+      ref: '',
+      soloReferencia: true
+    });
+  } else {
+    enviarMensajeProyector('update_text', {
+      texto: versiculo.text,
+      ref: referencia,
+      soloReferencia: false
+    });
+  }
+}
+
+/**
+ * Envía una estrofa al proyector
+ */
+function enviarEstrofaAlProyector(estrofaIndex) {
+  if (!himnoActivo || estrofaIndex < 0) {
+    console.warn('⚠️ No hay estrofa válida para enviar');
+    return;
+  }
+
+  const estrofa = himnoActivo.estrofas[estrofaIndex];
+  const esTitulo = estrofaIndex === 0;
+  
+  // Limpiar el título (remover "Himno #" si existe)
+  const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
+  
+  if (esTitulo) {
+    // Es el título del himno
+    enviarMensajeProyector('update_text', {
+      texto: `${himnoActivo.numero} | ${tituloLimpio}`,
+      ref: `Himno ${himnoActivo.numero} - ${tituloLimpio}`,
+      himnoData: {
+        esTitulo: true,
+        numero: himnoActivo.numero,
+        titulo: tituloLimpio,
+        totalEstrofas: himnoActivo.estrofas.length
+      }
+    });
+  } else {
+    // Es una estrofa
+    const textoEstrofa = estrofa.texto; // Usar el texto de la estrofa
+    const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
+    const ref = `${himnoActivo.numero} | ${tituloLimpio} - ${versoText}`;
+    
+    enviarMensajeProyector('update_text', {
+      texto: textoEstrofa,
+      ref: ref,
+      himnoData: {
+        esTitulo: false,
+        numero: himnoActivo.numero,
+        titulo: tituloLimpio,
+        verso: estrofa.verso,
+        estrofaIndex: estrofaIndex,
+        totalEstrofas: himnoActivo.estrofas.length,
+        seccionActual: estrofaIndex,
+        totalSecciones: himnoActivo.estrofas.length - 1 // -1 porque la primera es el título
+      }
+    });
+  }
+  
+  console.log('📤 Estrofa enviada al proyector:', {
+    index: estrofaIndex,
+    esTitulo: esTitulo,
+    texto: esTitulo ? `${himnoActivo.numero} | ${tituloLimpio}` : estrofa.texto,
+    verso: esTitulo ? 'Título' : estrofa.verso
+  });
+}
+
 /**
  * Inicializa la aplicación
  */
 async function inicializar() {
+  console.log('🚀 Función inicializar() ejecutándose...');
+  
+  // Inicializar SocketIO primero
+  console.log('🔌 Llamando a inicializarSocketIO()...');
+  inicializarSocketIO();
+  
+  console.log('📋 Obteniendo referencias a elementos del DOM...');
   // Obtener referencias a elementos del DOM
   elementos = {
     abrirProyector: document.getElementById('abrirProyector'),
@@ -49,6 +223,8 @@ async function inicializar() {
     btnInstrumental: document.getElementById('btnInstrumental'),
     btnSoloLetra: document.getElementById('btnSoloLetra')
   };
+
+  console.log('✅ Referencias a elementos obtenidas');
 
   // --- Configuración Panel ---
   const btnConfig = document.getElementById('btnConfig');
@@ -118,7 +294,7 @@ async function inicializar() {
       fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
       soloReferencia: esModoBiblia ? config.soloReferencia : null
     };
-    channel.postMessage({ tipo: 'config', config: configEnviar });
+    enviarMensajeProyector('config', configEnviar);
   }
   // Enviar config inicial al abrir proyector
   if (proyectorWindow && !proyectorWindow.closed) {
@@ -127,7 +303,7 @@ async function inicializar() {
       fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
       soloReferencia: esModoBiblia ? config.soloReferencia : null
     };
-    channel.postMessage({ tipo: 'config', config: configEnviar });
+    enviarMensajeProyector('config', configEnviar);
   }
   // Enviar config cada vez que se abre el proyector
   const originalAbrirProyector = abrirProyector;
@@ -139,12 +315,9 @@ async function inicializar() {
         fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
         soloReferencia: esModoBiblia ? config.soloReferencia : null
       };
-      channel.postMessage({ tipo: 'config', config: configEnviar });
+      enviarMensajeProyector('config', configEnviar);
     }, 500);
   };
-
-  // Inicializar BroadcastChannel
-  channel = new BroadcastChannel('proyector_channel');
 
   // Configurar eventos
   configurarEventos();
@@ -157,6 +330,13 @@ async function inicializar() {
 
   // Inicializar modo de audio
   inicializarAudioMode();
+  
+  console.log('✅ Función inicializar() completada exitosamente');
+  console.log('🔌 Estado final del socket:', {
+    existe: typeof window.socket !== 'undefined',
+    socket: window.socket,
+    conectado: window.socket ? window.socket.connected : 'N/A'
+  });
 }
 
 /**
@@ -165,6 +345,42 @@ async function inicializar() {
 function configurarEventos() {
   // Botón abrir proyector
   elementos.abrirProyector.addEventListener('click', abrirProyector);
+
+  // Botón de prueba SocketIO
+  const btnPrueba = document.getElementById('btnPrueba');
+  if (btnPrueba) {
+    btnPrueba.addEventListener('click', () => {
+      console.log('�� Botón de prueba clickeado');
+      console.log('🔍 Estado actual:', {
+        socket: !!socket,
+        conectado: socket ? socket.connected : false,
+        url: window.location.href,
+        userAgent: navigator.userAgent
+      });
+      
+      const resultado = enviarMensajeProyector('update_text', {
+        texto: '🧪 Prueba de SocketIO exitosa desde el celular!',
+        ref: 'Test - ' + new Date().toLocaleTimeString(),
+        soloReferencia: false
+      });
+      
+      // Cambiar el botón según el resultado
+      if (resultado) {
+        btnPrueba.textContent = '✅ Enviado!';
+        btnPrueba.style.background = '#28a745';
+        console.log('✅ Prueba exitosa');
+      } else {
+        btnPrueba.textContent = '❌ Error!';
+        btnPrueba.style.background = '#dc3545';
+        console.log('❌ Prueba fallida');
+      }
+      
+      setTimeout(() => {
+        btnPrueba.textContent = '🧪 Probar SocketIO';
+        btnPrueba.style.background = '#28a745';
+      }, 3000);
+    });
+  }
 
   // Switch de modo
   elementos.modoSwitch.addEventListener('change', cambiarModo);
@@ -256,9 +472,15 @@ function configurarEventos() {
  * Carga los datos iniciales de la aplicación
  */
 async function cargarDatosIniciales() {
+  console.log('📚 Iniciando carga de datos iniciales...');
   try {
     // Cargar versiones de Biblia
+    console.log('📖 Cargando versiones de Biblia...');
+    console.log('🔍 getBibleVersions disponible:', typeof getBibleVersions !== 'undefined' ? 'Sí' : 'No');
+    
     const versiones = await getBibleVersions();
+    console.log('✅ Versiones de Biblia cargadas:', versiones);
+    
     elementos.versionBiblia.innerHTML = '<option value="">Selecciona una versión</option>';
     let rv60Index = -1;
     versiones.forEach((version, idx) => {
@@ -273,22 +495,108 @@ async function cargarDatosIniciales() {
       elementos.versionBiblia.selectedIndex = rv60Index;
       await cambiarVersionBiblia();
     }
+    
     // Cargar índice de himnos
+    console.log('🎵 Cargando índice de himnos...');
+    console.log('🔍 getHymnIndex disponible:', typeof getHymnIndex !== 'undefined' ? 'Sí' : 'No');
+    
     indiceHimnos = await getHymnIndex();
+    console.log('✅ Índice de himnos cargado:', indiceHimnos ? indiceHimnos.length + ' himnos' : 'No disponible');
+    
+    console.log('✅ Datos iniciales cargados exitosamente');
   } catch (error) {
-    console.error('Error al cargar datos iniciales:', error);
+    console.error('❌ Error al cargar datos iniciales:', error);
+    console.error('🔍 Detalles del error:', {
+      message: error.message,
+      stack: error.stack
+    });
   }
 }
 
 /**
- * Abre la ventana del proyector
+ * Detecta si el dispositivo es móvil
+ */
+function esDispositivoMovil() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+         window.innerWidth <= 768;
+}
+
+/**
+ * Abre la ventana de proyección
  */
 function abrirProyector() {
+  const esMovil = esDispositivoMovil();
+  
+  if (esMovil) {
+    // Si es móvil, abrir automáticamente en nueva pestaña
+    const nuevaPestana = window.open('proyector.html', '_blank');
+    
+    // Mostrar instrucciones en la página actual
+    mostrarInstruccionesMovil();
+    
+    // Cambiar el texto del botón
+    const boton = document.getElementById('abrirProyector');
+    if (boton) {
+      boton.textContent = '✅ Proyección Abierta';
+      boton.style.background = '#28a745';
+      boton.style.color = 'white';
+      
+      // Restaurar después de 3 segundos
+      setTimeout(() => {
+        boton.textContent = 'Abrir Ventana de Proyección';
+        boton.style.background = '';
+        boton.style.color = '';
+      }, 3000);
+    }
+  } else {
+    // Si es PC, comportamiento normal
   if (proyectorWindow && !proyectorWindow.closed) {
     proyectorWindow.focus();
   } else {
     proyectorWindow = window.open('proyector.html', 'proyector', 'width=800,height=600');
+    }
   }
+}
+
+/**
+ * Muestra instrucciones para dispositivos móviles
+ */
+function mostrarInstruccionesMovil() {
+  // Crear o actualizar el elemento de instrucciones
+  let instrucciones = document.getElementById('instrucciones-movil');
+  if (!instrucciones) {
+    instrucciones = document.createElement('div');
+    instrucciones.id = 'instrucciones-movil';
+    instrucciones.style.cssText = `
+      background: #17a2b8;
+      color: white;
+      padding: 1em;
+      margin: 1em 0;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 14px;
+    `;
+    
+    // Insertar después del botón
+    const boton = document.getElementById('abrirProyector');
+    if (boton && boton.parentNode) {
+      boton.parentNode.insertBefore(instrucciones, boton.nextSibling);
+    }
+  }
+  
+  instrucciones.innerHTML = `
+    <strong>📱 Control Móvil Activo</strong><br>
+    ✅ Ventana de proyección abierta en la PC<br>
+    🎯 Ahora puedes controlar desde tu celular<br>
+    <small>La proyección aparecerá en la nueva pestaña de la PC</small>
+  `;
+  
+  // Ocultar después de 5 segundos
+  setTimeout(() => {
+    if (instrucciones) {
+      instrucciones.style.display = 'none';
+    }
+  }, 5000);
 }
 
 /**
@@ -300,18 +608,12 @@ function cambiarModo() {
   if (esModoBiblia) {
     elementos.controlBiblia.style.display = 'block';
     elementos.controlHimnario.style.display = 'none';
-    channel.postMessage({ 
-      tipo: 'change_mode', 
-      videoSrc: 'assets/videos/verso-bg.mkv' 
-    });
+    enviarMensajeProyector('change_mode', { videoSrc: 'assets/videos/verso-bg.mkv' });
     ocultarPlayFooter();
   } else {
     elementos.controlBiblia.style.display = 'none';
     elementos.controlHimnario.style.display = 'block';
-    channel.postMessage({ 
-      tipo: 'change_mode', 
-      videoSrc: 'assets/videos/himno-bg.mp4' 
-    });
+    enviarMensajeProyector('change_mode', { videoSrc: 'assets/videos/himno-bg.mp4' });
   }
   
   // Enviar configuración actualizada según el modo
@@ -320,7 +622,7 @@ function cambiarModo() {
     fontsize: esModoBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
     soloReferencia: esModoBiblia ? config.soloReferencia : null
   };
-  channel.postMessage({ tipo: 'config', config: configEnviar });
+  enviarMensajeProyector('config', configEnviar);
   
   limpiarVistaPrevia();
 }
@@ -633,18 +935,20 @@ async function mostrarListaHimnos(himnos) {
     }
   }
   
-  if (himnosValidos.length === 0) {
-    elementos.listaHimnos.innerHTML = '<div style="padding: 1em; color: #888;">No se encontraron himnos</div>';
-    return;
-  }
-  
-  himnosValidos.forEach((himno, idx) => {
+  // Mostrar solo los himnos válidos
+  himnosValidos.slice(0, 20).forEach((himno, idx) => {
     const div = document.createElement('div');
-    div.innerHTML = `<strong>${himno.number}</strong> - ${himno.title}`;
+    div.textContent = `${himno.number} - ${himno.title}`;
     div.dataset.himno = himno.file;
     if (idx === himnoSugeridoIndex) div.classList.add('selected');
     elementos.listaHimnos.appendChild(div);
   });
+  
+  if (himnosValidos.length > 0) {
+    elementos.listaHimnos.style.display = 'block';
+  } else {
+    elementos.listaHimnos.style.display = 'none';
+  }
 }
 
 /**
@@ -656,50 +960,31 @@ async function seleccionarHimno(event) {
   if (event.type === 'keydown' && event.selectedDiv) {
     target = event.selectedDiv;
   }
+  
   if (target && target.dataset.himno) {
     const himnoFile = target.dataset.himno;
-    // Obtener el título del himno seleccionado desde el elemento
-    const himnoDiv = target.closest('div');
-    if (himnoDiv) {
-      // El texto del div es "<strong>NUM</strong> - TÍTULO"
-      // Extraemos el título después del guion
-      const textoDiv = himnoDiv.textContent;
-      const partes = textoDiv.split(' - ');
-      if (partes.length > 1) {
-        elementos.buscarHimno.value = partes[1].trim();
-      } else {
-        elementos.buscarHimno.value = textoDiv.trim();
-      }
-    }
-    // Ocultar la lista de resultados
-    elementos.listaHimnos.innerHTML = '';
+    
     try {
-      console.log('Cargando himno:', himnoFile);
+      // Cargar el himno
       himnoActivo = await parseHymn(himnoFile);
       if (himnoActivo) {
-        console.log('Himno cargado exitosamente:', himnoActivo.titulo);
+        // Limpiar el título (remover "Himno #" si existe)
+        const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
+        
+        // Actualizar el input con el título del himno
+        elementos.buscarHimno.value = `${himnoActivo.numero} - ${tituloLimpio}`;
+        elementos.listaHimnos.style.display = 'none';
+        himnoSugeridoIndex = -1;
+        
+        // Cargar en vista previa
         cargarHimnoEnVistaPrevia();
-      } else {
-        console.error('No se pudo cargar el himno:', himnoFile);
-        // Mostrar mensaje de error en la vista previa
-        elementos.vistaPrevia.innerHTML = `
-          <div class="card" style="color: #f44336;">
-            <strong>Error:</strong> No se pudo cargar el himno "${himnoFile}"
-          </div>
-        `;
-        ocultarPlayFooter();
+        
+        // Enviar título al proyector
+        enviarEstrofaAlProyector(0);
       }
     } catch (error) {
-      console.error('Error al cargar el himno:', error);
-      // Mostrar mensaje de error en la vista previa
-      elementos.vistaPrevia.innerHTML = `
-        <div class="card" style="color: #f44336;">
-          <strong>Error:</strong> ${error.message}
-        </div>
-      `;
-      ocultarPlayFooter();
+      console.error('Error al cargar himno:', error);
     }
-    himnoSugeridoIndex = -1;
   }
 }
 
@@ -707,387 +992,192 @@ async function seleccionarHimno(event) {
  * Carga un himno en la vista previa
  */
 function cargarHimnoEnVistaPrevia() {
+  if (!himnoActivo) return;
+  
   elementos.vistaPrevia.innerHTML = '';
   
-  // Extraer número del título
-  let numero = himnoActivo.numero;
-  if (!numero && himnoActivo.titulo) {
-    const match = himnoActivo.titulo.match(/Himno #(\d+)/);
-    if (match) {
-      numero = match[1];
-    }
-  }
+  // Limpiar el título (remover "Himno #" si existe)
+  const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
   
-  // Si no se pudo extraer el número, usar 001 como fallback
-  if (!numero) {
-    numero = '001';
-  }
-  
-  // Formatear el número con ceros a la izquierda
-  const numeroFormateado = numero.padStart(3, '0');
-  
-  // Extraer título sin el prefijo "Himno #X"
-  let titulo = himnoActivo.titulo;
-  if (titulo) {
-    titulo = titulo.replace(/^Himno #\d+\s*/, '').trim();
-  }
-  
-  // Título del himno (sin botón play)
-  const tituloCard = document.createElement('div');
-  tituloCard.className = 'card';
-  tituloCard.dataset.estrofa = -1;
-  tituloCard.innerHTML = `<strong>${titulo}</strong>`;
-  elementos.vistaPrevia.appendChild(tituloCard);
-  
-  // Estrofas
-  if (himnoActivo.estrofas && himnoActivo.estrofas.length > 0) {
     himnoActivo.estrofas.forEach((estrofa, index) => {
       const card = document.createElement('div');
       card.className = 'card';
       card.dataset.estrofa = index;
-      card.textContent = estrofa;
-      elementos.vistaPrevia.appendChild(card);
-    });
+    
+    if (index === 0) {
+      // Es el título
+      card.innerHTML = `<strong>${himnoActivo.numero} | ${tituloLimpio}</strong>`;
   } else {
-    // Si no hay estrofas, mostrar mensaje
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.textContent = 'No se encontraron estrofas para este himno';
+      // Es una estrofa
+      const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
+      card.innerHTML = `<strong>${versoText}</strong><br>${estrofa.texto}`;
+    }
+    
     elementos.vistaPrevia.appendChild(card);
-  }
-
-  // Mostrar el botón play en el footer
-  const playBtn = document.getElementById('playHimnoFooter');
-  if (playBtn) playBtn.style.display = (audioMode === 'soloLetra') ? 'none' : '';
+    
+    // Agregar evento de clic
+    card.addEventListener('click', manejarClicCard);
+  });
+  
+  // Seleccionar la primera estrofa por defecto
+  estrofaActivaIndex = 0;
+  resaltarCard(0);
+  
+  // Mostrar el botón de reproducción
+  actualizarBotonPlayHimno();
 }
 
 /**
- * Maneja clics en cards de la vista previa
+ * Maneja el clic en una card de estrofa/versículo
  */
 function manejarClicCard(event) {
-  const card = event.target.closest('.card');
-  if (!card) return;
+  const card = event.currentTarget;
   const estrofaIndex = parseInt(card.dataset.estrofa);
-  const versiculoIndex = parseInt(card.dataset.versiculo);
-  if (!isNaN(estrofaIndex)) {
+  
+  if (elementos.modoSwitch.checked) {
+    // Modo Biblia
+    versiculoActivoIndex = estrofaIndex;
+    resaltarCard(estrofaIndex);
+    enviarVersiculoAlProyector(estrofaIndex);
+  } else {
     // Modo Himnario
     estrofaActivaIndex = estrofaIndex;
-    resaltarCard(estrofaIndex + 1);
+    resaltarCard(estrofaIndex);
     enviarEstrofaAlProyector(estrofaIndex);
-  } else if (!isNaN(versiculoIndex)) {
-    // Modo Biblia
-    versiculoActivoIndex = versiculoIndex;
-    resaltarCard(versiculoIndex);
-    enviarVersiculoAlProyector(versiculoIndex);
   }
 }
 
 /**
- * Resalta una card seleccionada
- */
-function resaltarCard(index) {
-  // Remover selección anterior
-  document.querySelectorAll('.card.selected').forEach(card => {
-    card.classList.remove('selected');
-  });
-  // Seleccionar nueva card
-  const cards = elementos.vistaPrevia.querySelectorAll('.card');
-  if (cards[index]) {
-    cards[index].classList.add('selected');
-  }
-}
-
-/**
- * Envía un versículo al proyector
- */
-function enviarVersiculoAlProyector(versiculoIndex) {
-  const capítulo = bibliaActual[libroActivo][capituloActivo];
-  const versiculo = capítulo[versiculoIndex];
-  const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
-
-  // Leer config
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
-  if (config.soloReferencia) {
-    channel.postMessage({
-      tipo: 'update_text',
-      texto: referencia,
-      ref: '',
-      soloReferencia: true
-    });
-  } else {
-    channel.postMessage({
-      tipo: 'update_text',
-      texto: versiculo.text,
-      ref: referencia,
-      soloReferencia: false
-    });
-  }
-}
-
-/**
- * Envía una estrofa al proyector
- */
-function enviarEstrofaAlProyector(estrofaIndex) {
-  let texto = '';
-  let ref = '';
-  let himnoData = null;
-  
-  // Extraer número del título
-  let numero = himnoActivo.numero;
-  if (!numero && himnoActivo.titulo) {
-    const match = himnoActivo.titulo.match(/Himno #(\d+)/);
-    if (match) {
-      numero = match[1];
-    }
-  }
-  
-  if (estrofaIndex === -1) {
-    // Es el título del himno
-    let titulo = himnoActivo.titulo;
-    if (titulo) {
-      titulo = titulo.replace(/^Himno #\d+\s*/, '').trim();
-    }
-    texto = titulo;
-    ref = `Himno ${numero || ''}`;
-    
-    // Datos para el título
-    himnoData = {
-      esTitulo: true,
-      numero: numero ? numero.padStart(3, '0') : '001',
-      titulo: titulo
-    };
-  } else {
-    // Es una estrofa
-    texto = himnoActivo.estrofas[estrofaIndex];
-    ref = `Himno ${numero || ''} - Estrofa ${estrofaIndex + 1}`;
-    
-    // Calcular datos de la estrofa
-    const totalSecciones = himnoActivo.estrofas.length;
-    const seccionActual = estrofaIndex + 1;
-    
-    // Determinar el tipo de estrofa y contar totales
-    let verseActual = '1';
-    let totalVerses = 1;
-    
-    // Si el himno tiene estructura de sections, usar esa información
-    if (himnoActivo.sections) {
-      const sections = Object.values(himnoActivo.sections);
-      const currentSection = sections[estrofaIndex];
-      if (currentSection && currentSection.verse) {
-        verseActual = currentSection.verse;
-        
-        // Contar cuántas estrofas únicas hay (excluyendo coros repetidos)
-        const verses = sections.map(s => s.verse);
-        const uniqueVerses = [...new Set(verses)];
-        totalVerses = uniqueVerses.length;
-        
-        // Si es coro, mostrar solo "Coro"
-        if (verseActual === 'coro') {
-          verseActual = 'coro';
-        } else {
-          // Para estrofas numeradas, mostrar el número actual
-          const verseNumber = parseInt(verseActual);
-          if (!isNaN(verseNumber)) {
-            verseActual = verseNumber.toString();
-          }
-        }
-      }
-    } else {
-      // Estimación basada en el número total de estrofas
-      // Asumir que hay aproximadamente 3-4 estrofas por himno
-      totalVerses = Math.min(4, Math.ceil(totalSecciones / 2));
-      verseActual = Math.min(estrofaIndex + 1, totalVerses).toString();
-    }
-    
-    himnoData = {
-      esTitulo: false,
-      numero: numero ? numero.padStart(3, '0') : '001',
-      titulo: himnoActivo.titulo ? himnoActivo.titulo.replace(/^Himno #\d+\s*/, '').trim() : '',
-      seccionActual: seccionActual,
-      totalSecciones: totalSecciones,
-      verseActual: verseActual,
-      totalVerses: totalVerses
-    };
-  }
-  
-  // Enviar al proyector con datos adicionales del himno
-  channel.postMessage({
-    tipo: 'update_text',
-    texto: texto,
-    ref: ref,
-    soloReferencia: false,
-    himnoData: himnoData
-  });
-}
-
-/**
- * Convierte un texto a formato sin tildes ni caracteres especiales
- * @param {string} texto - Texto a convertir
- * @returns {string} Texto sin tildes ni caracteres especiales
- */
-function normalizarTexto(texto) {
-  let resultado = texto
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remover acentos
-    .replace(/ñ/g, 'n')
-    .replace(/Ñ/g, 'n')
-    .replace(/[¿¡]/g, '') // Remover signos de interrogación y exclamación iniciales
-    .replace(/[^a-z0-9\s]/g, '') // Dejar solo letras, números y espacios
-    .replace(/\s+/g, ' ') // Reemplazar múltiples espacios con uno solo
-    .trim();
-
-  // Caso especial específico: solo para "¡Oh, jóvenes, venid!"
-  if (resultado === 'oh jovenes venid') {
-    resultado = 'oh jovenes venid';
-  }
-
-  return resultado;
-}
-
-/**
- * Busca el archivo de audio correcto para un himno
- * @param {string} numeroFormateado - Número del himno formateado (ej: "001")
- * @param {string} titulo - Título del himno (ya no se usará)
- * @returns {string} Ruta del archivo de audio
- */
-function construirRutaAudio(numeroFormateado, titulo) {
-  if (audioMode === 'cantado') {
-    return `assets/himnos/musica/cantado/${numeroFormateado}.mp3`;
-  } else if (audioMode === 'instrumental') {
-    return `assets/himnos/musica/instrumental/${numeroFormateado}.mp3`;
-  } else {
-    return '';
-  }
-}
-
-/**
- * Cambia el texto del botón play/stop según el estado
+ * Actualiza el botón de play del himno
  */
 function actualizarBotonPlayHimno() {
-  const playBtn = document.getElementById('playHimnoFooter');
-  if (!playBtn) return;
-  if (audioMode === 'soloLetra') {
-    playBtn.style.display = 'none';
+  if (!himnoActivo) {
+    ocultarPlayFooter();
     return;
   }
-  playBtn.style.display = '';
-  if (himnoSonando) {
-    playBtn.textContent = '⏹️ Stop';
-  } else {
-    playBtn.textContent = '▶️ Play';
+  
+  // Verificar si existe audio para este himno
+  const numeroFormateado = himnoActivo.numero.padStart(3, '0');
+  const rutaAudio = construirRutaAudio(numeroFormateado, himnoActivo.titulo);
+  
+  // Mostrar botón de play
+  const playHimnoFooter = document.getElementById('playHimnoFooter');
+  if (playHimnoFooter) {
+    playHimnoFooter.style.display = 'block';
   }
 }
 
 /**
- * Reproduce o detiene el audio del himno con fade out
+ * Construye la ruta del archivo de audio
+ */
+function construirRutaAudio(numeroFormateado, titulo) {
+  const tituloNormalizado = titulo.toLowerCase()
+    .replace(/[^a-z0-9]/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+  
+  return `assets/himnos/musica/${audioMode}/${numeroFormateado}.mp3`;
+}
+
+/**
+ * Reproduce un himno
  */
 async function reproducirHimno() {
-  if (audioMode === 'soloLetra') return;
-  const audio = elementos.reproductorAudio;
-  if (himnoSonando) {
-    // Si está sonando, hacer fade out y detener
-    if (fadeOutTimeout) clearTimeout(fadeOutTimeout);
-    let fadeDuration = 1000; // ms
-    let fadeSteps = 20;
-    let step = 0;
-    let initialVolume = audio.volume;
-    function fade() {
-      step++;
-      audio.volume = initialVolume * (1 - step / fadeSteps);
-      if (step < fadeSteps) {
-        fadeOutTimeout = setTimeout(fade, fadeDuration / fadeSteps);
-      } else {
-        audio.pause();
-        audio.currentTime = 0;
-        audio.volume = 1;
-        himnoSonando = false;
-        actualizarBotonPlayHimno();
-        // Quitar selección visual de estrofa y reiniciar índice
-        document.querySelectorAll('.card.selected').forEach(card => {
-          card.classList.remove('selected');
-        });
-        estrofaActivaIndex = -1;
-      }
-    }
-    fade();
-    return;
-  }
-
   if (!himnoActivo) return;
-  // Extraer número del título
-  let numero = himnoActivo.numero;
-  if (!numero && himnoActivo.titulo) {
-    const match = himnoActivo.titulo.match(/Himno #(\d+)/);
-    if (match) {
-      numero = match[1];
-    }
-  }
-  if (!numero) {
-    numero = '001';
-  }
-  const numeroFormateado = numero.padStart(3, '0');
-  let titulo = himnoActivo.titulo;
-  if (titulo) {
-    titulo = titulo.replace(/^Himno #\d+\s*/, '').trim();
-  }
+  
+  const numeroFormateado = himnoActivo.numero.padStart(3, '0');
+  const rutaAudio = construirRutaAudio(numeroFormateado, himnoActivo.titulo);
+  
   try {
-    const audioSrc = construirRutaAudio(numeroFormateado, titulo);
-    audio.src = audioSrc;
-    audio.volume = 1;
-    await audio.play();
+    console.log('🎵 Reproduciendo himno:', {
+      numero: himnoActivo.numero,
+      titulo: himnoActivo.titulo,
+      ruta: rutaAudio
+    });
+    
+    // Enviar comando de reproducción al proyector (PC)
+    enviarMensajeProyector('reproducirAudio', {
+      ruta: rutaAudio,
+      himno: himnoActivo.numero,
+      titulo: himnoActivo.titulo
+    });
+    
+    // NO reproducir en el panel de control (celular)
+    // El audio solo debe reproducirse en la PC
+    
     himnoSonando = true;
-    actualizarBotonPlayHimno();
-    // Enviar título al proyector
-    enviarEstrofaAlProyector(-1);
-    // Cuando termine el audio, volver a mostrar Play
-    audio.onended = () => {
-      himnoSonando = false;
-      actualizarBotonPlayHimno();
-    };
+    
+    // Cambiar el estado del botón
+    const playHimnoFooter = document.getElementById('playHimnoFooter');
+    if (playHimnoFooter) {
+      playHimnoFooter.textContent = '⏸️ Pausar Himno';
+      playHimnoFooter.style.background = '#dc3545';
+    }
+    
+    console.log('✅ Comando de reproducción enviado al proyector');
+    
   } catch (error) {
-    console.error('Error al reproducir audio:', error);
-    alert(`No se pudo reproducir el audio del himno ${numeroFormateado}`);
-    himnoSonando = false;
-    actualizarBotonPlayHimno();
+    console.error('❌ Error al reproducir himno:', error);
   }
 }
 
 /**
- * Navega entre elementos (anterior/siguiente)
+ * Navega entre estrofas/versículos
  */
 function navegar(direccion) {
-  const esModoBiblia = elementos.modoSwitch.checked;
-  
-  if (esModoBiblia && capituloActivo !== null) {
-    // Navegación en Biblia
+  if (elementos.modoSwitch.checked) {
+    // Modo Biblia
+    if (!bibliaActual || !libroActivo || capituloActivo === null || versiculoActivoIndex < 0) return;
+    
     const capítulo = bibliaActual[libroActivo][capituloActivo];
-    const nuevoIndex = versiculoActivoIndex + direccion;
+    const totalVersiculos = capítulo.length;
     
-    if (nuevoIndex >= 0 && nuevoIndex < capítulo.length) {
-      versiculoActivoIndex = nuevoIndex;
-      resaltarCard(nuevoIndex);
-      enviarVersiculoAlProyector(nuevoIndex);
-      // Resaltar el botón de la grilla de versículos
-      elementos.grillaVersiculos.querySelectorAll('button').forEach(btn => {
-        btn.classList.remove('selected');
-      });
-      const btns = elementos.grillaVersiculos.querySelectorAll('button');
-      if (btns[nuevoIndex]) {
-        btns[nuevoIndex].classList.add('selected');
-      }
-    }
-  } else if (!esModoBiblia && himnoActivo) {
-    // Navegación en Himnario
-    const nuevoIndex = estrofaActivaIndex + direccion;
-    const maxIndex = himnoActivo.estrofas.length - 1;
+    versiculoActivoIndex += direccion;
     
-    if (nuevoIndex >= -1 && nuevoIndex <= maxIndex) {
-      estrofaActivaIndex = nuevoIndex;
-      resaltarCard(nuevoIndex + 1); // +1 porque el título está en índice 0
-      enviarEstrofaAlProyector(nuevoIndex);
+    if (versiculoActivoIndex < 0) {
+      versiculoActivoIndex = totalVersiculos - 1;
+    } else if (versiculoActivoIndex >= totalVersiculos) {
+      versiculoActivoIndex = 0;
     }
+    
+    resaltarCard(versiculoActivoIndex);
+    enviarVersiculoAlProyector(versiculoActivoIndex);
+  } else {
+    // Modo Himnario
+    if (!himnoActivo || estrofaActivaIndex < 0) return;
+    
+    const totalEstrofas = himnoActivo.estrofas.length;
+    
+    estrofaActivaIndex += direccion;
+    
+    if (estrofaActivaIndex < 0) {
+      estrofaActivaIndex = totalEstrofas - 1;
+    } else if (estrofaActivaIndex >= totalEstrofas) {
+      estrofaActivaIndex = 0;
+    }
+    
+    // Resaltar la card seleccionada
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+      card.classList.toggle('selected', index === estrofaActivaIndex);
+    });
+    
+    enviarEstrofaAlProyector(estrofaActivaIndex);
   }
+}
+
+/**
+ * Resalta un versículo en la vista previa
+ */
+function resaltarCard(versiculoIndex) {
+  const cards = document.querySelectorAll('.card');
+  cards.forEach((card, index) => {
+    if (index === versiculoIndex) {
+      card.classList.add('selected');
+    } else {
+      card.classList.remove('selected');
+    }
+  });
 }
 
 /**
@@ -1097,145 +1187,99 @@ function limpiarVistaPrevia() {
   elementos.vistaPrevia.innerHTML = '';
   versiculoActivoIndex = -1;
   estrofaActivaIndex = -1;
+  himnoActivo = null;
+  ocultarPlayFooter();
 }
 
 /**
- * Limpia las grillas
+ * Limpia las grillas de capítulos y versículos
  */
 function limpiarGrillas() {
   elementos.grillaCapitulos.innerHTML = '';
   elementos.grillaVersiculos.innerHTML = '';
   capituloActivo = null;
-  libroActivo = null;
+  versiculoActivoIndex = -1;
 }
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', inicializar);
-
-// Ocultar el botón play del footer si no hay himno activo
+/**
+ * Oculta el footer de reproducción del himno
+ */
 function ocultarPlayFooter(forceHide = false) {
-  const playBtn = document.getElementById('playHimnoFooter');
-  if (playBtn) playBtn.style.display = (forceHide || audioMode === 'soloLetra') ? 'none' : '';
+  const playHimnoFooter = document.getElementById('playHimnoFooter');
+  if (playHimnoFooter) {
+    playHimnoFooter.style.display = forceHide ? 'none' : 'none';
+  }
 }
 
-// --- Navegación con teclado en sugerencias de libros ---
-function manejarTeclasSugerenciasLibros(e) {
-  const sugerencias = Array.from(elementos.sugerenciasLibros.querySelectorAll('div'));
-  if (elementos.sugerenciasLibros.style.display !== 'block' || sugerencias.length === 0) return;
-  // Si el input termina con un espacio, número, dos puntos, coma o punto después del nombre del libro, ocultar sugerencias y no hacer autocompletado
-  const terminaConCapituloOVersiculo = /^(\d+\s)?[\wáéíóúüñ]+[\s\d:.,]+$/i.test(elementos.buscarLibro.value);
-  if (terminaConCapituloOVersiculo) {
-    elementos.sugerenciasLibros.style.display = 'none';
-    libroSugeridoIndex = -1;
-    return; // No hacer autocompletado ni selección
-  }
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    libroSugeridoIndex = (libroSugeridoIndex + 1) % sugerencias.length;
-    actualizarSeleccionSugerenciasLibros(sugerencias);
-    return;
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    libroSugeridoIndex = (libroSugeridoIndex - 1 + sugerencias.length) % sugerencias.length;
-    actualizarSeleccionSugerenciasLibros(sugerencias);
-    return;
-  } else if (e.key === 'Enter') {
-    // Solo autocompletar si el input NO termina con un espacio, número, dos puntos, coma o punto después del nombre del libro
-    // (ya está cubierto arriba)
-    e.preventDefault();
-    if (libroSugeridoIndex >= 0 && libroSugeridoIndex < sugerencias.length) {
-      const selectedDiv = sugerencias[libroSugeridoIndex];
-      elementos.buscarLibro.value = selectedDiv.textContent + ' ';
-      elementos.sugerenciasLibros.style.display = 'none';
-      seleccionarLibro({ type: 'keydown', selectedDiv });
-      setTimeout(() => {
-        elementos.buscarLibro.focus();
-        elementos.buscarLibro.setSelectionRange(elementos.buscarLibro.value.length, elementos.buscarLibro.value.length);
-      }, 0);
-    }
-    return;
-  }
-  // Refuerza el resaltado visual en cualquier otra navegación
-  actualizarSeleccionSugerenciasLibros(sugerencias);
-}
-function actualizarSeleccionSugerenciasLibros(sugerencias) {
-  sugerencias.forEach((div, idx) => {
-    if (idx === libroSugeridoIndex) {
-      div.classList.add('selected');
-      // NO actualizar el input aquí para evitar el bug de reseteo de filtro
-      // Scroll automático al seleccionado
-      div.scrollIntoView({ block: 'nearest' });
-    } else {
-      div.classList.remove('selected');
-    }
-  });
-}
-// --- Navegación con teclado en lista de himnos ---
-function manejarTeclasListaHimnos(e) {
-  const himnos = Array.from(elementos.listaHimnos.querySelectorAll('div'));
-  if (elementos.listaHimnos.style.display === 'none' || himnos.length === 0) return;
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    himnoSugeridoIndex = (himnoSugeridoIndex + 1) % himnos.length;
-    actualizarSeleccionListaHimnos(himnos);
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    himnoSugeridoIndex = (himnoSugeridoIndex - 1 + himnos.length) % himnos.length;
-    actualizarSeleccionListaHimnos(himnos);
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (himnoSugeridoIndex >= 0 && himnoSugeridoIndex < himnos.length) {
-      const selectedDiv = himnos[himnoSugeridoIndex];
-      // Simular selección
-      seleccionarHimno({ type: 'keydown', selectedDiv });
-    }
-  }
-}
-function actualizarSeleccionListaHimnos(himnos) {
-  himnos.forEach((div, idx) => {
-    if (idx === himnoSugeridoIndex) {
-      div.classList.add('selected');
-      // Extraer solo el título para el input
-      const textoDiv = div.textContent;
-      const partes = textoDiv.split(' - ');
-      if (partes.length > 1) {
-        elementos.buscarHimno.value = partes[1].trim();
-      } else {
-        elementos.buscarHimno.value = textoDiv.trim();
-      }
-      // Scroll automático al seleccionado
-      div.scrollIntoView({ block: 'nearest' });
-    } else {
-      div.classList.remove('selected');
-    }
-  });
+/**
+ * Normaliza el texto para comparaciones
+ */
+function normalizarTexto(texto) {
+  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
+/**
+ * Inicializa el modo de audio
+ */
 function inicializarAudioMode() {
-  // Estado inicial
-  actualizarAudioModeUI();
-  // Listeners
-  elementos.btnCantado.addEventListener('click', () => {
-    audioMode = 'cantado';
-    actualizarAudioModeUI();
-    actualizarBotonPlayHimno();
-    if (himnoActivo) ocultarPlayFooter(false);
-  });
-  elementos.btnInstrumental.addEventListener('click', () => {
-    audioMode = 'instrumental';
-    actualizarAudioModeUI();
-    actualizarBotonPlayHimno();
-    if (himnoActivo) ocultarPlayFooter(false);
-  });
-  elementos.btnSoloLetra.addEventListener('click', () => {
-    audioMode = 'soloLetra';
-    actualizarAudioModeUI();
-    ocultarPlayFooter(true);
-  });
+  // Implementa la inicialización del modo de audio
 }
 
-function actualizarAudioModeUI() {
-  elementos.btnCantado.classList.toggle('selected', audioMode === 'cantado');
-  elementos.btnInstrumental.classList.toggle('selected', audioMode === 'instrumental');
-  elementos.btnSoloLetra.classList.toggle('selected', audioMode === 'soloLetra');
+/**
+ * Maneja teclas de navegación en sugerencias de libros
+ */
+function manejarTeclasSugerenciasLibros(event) {
+  if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
+    const sugerencias = document.querySelectorAll('.sugerenciasLibros div');
+    let index = Array.from(sugerencias).findIndex(div => div.classList.contains('selected'));
+    
+    if (event.key === "ArrowUp") {
+      index = (index - 1 + sugerencias.length) % sugerencias.length;
+    } else if (event.key === "ArrowDown") {
+      index = (index + 1) % sugerencias.length;
+    } else if (event.key === "Enter") {
+      const selectedDiv = sugerencias[index];
+      if (selectedDiv) {
+        seleccionarLibro({ type: 'click', selectedDiv });
+      }
+    }
+    
+  sugerencias.forEach((div, idx) => {
+      div.classList.toggle('selected', idx === index);
+    });
+  }
 }
+
+/**
+ * Maneja teclas de navegación en lista de himnos
+ */
+function manejarTeclasListaHimnos(event) {
+  if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
+    const himnos = document.querySelectorAll('.listaHimnos div');
+    let index = Array.from(himnos).findIndex(div => div.classList.contains('selected'));
+    
+    if (event.key === "ArrowUp") {
+      index = (index - 1 + himnos.length) % himnos.length;
+    } else if (event.key === "ArrowDown") {
+      index = (index + 1) % himnos.length;
+    } else if (event.key === "Enter") {
+      const selectedDiv = himnos[index];
+      if (selectedDiv) {
+        seleccionarHimno({ type: 'click', target: selectedDiv });
+      }
+    }
+    
+  himnos.forEach((div, idx) => {
+      div.classList.toggle('selected', idx === index);
+    });
+  }
+}
+
+// Inicializar la aplicación cuando el DOM esté listo
+console.log('📋 DOM cargado, iniciando aplicación...');
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('🎯 DOMContentLoaded disparado, llamando a inicializar()...');
+  inicializar().catch(error => {
+    console.error('❌ Error al inicializar la aplicación:', error);
+  });
+});

@@ -88,4 +88,75 @@ Para verificar que todo funciona correctamente, abre `test.html` en el navegador
 
 - Navegador moderno con soporte para ES6 modules
 - Servidor web local para desarrollo (debido a CORS)
-- Archivos de audio en formato MP3 para himnos 
+- Archivos de audio en formato MP3 para himnos
+
+## Control Remoto desde Celular
+
+### Opción 1: Acceso Web Local (Recomendado)
+
+Para controlar el proyector desde tu celular:
+
+1. **Configurar servidor web local:**
+   ```bash
+   # Usando Python (si tienes Python instalado)
+   python -m http.server 8080
+   
+   # O usando Node.js (si tienes Node.js instalado)
+   npx http-server -p 8080
+   ```
+
+2. **Encontrar la IP de tu computadora:**
+   - En Windows: `ipconfig` en CMD
+   - En Mac/Linux: `ifconfig` o `ip addr` en terminal
+   - Busca la IP local (ej: 192.168.1.100)
+
+3. **Acceder desde el celular:**
+   - Conecta tu celular a la misma red WiFi
+   - Abre el navegador en tu celular
+   - Ve a: `http://[IP-DE-TU-PC]:8080`
+   - Ejemplo: `http://192.168.1.100:8080`
+
+4. **Usar el panel de control:**
+   - El panel de control funcionará igual que en la PC
+   - Puedes buscar himnos, versículos bíblicos y controlar la proyección
+   - La ventana de proyección seguirá abierta en la PC
+
+### Opción 2: Aplicación Móvil Personalizada
+
+Para una experiencia más optimizada, podrías crear una aplicación móvil que se conecte al sistema:
+
+1. **API REST simple** - Crear endpoints para:
+   - Buscar himnos
+   - Buscar versículos bíblicos
+   - Enviar contenido al proyector
+   - Controlar navegación
+
+2. **Aplicación móvil** - Usando:
+   - React Native
+   - Flutter
+   - PWA (Progressive Web App)
+
+### Opción 3: Control por Bluetooth/WiFi Direct
+
+Para control sin red WiFi:
+- Usar WebRTC para conexión directa
+- Implementar servidor WebSocket
+- Crear app móvil con conexión directa
+
+## Configuración de Red
+
+### Requisitos:
+- PC y celular en la misma red WiFi
+- Firewall configurado para permitir conexiones al puerto
+- Navegador moderno en el celular
+
+### Solución de Problemas:
+- Si no funciona, verifica que ambos dispositivos estén en la misma red
+- Asegúrate de que el firewall no bloquee las conexiones
+- Prueba con diferentes puertos si el 8080 está ocupado
+
+## Seguridad
+
+- Solo usar en redes confiables
+- Considerar agregar autenticación básica
+- Limitar acceso solo a dispositivos autorizados 

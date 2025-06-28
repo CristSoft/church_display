@@ -1,8 +1,12 @@
+// dataManager.js - Script normal (no módulo)
+
+console.log('📚 dataManager.js cargando...');
+
 /**
  * Obtiene la lista de versiones de la Biblia disponibles.
  * @returns {Promise<Array<{file: string, description: string}>>}
  */
-export async function getBibleVersions() {
+async function getBibleVersions() {
   try {
     // Crear un archivo de índice que liste las biblias disponibles
     // Como no podemos leer el directorio directamente desde el navegador,
@@ -72,7 +76,7 @@ export async function getBibleVersions() {
  * @param {string} versionFileName - Nombre del archivo XML (ej. 'RVR1960.xml')
  * @returns {Promise<Object>} Objeto con la estructura { Libro: [ [ {verse, text}, ... ], ... ] }
  */
-export async function parseBible(versionFileName) {
+async function parseBible(versionFileName) {
   try {
     const response = await fetch(`assets/biblias/${versionFileName}`);
     
@@ -125,7 +129,7 @@ export async function parseBible(versionFileName) {
  * Obtiene el índice de himnos disponibles.
  * @returns {Promise<Array<{number: string, title: string, file: string}>>}
  */
-export async function getHymnIndex() {
+async function getHymnIndex() {
   try {
     // Lista hardcodeada de himnos basada en los archivos disponibles
     // Esto es una solución temporal hasta que se implemente un sistema de indexación dinámica
@@ -756,59 +760,60 @@ export async function getHymnIndex() {
  * @param {string} hymnFileName - Nombre del archivo JSON del himno
  * @returns {Promise<Object>} Objeto con la letra del himno
  */
-export async function parseHymn(hymnFileName) {
+async function parseHymn(hymnFileName) {
   try {
     const response = await fetch(`assets/himnos/letra/${hymnFileName}`);
     if (!response.ok) throw new Error('No se pudo cargar el himno');
     const data = await response.json();
     
+    // Extraer el número del nombre del archivo (ej: "246 - Te quiero, mi Señor.json" -> "246")
+    const numeroMatch = hymnFileName.match(/^(\d+)/);
+    const numero = numeroMatch ? numeroMatch[1] : '';
+    
     // Convertir la estructura de sections a estrofas
     const himno = {
       titulo: data.title || 'Himno',
-      numero: data.number || '',
+      numero: numero, // Usar el número extraído del nombre del archivo
       estrofas: [],
-      sections: data.sections || null // Preservar la información de secciones
+      sections: data.sections || {}
     };
     
-    // Si tiene sections, convertir a estrofas
+    // Procesar las secciones y convertirlas a estrofas
     if (data.sections) {
-      const sections = Object.values(data.sections);
-      sections.forEach(section => {
-        if (section.text && Array.isArray(section.text)) {
-          // Unir las líneas de la estrofa
-          const estrofa = section.text.join('\n');
-          himno.estrofas.push(estrofa);
+      const sectionKeys = Object.keys(data.sections).sort((a, b) => parseInt(a) - parseInt(b));
+      
+      sectionKeys.forEach(sectionKey => {
+        const section = data.sections[sectionKey];
+        if (section && section.text && Array.isArray(section.text)) {
+          // Unir las líneas de texto en una sola estrofa
+          const textoCompleto = section.text.join('\n');
+          
+          himno.estrofas.push({
+            verso: section.verse || sectionKey,
+            texto: textoCompleto,
+            sectionKey: sectionKey
+          });
         }
       });
     }
-    // Si ya tiene estrofas, usarlas directamente
-    else if (data.estrofas && Array.isArray(data.estrofas)) {
-      himno.estrofas = data.estrofas;
-    }
-    // Si tiene letra como string, dividir por líneas
-    else if (data.letra) {
-      const lineas = data.letra.split('\n');
-      let estrofaActual = '';
-      
-      lineas.forEach(linea => {
-        if (linea.trim() === '') {
-          if (estrofaActual.trim()) {
-            himno.estrofas.push(estrofaActual.trim());
-            estrofaActual = '';
-          }
-        } else {
-          estrofaActual += (estrofaActual ? '\n' : '') + linea;
-        }
-      });
-      
-      if (estrofaActual.trim()) {
-        himno.estrofas.push(estrofaActual.trim());
-      }
-    }
+    
+    console.log('📖 Himno cargado:', {
+      numero: himno.numero,
+      titulo: himno.titulo,
+      estrofas: himno.estrofas.length
+    });
     
     return himno;
   } catch (err) {
     console.error('Error al cargar el himno:', err);
     return null;
   }
-} 
+}
+
+// Hacer las funciones disponibles globalmente
+console.log('🌐 Haciendo funciones disponibles globalmente...');
+window.getBibleVersions = getBibleVersions;
+window.parseBible = parseBible;
+window.getHymnIndex = getHymnIndex;
+window.parseHymn = parseHymn;
+console.log('✅ dataManager.js cargado completamente');
