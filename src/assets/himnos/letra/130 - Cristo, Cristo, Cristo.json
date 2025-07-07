@@ -1,0 +1,33 @@
+{
+  "title": "Himno #130 Cristo, Cristo, Cristo",
+  "sections": {
+    "1": {
+      "verse": "1",
+      "text": [
+        "Cristo, Cristo, Cristo;",
+        "otro nombre no hay igual."
+      ]
+    },
+    "2": {
+      "verse": "1",
+      "text": [
+        "Santo, tierno, puro;",
+        "tú llevaste la cruz por mí."
+      ]
+    },
+    "3": {
+      "verse": "1",
+      "text": [
+        "Cristo, Cristo, Cristo,",
+        "cielo y tierra te alabarán."
+      ]
+    },
+    "4": {
+      "verse": "1",
+      "text": [
+        "Rey de reyes, sublime Señor,",
+        "no hay otro igual a ti."
+      ]
+    }
+  }
+}

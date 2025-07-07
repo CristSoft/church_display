@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Proyector</title>
+    <link rel="stylesheet" href="/css/proyector.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+        /* Estilos para el botón de habilitación de audio */
+        #audio-enabler {
+            position: fixed;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        #audio-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        #audio-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #d32f2f; /* rojo por defecto */
+            box-shadow: 0 0 12px 2px rgba(0,0,0,0.5);
+            z-index: 9999;
+            border: 3px solid #111;
+            display: none;
+            transition: background 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        #audio-indicator.enabled {
+            background: #43a047; /* verde */
+            box-shadow: 0 0 16px 4px rgba(67,160,71,0.6);
+        }
+        #audio-indicator::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: 110%;
+            right: 50%;
+            transform: translateX(50%);
+            background: #222;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        #audio-indicator:hover::after {
+            opacity: 1;
+        }
+        
+        /* Círculo rojo en esquina superior derecha */
+        #circulo-indicador {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff0000; /* rojo */
+            box-shadow: 0 0 8px 2px rgba(255,0,0,0.4);
+            z-index: 99999; /* z-index más alto posible */
+            border: 1px solid #ffffff;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        #circulo-indicador.verde {
+            background: #00ff00; /* verde */
+            box-shadow: 0 0 12px 3px rgba(0,255,0,0.6);
+        }
+        
+        #circulo-indicador.oculto {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <video autoplay muted loop id="video-bg">
+        <source src="/src/assets/videos/verso-bg.mp4" type="video/mp4">
+        <!-- El src se cambiará con JS -->
+    </video>
+    
+    <!-- Botón invisible para habilitar audio -->
+    <button id="audio-enabler" type="button">Habilitar Audio</button>
+    
+    <!-- Indicador de estado del audio -->
+    <div id="audio-status">Audio: Deshabilitado</div>
+    
+    <!-- Indicador de audio -->
+    <div id="audio-indicator" data-tooltip="Haz clic para habilitar el audio"></div>
+    
+    <!-- Círculo indicador en esquina superior derecha -->
+    <div id="circulo-indicador"></div>
+    
+    <div id="contenido">
+        <!-- Contador de sección (arriba a la derecha) -->
+        <div id="contador-seccion"></div>
+        
+        <!-- Indicador de estrofa (centrado arriba) -->
+        <div id="indicador-estrofa"></div>
+        
+        <p id="texto-principal"></p>
+        <footer id="referencia"></footer>
+    </div>
+    
+    <!-- Script para habilitar audio automáticamente -->
+    <script>
+        // Variable global para el estado del audio
+        window.audioEnabled = false;
+        const audioStatus = document.getElementById('audio-status');
+        const audioEnabler = document.getElementById('audio-enabler');
+        const audioIndicator = document.getElementById('audio-indicator');
+        
+        // Función para actualizar el indicador de estado
+        function updateAudioStatus(enabled) {
+            window.audioEnabled = enabled;
+            audioStatus.textContent = `Audio: ${enabled ? 'Habilitado' : 'Deshabilitado'}`;
+            audioStatus.style.display = 'block';
+            audioStatus.style.background = enabled ? 'rgba(0,255,0,0.7)' : 'rgba(255,0,0,0.7)';
+            
+            // Ocultar el indicador después de 3 segundos si está habilitado
+            if (enabled) {
+                setTimeout(() => {
+                    audioStatus.style.display = 'none';
+                }, 3000);
+            }
+        }
+        
+        function showAudioIndicator(enabled) {
+            if (enabled) {
+                audioIndicator.classList.add('enabled');
+                audioIndicator.setAttribute('data-tooltip', 'Audio habilitado');
+                audioIndicator.style.display = 'block';
+                setTimeout(() => {
+                    audioIndicator.style.display = 'none';
+                }, 2500);
+            } else {
+                audioIndicator.classList.remove('enabled');
+                audioIndicator.setAttribute('data-tooltip', 'Haz clic para habilitar el audio');
+                audioIndicator.style.display = 'block';
+            }
+        }
+        
+        // Función para habilitar el contexto de audio
+        function enableAudioContext() {
+            if (window.audioEnabled) return Promise.resolve();
+            
+            return new Promise((resolve, reject) => {
+                try {
+                    // Estrategia 1: Crear un audio temporal y reproducirlo
+                    const tempAudio = new Audio();
+                    tempAudio.volume = 0;
+                    
+                    // Estrategia 2: Usar Web Audio API si está disponible
+                    let audioContext = null;
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        try {
+                            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        } catch (e) {
+                            console.log('Web Audio API no disponible:', e);
+                        }
+                    }
+                    
+                    // Intentar reproducir el audio temporal
+                    const playPromise = tempAudio.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise
+                            .then(() => {
+                                console.log('✅ Audio habilitado exitosamente');
+                                updateAudioStatus(true);
+                                showAudioIndicator(true);
+                                
+                                // Si tenemos AudioContext, también lo resumimos
+                                if (audioContext && audioContext.state === 'suspended') {
+                                    audioContext.resume();
+                                }
+                                
+                                resolve();
+                            })
+                            .catch(error => {
+                                console.log('⚠️ No se pudo habilitar audio automáticamente:', error);
+                                
+                                // Estrategia 3: Intentar con AudioContext
+                                if (audioContext && audioContext.state === 'suspended') {
+                                    audioContext.resume().then(() => {
+                                        console.log('✅ Audio habilitado via AudioContext');
+                                        updateAudioStatus(true);
+                                        showAudioIndicator(true);
+                                        resolve();
+                                    }).catch(reject);
+                                } else {
+                                    updateAudioStatus(false);
+                                    showAudioIndicator(false);
+                                    reject(error);
+                                }
+                            });
+                    } else {
+                        // Fallback para navegadores más antiguos
+                        console.log('ℹ️ Navegador no soporta play() promise');
+                        updateAudioStatus(true);
+                        showAudioIndicator(true);
+                        resolve();
+                    }
+                } catch (error) {
+                    console.error('❌ Error al habilitar audio:', error);
+                    updateAudioStatus(false);
+                    showAudioIndicator(false);
+                    reject(error);
+                }
+            });
+        }
+        
+        // Habilitar audio al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Intentando habilitar audio automáticamente...');
+            
+            // Intentar habilitar audio inmediatamente
+            enableAudioContext().catch(() => {
+                console.log('ℹ️ Audio no se pudo habilitar automáticamente');
+            });
+            
+            // También intentar cuando el usuario interactúe con la página
+            const enableOnInteraction = () => {
+                enableAudioContext().then(() => {
+                    // Remover los event listeners una vez que el audio esté habilitado
+                    document.removeEventListener('click', enableOnInteraction);
+                    document.removeEventListener('keydown', enableOnInteraction);
+                    document.removeEventListener('touchstart', enableOnInteraction);
+                }).catch(() => {
+                    // Si falla, mantener los listeners activos
+                });
+            };
+            
+            document.addEventListener('click', enableOnInteraction);
+            document.addEventListener('keydown', enableOnInteraction);
+            document.addEventListener('touchstart', enableOnInteraction);
+        });
+        
+        // Habilitar audio al hacer clic en cualquier parte de la página
+        document.addEventListener('click', function() {
+            if (!window.audioEnabled) {
+                enableAudioContext().catch(() => {
+                    console.log('ℹ️ Audio ya habilitado o no disponible');
+                });
+            }
+        }, { once: false });
+        
+        // Exponer la función globalmente para que pueda ser usada desde proyector.js
+        window.enableAudioContext = enableAudioContext;
+    </script>
+    
+    <!-- Script para el círculo indicador -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const circuloIndicador = document.getElementById('circulo-indicador');
+            
+            // Función para manejar el clic en cualquier parte de la pantalla
+            function manejarClicPantalla() {
+                // Cambiar a verde
+                circuloIndicador.classList.add('verde');
+                
+                // Eliminar el elemento del DOM después de 3 segundos
+                setTimeout(() => {
+                    circuloIndicador.remove();
+                }, 3000);
+            }
+            
+            // Agregar event listener para el clic en cualquier parte de la pantalla
+            document.addEventListener('click', manejarClicPantalla);
+        });
+    </script>
+    
+    <script src="/src/js/proyector.js"></script>
+</body>
+</html>
