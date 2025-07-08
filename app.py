@@ -67,10 +67,14 @@ def test_fadeout():
 def test_audio_auto():
     return send_from_directory('.', 'test_audio_auto.html')
 
+proyector_abierto = False  # Estado global del proyector
+
 # Eventos de SocketIO
 @socketio.on('connect')
 def handle_connect():
     print(f'✅ Cliente conectado: {request.sid}')
+    # Enviar el estado actual del proyector al nuevo cliente
+    emit('estadoProyector', {'abierto': proyector_abierto})
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -121,13 +125,17 @@ def on_proyector_click():
 # --- NUEVO: Reenviar proyectorAbierto y proyectorCerrado a todos los clientes ---
 @socketio.on('proyectorAbierto')
 def on_proyector_abierto():
+    global proyector_abierto
+    proyector_abierto = True
     print(f'📤 Recibido proyectorAbierto (reenviando a todos los clientes)')
-    emit('proyectorAbierto', broadcast=True, include_self=False)
+    emit('proyectorAbierto', broadcast=True)  # include_self=True por defecto
 
 @socketio.on('proyectorCerrado')
 def on_proyector_cerrado():
+    global proyector_abierto
+    proyector_abierto = False
     print(f'📤 Recibido proyectorCerrado (reenviando a todos los clientes)')
-    emit('proyectorCerrado', broadcast=True, include_self=False)
+    emit('proyectorCerrado', broadcast=True)  # include_self=True por defecto
 
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask-SocketIO para Church Display...")

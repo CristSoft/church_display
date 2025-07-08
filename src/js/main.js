@@ -107,34 +107,58 @@ function inicializarSocketIO() {
       }
     });
 
-    // --- NUEVO: listeners para sincronización de proyector ---
+    // Handler de proyectorAbierto
     socket.on('proyectorAbierto', () => {
-      console.log('Evento proyectorAbierto recibido');
       proyectorPendienteClick = true;
       const boton = document.getElementById('abrirProyector');
       if (boton) {
+        boton.classList.add('proyector-abierto');
+        boton.classList.remove('proyector-normal');
         boton.style.display = '';
-        boton.style.background = '#dc3545';
-        boton.style.color = '#fff';
         boton.textContent = 'No olvides hacer click en el proyector';
         boton.style.pointerEvents = 'none';
         boton.style.cursor = 'not-allowed';
       }
       actualizarVisibilidadBotonProyector();
     });
+    // Handler de proyectorCerrado
     socket.on('proyectorCerrado', () => {
-      console.log('Evento proyectorCerrado recibido');
       proyectorPendienteClick = false;
       const boton = document.getElementById('abrirProyector');
       if (boton) {
+        boton.classList.remove('proyector-abierto');
+        boton.classList.add('proyector-normal');
         boton.style.display = '';
-        boton.style.background = '';
-        boton.style.color = '';
         boton.textContent = 'Abrir Ventana de Proyección';
         boton.style.pointerEvents = '';
         boton.style.cursor = '';
       }
       actualizarVisibilidadBotonProyector();
+    });
+
+    // Estado inicial del proyector
+    socket.on('estadoProyector', (data) => {
+      const boton = document.getElementById('abrirProyector');
+      if (data && typeof data.abierto !== 'undefined' && boton) {
+        if (data.abierto) {
+          proyectorPendienteClick = true;
+          boton.classList.add('proyector-abierto');
+          boton.classList.remove('proyector-normal');
+          boton.style.display = '';
+          boton.textContent = 'No olvides hacer click en el proyector';
+          boton.style.pointerEvents = 'none';
+          boton.style.cursor = 'not-allowed';
+        } else {
+          proyectorPendienteClick = false;
+          boton.classList.remove('proyector-abierto');
+          boton.classList.add('proyector-normal');
+          boton.style.display = '';
+          boton.textContent = 'Abrir Ventana de Proyección';
+          boton.style.pointerEvents = '';
+          boton.style.cursor = '';
+        }
+        actualizarVisibilidadBotonProyector();
+      }
     });
 
     console.log('🔌 SocketIO inicializado correctamente');
@@ -307,7 +331,7 @@ async function inicializar() {
   zonaRetroceder = document.getElementById('zonaRetroceder');
   zonaAvanzar = document.getElementById('zonaAvanzar');
   proyectorPreviewContent = document.getElementById('proyectorPreviewContent');
-  vistaActual = 'lista';
+  vistaActual = 'proyector';
 
   miniProyectorVideo = document.getElementById('miniProyectorVideo');
   miniProyectorContainer = document.getElementById('vistaProyector');
@@ -322,9 +346,9 @@ async function inicializar() {
     });
   }
 
-  // Estado inicial: solo la lista visible
-  if (vistaPrevia) vistaPrevia.style.display = 'block';
-  if (vistaProyector) vistaProyector.style.display = 'none';
+  // Estado inicial: solo la vista proyector visible
+  if (vistaPrevia) vistaPrevia.style.display = 'none';
+  if (vistaProyector) vistaProyector.style.display = 'flex';
   actualizarTopBarTitulo();
 
   // Botón para alternar vista
@@ -618,20 +642,7 @@ function abrirProyector() {
     // Mostrar instrucciones en la página actual
     mostrarInstruccionesMovil();
     
-    // Cambiar el texto del botón
-    const boton = document.getElementById('abrirProyector');
-    if (boton) {
-      boton.textContent = '✅ Proyección Abierta';
-      boton.style.background = '#28a745';
-      boton.style.color = 'white';
-      
-      // Restaurar después de 3 segundos
-      setTimeout(() => {
-        boton.textContent = 'Abrir Ventana de Proyección';
-        boton.style.background = '';
-        boton.style.color = '';
-      }, 3000);
-    }
+    // Cambiar el texto del botón SOLO por socket
     actualizarVisibilidadBotonProyector();
     // Emitir evento para sincronizar con otros paneles
     if (window.socket) {
@@ -639,48 +650,28 @@ function abrirProyector() {
     }
   } else {
     // Si es PC, comportamiento normal
-  if (proyectorWindow && !proyectorWindow.closed) {
-    proyectorWindow.focus();
-  } else {
-    proyectorWindow = window.open('proyector.html', 'proyector', 'width=800,height=600');
-    proyectorPendienteClick = true;
-    // Cambia el botón a rojo y el texto
-    const boton = document.getElementById('abrirProyector');
-    if (boton) {
-      boton.style.background = '#dc3545';
-      boton.style.color = '#fff';
-      boton.textContent = 'No olvides hacer click en el proyector';
-      boton.style.display = '';
-      boton.style.pointerEvents = 'none';
-      boton.style.cursor = 'not-allowed';
-    }
-    // Emitir evento para sincronizar con otros paneles
-    if (window.socket) {
-      window.socket.emit('proyectorAbierto');
-    }
-    // Monitorea si la ventana se cierra manualmente
-    const checkInterval = setInterval(() => {
-      if (!proyectorWindow || proyectorWindow.closed) {
-        clearInterval(checkInterval);
-        proyectorWindow = null;
-        proyectorPendienteClick = false;
-        // Restaura el botón
-        const boton = document.getElementById('abrirProyector');
-        if (boton) {
-          boton.style.background = '';
-          boton.style.color = '';
-          boton.textContent = 'Abrir Ventana de Proyección';
-          boton.style.display = '';
-          boton.style.pointerEvents = '';
-          boton.style.cursor = '';
-        }
-        // Emitir evento para sincronizar con otros paneles
-        if (window.socket) {
-          window.socket.emit('proyectorCerrado');
-        }
+    if (proyectorWindow && !proyectorWindow.closed) {
+      proyectorWindow.focus();
+    } else {
+      proyectorWindow = window.open('proyector.html', 'proyector', 'width=800,height=600');
+      proyectorPendienteClick = true;
+      // NO cambiar el botón aquí, solo emitir el evento
+      if (window.socket) {
+        window.socket.emit('proyectorAbierto');
       }
-    }, 1000);
-  }
+      // Monitorea si la ventana se cierra manualmente
+      const checkInterval = setInterval(() => {
+        if (!proyectorWindow || proyectorWindow.closed) {
+          clearInterval(checkInterval);
+          proyectorWindow = null;
+          proyectorPendienteClick = false;
+          // Restaura el botón SOLO por socket
+          if (window.socket) {
+            window.socket.emit('proyectorCerrado');
+          }
+        }
+      }, 1000);
+    }
   }
 }
 
@@ -1704,12 +1695,12 @@ console.log('📋 DOM cargado, iniciando aplicación...');
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🎯 DOMContentLoaded disparado, llamando a inicializar()...');
   inicializar().then(() => {
-    if (vistaPrevia) vistaPrevia.style.display = 'block';
-    if (vistaProyector) vistaProyector.style.display = 'none';
-    vistaActual = 'lista';
+    if (vistaPrevia) vistaPrevia.style.display = 'none';
+    if (vistaProyector) vistaProyector.style.display = 'flex';
+    vistaActual = 'proyector';
     actualizarTopBarTitulo();
     const botonera = document.getElementById('botoneraNavegacion');
-    if (botonera) botonera.style.display = 'flex';
+    if (botonera) botonera.style.display = 'none';
     const playMini = document.getElementById('playHimnoMiniProyector');
     if (playMini) {
       playMini.addEventListener('click', () => {
@@ -1728,23 +1719,26 @@ function actualizarVisibilidadBotonProyector() {
   const body = document.body;
   if (!boton) return;
   if (proyectorWindow && !proyectorWindow.closed && proyectorPendienteClick) {
-    boton.style.background = '#dc3545';
-    boton.style.color = '#fff';
-    boton.textContent = 'No olvides hacer click en el proyector';
+    boton.classList.add('proyector-abierto');
+    boton.classList.remove('proyector-normal');
     boton.style.display = '';
+    boton.textContent = 'No olvides hacer click en el proyector';
     boton.style.pointerEvents = 'none';
     boton.style.cursor = 'not-allowed';
     body.classList.add('con-boton-proyector');
   } else if (proyectorWindow && !proyectorWindow.closed && !proyectorPendienteClick) {
-    boton.style.display = 'none';
+    boton.classList.remove('proyector-abierto');
+    boton.classList.add('proyector-normal');
+    boton.style.display = '';
+    boton.textContent = 'Abrir Ventana de Proyección';
     boton.style.pointerEvents = '';
     boton.style.cursor = '';
     body.classList.remove('con-boton-proyector');
   } else {
-    boton.style.background = '';
-    boton.style.color = '';
-    boton.textContent = 'Abrir Ventana de Proyección';
+    boton.classList.remove('proyector-abierto');
+    boton.classList.add('proyector-normal');
     boton.style.display = '';
+    boton.textContent = 'Abrir Ventana de Proyección';
     boton.style.pointerEvents = '';
     boton.style.cursor = '';
     body.classList.add('con-boton-proyector');

@@ -24,7 +24,31 @@
       </button>
     </div>
     
-    <button id="abrirProyector" class="btn-abrir-proyector">Abrir Ventana de Proyección</button>
+    <button id="abrirProyector" class="btn-abrir-proyector proyector-normal">Abrir Ventana de Proyección</button>
+    <!-- Script para deshabilitar el botón en móviles -->
+    <!--
+    <script>
+      // Deshabilitar el botón en móviles solo visualmente (sin usar 'disabled')
+      function esDispositivoMovil() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        if (esDispositivoMovil()) {
+          var btn = document.getElementById('abrirProyector');
+          // btn.disabled = true; // Eliminado: solo CSS
+          btn.style.opacity = '0.6';
+          btn.style.filter = 'grayscale(0.5)';
+          btn.style.cursor = 'not-allowed';
+          btn.title = 'No disponible en dispositivos móviles';
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          }, true);
+        }
+      });
+    </script>
+    -->
     <!-- Modal de configuración -->
     <div id="configModal">
       <div class="config-modal-content">

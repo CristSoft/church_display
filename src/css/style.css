@@ -1,3 +1,12 @@
+/* Variables */
+/** Variable CSS para el color dorado principal */
+:root {
+  --color-gris-base:#23272b;
+  /* --color-destacado: #ffd700; */
+  --color-destacado: #64a8e7;
+}
+
+
 /* Tema oscuro general */
 body {
   background: #181c20;
@@ -13,7 +22,7 @@ body {
 button,
 select,
 input[type="text"] {
-  background: #23272b;
+  background: var(--color-gris-base);
   color: #f1f1f1;
   border: 1px solid #333;
   border-radius: 4px;
@@ -75,7 +84,7 @@ hr {
 
 .switch-input:checked+.slider::before {
   transform: translateX(24px);
-  background: #ffd700;
+  background: var(--color-destacado);
 }
 
 /* Paneles de control */
@@ -98,7 +107,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 /* Sugerencias de libros */
 #sugerenciasLibros {
-  background: #23272b;
+  background: var(--color-gris-base);
   border: 1px solid #333;
   border-radius: 4px;
   max-height: 180px;
@@ -168,7 +177,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   padding: 0.3em 0;
   font-size: 0.9em;
   border-radius: 4px;
-  background: #23272b;
+  background: var(--color-gris-base);
   border: 1px solid #333;
   cursor: pointer;
   min-width: 36px;
@@ -195,7 +204,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 #listaHimnos {
   max-height: 250px;
   overflow-y: auto;
-  background: #23272b;
+  background: var(--color-gris-base);
   border: 1px solid #333;
   border-radius: 4px;
   margin-bottom: 0.5em;
@@ -219,7 +228,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 /* Vista previa */
 #vistaPrevia {
-  background: #23272b;
+  background: var(--color-gris-base);
   border-radius: 8px;
   padding: 1em;
   padding-bottom: 150px;
@@ -242,7 +251,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 }
 
 .card.selected {
-  border: 2px solid #ffd700;
+  border: 2px solid var(--color-destacado);
   background: #333;
 }
 
@@ -257,7 +266,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 /* Reproductor de audio */
 #audio {
   width: 100%;
-  background: #23272b;
+  background: var(--color-gris-base);
   border-radius: 4px;
 }
 
@@ -276,7 +285,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 .grilla-label {
   font-weight: bold;
-  color: #ffd700;
+  color: var(--color-destacado);
   margin-top: 0.7em;
   margin-bottom: 0.2em;
   font-size: 1.05em;
@@ -302,8 +311,8 @@ body:not(.con-boton-proyector) #controlHimnario {
   font-size: 1.1em;
   padding: 0.6em 1.4em;
   border-radius: 6px;
-  background: #23272b;
-  color: #ffd700;
+  background: var(--color-gris-base);
+  color: var(--color-destacado);
   border: 1px solid #333;
   transition: background 0.2s, color 0.2s;
 }
@@ -345,7 +354,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 }
 
 #configModal>div {
-  background: #23272b;
+  background: var(--color-gris-base);
   color: #fff;
   border-radius: 10px;
   padding: 2em;
@@ -364,7 +373,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   right: 10px;
   background: none;
   border: none;
-  color: #ffd700;
+  color: var(--color-destacado);
   font-size: 1.5em;
   cursor: pointer;
 }
@@ -399,7 +408,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 #fontsizeValueBiblia,
 #fontsizeValueHimnario {
-  color: #ffd700;
+  color: var(--color-destacado);
   font-weight: bold;
   margin-left: 0.5em;
 }
@@ -409,8 +418,8 @@ body:not(.con-boton-proyector) #controlHimnario {
 }
 
 .audio-mode-btn {
-  background: #23272b;
-  color: #ffd700;
+  background: var(--color-gris-base);
+  color: var(--color-destacado);
   border: 2px solid #333;
   border-radius: 8px;
   padding: 0.4em 0.7em;
@@ -426,9 +435,9 @@ body:not(.con-boton-proyector) #controlHimnario {
 }
 
 .audio-mode-btn.selected {
-  background: #ffd700;
-  color: #23272b;
-  border-color: #ffd700;
+  background: var(--color-destacado);
+  color: var(--color-gris-base);
+  border-color: var(--color-destacado);
 }
 
 .audio-mode-btn:not(.selected):hover {
@@ -637,7 +646,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   opacity: 0;
   width: 100%;
   margin-top: 1em;
-  background: #23272b;
+  background: var(--color-gris-base);
   border-radius: 4px;
 }
 
@@ -650,12 +659,20 @@ body:not(.con-boton-proyector) #controlHimnario {
   color: #050f08be;
 }
 
+#abrirProyector.proyector-abierto {
+  background-color: #dc3545 !important;
+  color: #fff !important;
+}
+#abrirProyector.proyector-normal {
+  background-color: lightgreen !important;
+  color: #050f08be !important;
+}
 
 
 /* --- FOOT NAVBAR ACTIVE BUTTON --- */
 .nav-btn.active {
-  background: #ffd700 !important;
-  color: #23272b !important;
+  background: var(--color-destacado) !important;
+  color: var(--color-gris-base) !important;
   border-radius: 8px;
   box-shadow: 0 2px 8px #0003;
   transition: background 0.2s, color 0.2s;
@@ -689,7 +706,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   width: 100%;
   text-align: center;
   color: #fff;
-  text-shadow: 0 2px 8px #000, 0 0 2px #ffd700;
+  text-shadow: 0 2px 8px #000, 0 0 2px var(--color-destacado);
   font-family: 'Merriweather', 'Roboto Slab', serif;
   padding: 2em 1em;
   font-size: 2.2em;
@@ -701,7 +718,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 .mini-proyector-content .referencia {
   display: block;
   font-size: 0.5em;
-  color: #ffd700;
+  color: var(--color-destacado);
   margin-bottom: 0.5em;
   text-shadow: 0 1px 4px #000;
   font-weight: bold;
@@ -728,7 +745,7 @@ body {
   bottom: 0;
   width: 100vw;
   z-index: 5000;
-  background: #23272b;
+  background: var(--color-gris-base);
   box-shadow: 0 -2px 12px #000a;
   display: flex;
   justify-content: center;
@@ -744,7 +761,7 @@ body {
   /* Altura del foot navbar */
   width: 100vw;
   z-index: 4000;
-  background: #23272b;
+  background: var(--color-gris-base);
   box-shadow: 0 -2px 12px #000a;
   display: block;
   justify-content: center;
@@ -777,8 +794,8 @@ body {
   left: 0;
   width: 100vw;
   height: 56px;
-  background: #23272b;
-  color: #ffd700;
+  background: var(--color-gris-base);
+  color: var(--color-destacado);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -794,7 +811,7 @@ body {
 .btn-cambiar-vista {
   background: none;
   border: none;
-  color: #ffd700;
+  color: var(--color-destacado);
   font-size: 1.5em;
   cursor: pointer;
   outline: none;
@@ -821,7 +838,7 @@ body {
   align-items: center;
 }
 .config-modal-content {
-  background: #23272b;
+  background: var(--color-gris-base);
   color: #fff;
   border-radius: 10px;
   padding: 2em;
@@ -836,13 +853,13 @@ body {
   right: 10px;
   background: none;
   border: none;
-  color: #ffd700;
+  color: var(--color-destacado);
   font-size: 1.5em;
   cursor: pointer;
 }
 .config-titulo {
   margin-top: 0;
-  color: #ffd700;
+  color: var(--color-destacado);
 }
 .slider-font-biblia-container,
 .slider-font-himnario-container,
@@ -857,7 +874,7 @@ body {
   left: 0;
   width: 100vw;
   height: 64px;
-  background: #23272b;
+  background: var(--color-gris-base);
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -867,7 +884,7 @@ body {
 .nav-btn {
   background: none;
   border: none;
-  color: #ffd700;
+  color: var(--color-destacado);
   font-size: 2em;
   display: flex;
   flex-direction: column;
@@ -893,13 +910,13 @@ body {
   padding: 0.5em 1.2em;
   background: none;
   border: none;
-  color: #ffd700;
+  color: var(--color-destacado);
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.2s;
 }
 .btn-control:hover {
-  background: #23272b;
+  background: var(--color-gris-base);
   color: #fffbe7;
 }
 .btn-control-text {
@@ -924,4 +941,14 @@ body {
   body {
     padding-top: 64px !important; /* Asegura espacio suficiente para el topbar en móvil */
   }
+}
+
+@media (max-width: 768px) {
+  /* Eliminar la deshabilitación visual del botón en móviles para permitir el cambio de color por JS */
+  /* #abrirProyector {
+    pointer-events: none;
+    opacity: 0.6;
+    filter: grayscale(0.5);
+    cursor: not-allowed;
+  } */
 }
