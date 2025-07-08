@@ -118,6 +118,17 @@ def on_proyector_click():
     print(f'📤 Recibido proyectorClick (reenviando a todos los clientes)')
     emit('proyectorClick', broadcast=True, include_self=False)
 
+# --- NUEVO: Reenviar proyectorAbierto y proyectorCerrado a todos los clientes ---
+@socketio.on('proyectorAbierto')
+def on_proyector_abierto():
+    print(f'📤 Recibido proyectorAbierto (reenviando a todos los clientes)')
+    emit('proyectorAbierto', broadcast=True, include_self=False)
+
+@socketio.on('proyectorCerrado')
+def on_proyector_cerrado():
+    print(f'📤 Recibido proyectorCerrado (reenviando a todos los clientes)')
+    emit('proyectorCerrado', broadcast=True, include_self=False)
+
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask-SocketIO para Church Display...")
     print("📱 Panel de control: http://localhost:8080/")

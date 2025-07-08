@@ -4,7 +4,7 @@ body {
   color: #f1f1f1;
   font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
-  padding: 2em 1em;
+  padding: 56px 1em 2em 1em; /* padding-top igual a la altura del topbar */
   display: block;
   align-items: center;
   align-content: center;
@@ -88,6 +88,12 @@ hr {
 #controlBiblia[hidden],
 #controlHimnario[hidden] {
   display: none !important;
+}
+
+/* Eliminar reglas dinámicas de margin-top para los controles */
+body:not(.con-boton-proyector) #controlBiblia,
+body:not(.con-boton-proyector) #controlHimnario {
+  margin-top: 0;
 }
 
 /* Sugerencias de libros */
@@ -537,7 +543,8 @@ hr {
     max-width: 100vw;
     box-sizing: border-box;
     margin: 0 auto;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.5em;  
+    padding-top: 0.5em;
     padding-left: 0.5em;
     padding-right: 0.5em;    
 
@@ -638,7 +645,7 @@ hr {
   width: 100%;
   font-weight: bold;
   align-content: center;
-  padding-top: 60px;
+  padding-top: 20px;
   background-color: lightgreen;
   color: #050f08be;
 }
@@ -911,4 +918,10 @@ body {
 }
 #playHimnoFooter i {
   margin-right: 0.4em;
+}
+
+@media (max-width: 600px) {
+  body {
+    padding-top: 64px !important; /* Asegura espacio suficiente para el topbar en móvil */
+  }
 }

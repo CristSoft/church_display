@@ -106,6 +106,37 @@ function inicializarSocketIO() {
         boton.style.cursor = '';
       }
     });
+
+    // --- NUEVO: listeners para sincronización de proyector ---
+    socket.on('proyectorAbierto', () => {
+      console.log('Evento proyectorAbierto recibido');
+      proyectorPendienteClick = true;
+      const boton = document.getElementById('abrirProyector');
+      if (boton) {
+        boton.style.display = '';
+        boton.style.background = '#dc3545';
+        boton.style.color = '#fff';
+        boton.textContent = 'No olvides hacer click en el proyector';
+        boton.style.pointerEvents = 'none';
+        boton.style.cursor = 'not-allowed';
+      }
+      actualizarVisibilidadBotonProyector();
+    });
+    socket.on('proyectorCerrado', () => {
+      console.log('Evento proyectorCerrado recibido');
+      proyectorPendienteClick = false;
+      const boton = document.getElementById('abrirProyector');
+      if (boton) {
+        boton.style.display = '';
+        boton.style.background = '';
+        boton.style.color = '';
+        boton.textContent = 'Abrir Ventana de Proyección';
+        boton.style.pointerEvents = '';
+        boton.style.cursor = '';
+      }
+      actualizarVisibilidadBotonProyector();
+    });
+
     console.log('🔌 SocketIO inicializado correctamente');
   } catch (error) {
     console.error('❌ Error al inicializar SocketIO:', error);
@@ -602,6 +633,10 @@ function abrirProyector() {
       }, 3000);
     }
     actualizarVisibilidadBotonProyector();
+    // Emitir evento para sincronizar con otros paneles
+    if (window.socket) {
+      window.socket.emit('proyectorAbierto');
+    }
   } else {
     // Si es PC, comportamiento normal
   if (proyectorWindow && !proyectorWindow.closed) {
@@ -619,6 +654,10 @@ function abrirProyector() {
       boton.style.pointerEvents = 'none';
       boton.style.cursor = 'not-allowed';
     }
+    // Emitir evento para sincronizar con otros paneles
+    if (window.socket) {
+      window.socket.emit('proyectorAbierto');
+    }
     // Monitorea si la ventana se cierra manualmente
     const checkInterval = setInterval(() => {
       if (!proyectorWindow || proyectorWindow.closed) {
@@ -634,6 +673,10 @@ function abrirProyector() {
           boton.style.display = '';
           boton.style.pointerEvents = '';
           boton.style.cursor = '';
+        }
+        // Emitir evento para sincronizar con otros paneles
+        if (window.socket) {
+          window.socket.emit('proyectorCerrado');
         }
       }
     }, 1000);
@@ -1650,6 +1693,9 @@ function ajustarRelacionAspectoMiniProyector() {
 // Llamar también al hacer resize en el panel de control
 window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
 
+// Escuchar eventos de sincronización de proyector
+// Elimina el bloque duplicado de listeners de socket para proyectorAbierto/proyectorCerrado si existe fuera de inicializarSocketIO
+
 // Hacer la función cambiarModoGlobal disponible globalmente
 window.cambiarModoGlobal = cambiarModoGlobal;
 
@@ -1679,6 +1725,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function actualizarVisibilidadBotonProyector() {
   const boton = document.getElementById('abrirProyector');
+  const body = document.body;
   if (!boton) return;
   if (proyectorWindow && !proyectorWindow.closed && proyectorPendienteClick) {
     boton.style.background = '#dc3545';
@@ -1687,10 +1734,12 @@ function actualizarVisibilidadBotonProyector() {
     boton.style.display = '';
     boton.style.pointerEvents = 'none';
     boton.style.cursor = 'not-allowed';
+    body.classList.add('con-boton-proyector');
   } else if (proyectorWindow && !proyectorWindow.closed && !proyectorPendienteClick) {
     boton.style.display = 'none';
     boton.style.pointerEvents = '';
     boton.style.cursor = '';
+    body.classList.remove('con-boton-proyector');
   } else {
     boton.style.background = '';
     boton.style.color = '';
@@ -1698,5 +1747,6 @@ function actualizarVisibilidadBotonProyector() {
     boton.style.display = '';
     boton.style.pointerEvents = '';
     boton.style.cursor = '';
+    body.classList.add('con-boton-proyector');
   }
 }
