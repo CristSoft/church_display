@@ -24,6 +24,17 @@ let himnoSugeridoIndex = -1;
 // Referencias a elementos del DOM
 let elementos = {};
 
+// --- NUEVO: Referencias para la UI mejorada ---
+let topBarTitulo = null;
+let btnCambiarVista = null;
+let vistaPreviaContainer = null;
+let vistaPrevia = null;
+let vistaProyector = null;
+let zonaRetroceder = null;
+let zonaAvanzar = null;
+let proyectorPreviewContent = null;
+let vistaActual = 'lista'; // 'lista' o 'proyector'
+
 // Variable global para saber si está sonando el himno
 let himnoSonando = false;
 let fadeOutTimeout = null;
@@ -240,6 +251,36 @@ async function inicializar() {
     btnInstrumental: document.getElementById('btnInstrumental'),
     btnSoloLetra: document.getElementById('btnSoloLetra')
   };
+
+  // --- NUEVO: Referencias para la UI mejorada ---
+  topBarTitulo = document.getElementById('topBarTitulo');
+  btnCambiarVista = document.getElementById('btnCambiarVista');
+  vistaPreviaContainer = document.getElementById('vistaPreviaContainer');
+  vistaPrevia = document.getElementById('vistaPrevia');
+  vistaProyector = document.getElementById('vistaProyector');
+  zonaRetroceder = document.getElementById('zonaRetroceder');
+  zonaAvanzar = document.getElementById('zonaAvanzar');
+  proyectorPreviewContent = document.getElementById('proyectorPreviewContent');
+  vistaActual = 'lista';
+
+  // Estado inicial: solo la lista visible
+  if (vistaPrevia) vistaPrevia.style.display = 'block';
+  if (vistaProyector) vistaProyector.style.display = 'none';
+  actualizarTopBarTitulo();
+
+  // Botón para alternar vista
+  if (btnCambiarVista) {
+    btnCambiarVista.addEventListener('click', () => {
+      alternarVistaPrevisualizacion();
+    });
+  }
+  // Zonas de navegación en modo proyector
+  if (zonaRetroceder) {
+    zonaRetroceder.addEventListener('click', () => navegar(-1));
+  }
+  if (zonaAvanzar) {
+    zonaAvanzar.addEventListener('click', () => navegar(1));
+  }
 
   console.log('✅ Referencias a elementos obtenidas');
 
@@ -617,6 +658,8 @@ function cambiarModo() {
     soloReferencia: esBiblia ? config.soloReferencia : null
   };
   enviarMensajeProyector('config', configEnviar);
+  actualizarTopBarTitulo();
+  actualizarVistaProyector();
 }
 
 /**
@@ -660,6 +703,8 @@ function cambiarModoGlobal(modo) {
     soloReferencia: modo === 'biblia' ? config.soloReferencia : null
   };
   enviarMensajeProyector('config', configEnviar);
+  actualizarTopBarTitulo();
+  actualizarVistaProyector();
   
   console.log('✅ Cambio de modo completado');
 }
@@ -1246,6 +1291,7 @@ function navegar(direccion) {
     
     enviarEstrofaAlProyector(estrofaActivaIndex);
   }
+  actualizarVistaProyector();
 }
 
 /**
@@ -1274,6 +1320,7 @@ function limpiarVistaPrevia() {
   libroActivo = null;
   capituloActivo = null;
   ocultarPlayFooter();
+  actualizarVistaProyector();
 }
 
 /**
@@ -1389,6 +1436,105 @@ function manejarTeclasListaHimnos(event) {
   himnos.forEach((div, idx) => {
       div.classList.toggle('selected', idx === index);
     });
+  }
+}
+
+/**
+ * Alterna entre la vista lista y la vista tipo proyector
+ */
+function alternarVistaPrevisualizacion() {
+  if (vistaActual === 'lista') {
+    vistaActual = 'proyector';
+    if (vistaPrevia) vistaPrevia.style.display = 'none';
+    if (vistaProyector) vistaProyector.style.display = 'flex';
+    actualizarVistaProyector();
+    if (btnCambiarVista) {
+      const icono = btnCambiarVista.querySelector('i');
+      const texto = btnCambiarVista.querySelector('span');
+      if (icono) {
+        icono.className = 'fa-solid fa-list';
+      }
+      if (texto) {
+        texto.textContent = 'Lista';
+      }
+    }
+  } else {
+    vistaActual = 'lista';
+    if (vistaPrevia) vistaPrevia.style.display = 'block';
+    if (vistaProyector) vistaProyector.style.display = 'none';
+    if (btnCambiarVista) {
+      const icono = btnCambiarVista.querySelector('i');
+      const texto = btnCambiarVista.querySelector('span');
+      if (icono) {
+        icono.className = 'fa-solid fa-expand';
+      }
+      if (texto) {
+        texto.textContent = 'Proyector';
+      }
+    }
+  }
+  actualizarTopBarTitulo();
+}
+
+/**
+ * Actualiza el contenido de la vista tipo proyector
+ */
+function actualizarVistaProyector() {
+  if (!proyectorPreviewContent) return;
+  let texto = '';
+  let referencia = '';
+  if (esModoBiblia()) {
+    // Mostrar versículo actual
+    if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+      const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
+      referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
+      texto = versiculo.text;
+    } else {
+      referencia = '';
+      texto = '<span style="color:#ffd700;">Selecciona un versículo</span>';
+    }
+    // Video de fondo Biblia
+    if (miniProyectorVideo) {
+      if (miniProyectorVideo.src.indexOf('verso-bg.mp4') === -1) {
+        miniProyectorVideo.src = '/src/assets/videos/verso-bg.mp4';
+      }
+    }
+  } else {
+    // Mostrar estrofa actual
+    if (himnoActivo && estrofaActivaIndex >= 0) {
+      const estrofa = himnoActivo.estrofas[estrofaActivaIndex];
+      if (estrofaActivaIndex === 0) {
+        referencia = `Himno ${himnoActivo.numero}`;
+        texto = himnoActivo.titulo;
+      } else {
+        const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
+        referencia = `${himnoActivo.numero} - ${versoText}`;
+        texto = estrofa.texto.replace(/\n/g, '<br>');
+      }
+    } else {
+      referencia = '';
+      texto = '<span style="color:#ffd700;">Selecciona un himno</span>';
+    }
+    // Video de fondo Himnario
+    if (miniProyectorVideo) {
+      if (miniProyectorVideo.src.indexOf('himno-bg.mp4') === -1) {
+        miniProyectorVideo.src = '/src/assets/videos/himno-bg.mp4';
+      }
+    }
+  }
+  proyectorPreviewContent.innerHTML = (referencia ? `<span class='referencia'>${referencia}</span>` : '') + `<span>${texto}</span>`;
+}
+
+/**
+ * Actualiza el título de la barra superior según el modo y la vista
+ */
+function actualizarTopBarTitulo() {
+  if (!topBarTitulo) return;
+  let modo = esModoBiblia() ? 'Biblia' : 'Himnario';
+  if (vistaActual === 'proyector') {
+    topBarTitulo.textContent = `${modo} (Proyector)`;
+  } else {
+    topBarTitulo.textContent = modo;
   }
 }
 

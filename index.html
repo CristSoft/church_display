@@ -12,8 +12,68 @@
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+    <style>
+      /* --- FOOT NAVBAR ACTIVE BUTTON --- */
+      .nav-btn.active {
+        background: #ffd700 !important;
+        color: #23272b !important;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px #0003;
+        transition: background 0.2s, color 0.2s;
+      }
+      /* Mini proyector igual al proyector real */
+      .mini-proyector {
+        position: relative;
+        background: #181c20;
+        border-radius: 12px;
+        box-shadow: 0 4px 24px #000a;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mini-proyector-video {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: cover;
+        z-index: 0;
+      }
+      .mini-proyector-content {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        text-align: center;
+        color: #fff;
+        text-shadow: 0 2px 8px #000, 0 0 2px #ffd700;
+        font-family: 'Merriweather', 'Roboto Slab', serif;
+        padding: 2em 1em;
+        font-size: 2.2em;
+        line-height: 1.2;
+        user-select: none;
+        pointer-events: none;
+      }
+      .mini-proyector-content .referencia {
+        display: block;
+        font-size: 0.5em;
+        color: #ffd700;
+        margin-bottom: 0.5em;
+        text-shadow: 0 1px 4px #000;
+        font-weight: bold;
+        letter-spacing: 1px;
+      }
+    </style>
 </head>
 <body>
+    <!-- Top Bar Sticky -->
+    <div id="topBar" style="position:sticky;top:0;left:0;width:100vw;height:56px;background:#23272b;color:#ffd700;display:flex;align-items:center;justify-content:space-between;z-index:4000;padding:0 1.2em;box-shadow:0 2px 12px #000a;">
+      <span id="topBarTitulo" style="font-size:1.3em;font-weight:bold;">Biblia</span>
+      <button id="btnCambiarVista" style="background:none;border:none;color:#ffd700;font-size:1.5em;cursor:pointer;outline:none;display:flex;align-items:center;gap:0.5em;">
+        <i class="fa-solid fa-list"></i>
+        <span style="font-size:0.9em;">Lista</span>
+      </button>
+    </div>
+    
     <button id="abrirProyector">Abrir Ventana de Proyección</button>
     <!-- Modal de configuración -->
     <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
@@ -91,7 +151,15 @@
     </div>
     
     <!-- Área de vista previa -->
-    <div id="vistaPrevia"></div>
+    <div id="vistaPreviaContainer">
+      <div id="vistaPrevia" style="display:block;"></div>
+      <div id="vistaProyector" class="mini-proyector" style="display:none;width:100%;height:320px;min-height:180px;max-width:900px;margin:0 auto;position:relative;background:#181c20;border-radius:12px;box-shadow:0 4px 24px #000a;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+        <video id="miniProyectorVideo" class="mini-proyector-video" autoplay loop muted playsinline style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;"></video>
+        <div id="zonaRetroceder" style="position:absolute;left:0;top:0;width:50%;height:100%;cursor:pointer;z-index:2;"></div>
+        <div id="zonaAvanzar" style="position:absolute;right:0;top:0;width:50%;height:100%;cursor:pointer;z-index:2;"></div>
+        <div id="proyectorPreviewContent" class="mini-proyector-content" style="width:100%;text-align:center;padding:2em;font-size:2.5em;color:#fff;z-index:1;user-select:none;position:relative;"></div>
+      </div>
+    </div>
 
     <!-- Reproductor de audio para himnos -->
     <audio id="reproductorAudio" controls style="width:100%; margin-top:1em;"></audio>
@@ -224,68 +292,68 @@
     </script>
 
     <script>
-      // --- LÓGICA FOOT NAVBAR ---
-      const navHimnario = document.getElementById('navHimnario');
-      const navBiblia = document.getElementById('navBiblia');
-      const navConfig = document.getElementById('navConfig');
-      const controlHimnario = document.getElementById('controlHimnario');
-      const controlBiblia = document.getElementById('controlBiblia');
-      const configModal = document.getElementById('configModal');
-      
-      // Estado inicial: Biblia
-      let modoActual = 'biblia';
-      
-      function actualizarModo(modo) {
-        // Actualizar colores del navbar
-        if (modo === 'himnario') {
-          navHimnario.style.color = '#fff';
-          navBiblia.style.color = '#ffd700';
-        } else {
-          navHimnario.style.color = '#ffd700';
-          navBiblia.style.color = '#fff';
-        }
+      document.addEventListener('DOMContentLoaded', function() {
+        // --- LÓGICA FOOT NAVBAR ---
+        const navHimnario = document.getElementById('navHimnario');
+        const navBiblia = document.getElementById('navBiblia');
+        const navConfig = document.getElementById('navConfig');
+        const controlHimnario = document.getElementById('controlHimnario');
+        const controlBiblia = document.getElementById('controlBiblia');
+        const configModal = document.getElementById('configModal');
+        const topBarTitulo = document.getElementById('topBarTitulo');
+        const btnCambiarVista = document.getElementById('btnCambiarVista');
+        const vistaPreviaContainer = document.getElementById('vistaPreviaContainer');
+        const vistaPrevia = document.getElementById('vistaPrevia');
+        const vistaProyector = document.getElementById('vistaProyector');
         
-        // Usar la función global de main.js para cambiar el modo
-        if (typeof window.cambiarModoGlobal === 'function') {
-          window.cambiarModoGlobal(modo);
-        } else {
-          console.warn('⚠️ Función cambiarModoGlobal no disponible, usando lógica local');
-          // Fallback: lógica local
+        // Estado inicial: Biblia
+        let modoActual = 'biblia';
+        window.modoActual = modoActual;
+        
+        function actualizarModo(modo) {
+          // Quitar clase activa de todos
+          navHimnario.classList.remove('active');
+          navBiblia.classList.remove('active');
+          // Poner clase activa solo al botón del modo actual
           if (modo === 'himnario') {
-            controlHimnario.style.display = '';
-            controlBiblia.style.display = 'none';
+            navHimnario.classList.add('active');
           } else {
-            controlHimnario.style.display = 'none';
-            controlBiblia.style.display = '';
+            navBiblia.classList.add('active');
+          }
+          // Usar la función global de main.js para cambiar el modo
+          if (typeof window.cambiarModoGlobal === 'function') {
+            window.cambiarModoGlobal(modo);
+          } else {
+            // Fallback: lógica local
+            if (modo === 'himnario') {
+              controlHimnario.style.display = '';
+              controlBiblia.style.display = 'none';
+            } else {
+              controlHimnario.style.display = 'none';
+              controlBiblia.style.display = '';
+            }
           }
           modoActual = modo;
-          
-          // Enviar mensaje al proyector para cambiar el fondo de pantalla
-          setTimeout(() => {
-            if (typeof window.socket !== 'undefined' && window.socket && window.socket.connected) {
-              const videoSrc = modo === 'himnario' ? '/src/assets/videos/himno-bg.mp4' : '/src/assets/videos/verso-bg.mp4';
-              window.socket.emit('change_mode', { videoSrc: videoSrc });
-              console.log('📤 Enviando cambio de modo al proyector:', { modo, videoSrc });
-            } else {
-              console.warn('⚠️ Socket no disponible para enviar cambio de modo');
-            }
-          }, 100); // Pequeño retraso para asegurar que el socket esté disponible
+          window.modoActual = modo;
         }
-      }
-      
-      navHimnario.addEventListener('click', () => actualizarModo('himnario'));
-      navBiblia.addEventListener('click', () => actualizarModo('biblia'));
-      navConfig.addEventListener('click', () => {
-        configModal.style.display = 'flex';
+        
+        navHimnario.addEventListener('click', () => actualizarModo('himnario'));
+        navBiblia.addEventListener('click', () => actualizarModo('biblia'));
+        navConfig.addEventListener('click', () => {
+          configModal.style.display = 'flex';
+          // Nunca dejar activo el botón de config
+          navHimnario.classList.remove('active');
+          navBiblia.classList.remove('active');
+        });
+        
+        // Cerrar modal config
+        document.getElementById('cerrarConfig').addEventListener('click', () => {
+          configModal.style.display = 'none';
+        });
+        
+        // Inicializar modo
+        actualizarModo('biblia');
       });
-      
-      // Cerrar modal config
-      document.getElementById('cerrarConfig').addEventListener('click', () => {
-        configModal.style.display = 'none';
-      });
-      
-      // Inicializar modo
-      actualizarModo('biblia');
     </script>
 </body>
 </html>
