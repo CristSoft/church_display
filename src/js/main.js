@@ -158,8 +158,14 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   const estrofa = himnoActivo.estrofas[estrofaIndex];
   const esTitulo = estrofaIndex === 0;
   
-  // Limpiar el título (remover "Himno #" si existe)
-  const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
+  // Usar el título tal cual viene del JSON
+  const tituloLimpio = himnoActivo.titulo;
+  
+  // Debug: Log para verificar el título
+  console.log('🔍 Debug título:', {
+    tituloLimpio: tituloLimpio,
+    numero: himnoActivo.numero
+  });
   
   if (esTitulo) {
     // Es el título del himno
@@ -238,7 +244,6 @@ async function inicializar() {
   console.log('✅ Referencias a elementos obtenidas');
 
   // --- Configuración Panel ---
-  const btnConfig = document.getElementById('btnConfig');
   const configModal = document.getElementById('configModal');
   const cerrarConfig = document.getElementById('cerrarConfig');
   const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
@@ -271,10 +276,6 @@ async function inicializar() {
   
   actualizarOpcionesModo();
 
-  // Abrir modal
-  btnConfig.addEventListener('click', () => {
-    configModal.style.display = 'flex';
-  });
   // Cerrar modal
   cerrarConfig.addEventListener('click', () => {
     configModal.style.display = 'none';
@@ -1004,8 +1005,14 @@ async function seleccionarHimno(event) {
       // Cargar el himno
       himnoActivo = await parseHymn(himnoFile);
       if (himnoActivo) {
-        // Limpiar el título (remover "Himno #" si existe)
-        const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
+        // Usar el título tal cual viene del JSON
+        const tituloLimpio = himnoActivo.titulo;
+        
+        // Debug: Log para verificar el título
+        console.log('🔍 Debug título (seleccionarHimno):', {
+          tituloLimpio: tituloLimpio,
+          numero: himnoActivo.numero
+        });
         
         // Actualizar el input con el título del himno
         elementos.buscarHimno.value = `${himnoActivo.numero} - ${tituloLimpio}`;
@@ -1032,8 +1039,14 @@ function cargarHimnoEnVistaPrevia() {
   
   elementos.vistaPrevia.innerHTML = '';
   
-  // Limpiar el título (remover "Himno #" si existe)
-  const tituloLimpio = himnoActivo.titulo.replace(/^Himno\s*#?\d*\s*/, '').trim();
+  // Usar el título tal cual viene del JSON
+  const tituloLimpio = himnoActivo.titulo;
+  
+  // Debug: Log para verificar el título
+  console.log('🔍 Debug título (cargarHimnoEnVistaPrevia):', {
+    tituloLimpio: tituloLimpio,
+    numero: himnoActivo.numero
+  });
   
   himnoActivo.estrofas.forEach((estrofa, index) => {
     const card = document.createElement('div');

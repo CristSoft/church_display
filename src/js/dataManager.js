@@ -770,18 +770,19 @@ async function parseHymn(hymnFileName) {
     const numeroMatch = hymnFileName.match(/^(\d+)/);
     const numero = numeroMatch ? numeroMatch[1] : '';
     
-    // Limpiar el título (remover "Himno #" si existe)
-    const tituloLimpio = (data.title || 'Himno').replace(/^Himno\s*#?\d*\s*/, '').trim();
+    // Usar el título original del JSON sin filtrar
+    const tituloOriginal = data.title || 'Himno';
     
     // Convertir la estructura de sections a estrofas
     const himno = {
-      titulo: tituloLimpio,
+      titulo: tituloOriginal, // Usar el título original sin filtrar
       numero: numero, // Usar el número extraído del nombre del archivo
       estrofas: [],
       sections: data.sections || {}
     };
     
     // Agregar el título como primera estrofa (índice 0)
+    const tituloLimpio = tituloOriginal.replace(/^Himno\s*#?\d*\s*/, '').trim();
     himno.estrofas.push({
       verso: 'titulo',
       texto: `${numero} | ${tituloLimpio}`,
