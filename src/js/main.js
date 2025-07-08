@@ -41,6 +41,10 @@ let fadeOutTimeout = null;
 // Modo de audio: 'cantado', 'instrumental', 'soloLetra'
 let audioMode = 'cantado';
 
+let miniProyectorVideo = null;
+let miniProyectorAspect = 16/9; // Valor por defecto
+let miniProyectorContainer = null;
+
 console.log('📦 Variables globales inicializadas');
 
 /**
@@ -262,6 +266,19 @@ async function inicializar() {
   zonaAvanzar = document.getElementById('zonaAvanzar');
   proyectorPreviewContent = document.getElementById('proyectorPreviewContent');
   vistaActual = 'lista';
+
+  miniProyectorVideo = document.getElementById('miniProyectorVideo');
+  miniProyectorContainer = document.getElementById('vistaProyector');
+
+  // Escuchar relación de aspecto del proyector real
+  if (window.socket) {
+    window.socket.on('aspect_ratio', (data) => {
+      if (data && data.aspect) {
+        miniProyectorAspect = data.aspect;
+        ajustarRelacionAspectoMiniProyector();
+      }
+    });
+  }
 
   // Estado inicial: solo la lista visible
   if (vistaPrevia) vistaPrevia.style.display = 'block';
@@ -1147,6 +1164,7 @@ function manejarClicCard(event) {
 function actualizarBotonPlayHimno() {
   if (!himnoActivo) {
     ocultarPlayFooter();
+    actualizarBotonPlayMiniProyector();
     return;
   }
   
@@ -1168,6 +1186,7 @@ function actualizarBotonPlayHimno() {
       playHimnoFooter.style.background = '#28a745';
     }
   }
+  actualizarBotonPlayMiniProyector();
 }
 
 /**
@@ -1246,6 +1265,7 @@ async function reproducirHimno() {
       console.error('❌ Error al reproducir himno:', error);
     }
   }
+  actualizarBotonPlayMiniProyector();
 }
 
 /**
@@ -1443,10 +1463,15 @@ function manejarTeclasListaHimnos(event) {
  * Alterna entre la vista lista y la vista tipo proyector
  */
 function alternarVistaPrevisualizacion() {
+  const botonera = document.getElementById('botoneraNavegacion');
+  const playMini = document.getElementById('playHimnoMiniProyector');
   if (vistaActual === 'lista') {
     vistaActual = 'proyector';
     if (vistaPrevia) vistaPrevia.style.display = 'none';
     if (vistaProyector) vistaProyector.style.display = 'flex';
+    if (botonera) botonera.style.display = 'none';
+    // Mostrar botón play/stop solo si es himnario
+    if (playMini) playMini.style.display = (!esModoBiblia() ? 'block' : 'none');
     actualizarVistaProyector();
     if (btnCambiarVista) {
       const icono = btnCambiarVista.querySelector('i');
@@ -1462,6 +1487,8 @@ function alternarVistaPrevisualizacion() {
     vistaActual = 'lista';
     if (vistaPrevia) vistaPrevia.style.display = 'block';
     if (vistaProyector) vistaProyector.style.display = 'none';
+    if (botonera) botonera.style.display = 'flex';
+    if (playMini) playMini.style.display = 'none';
     if (btnCambiarVista) {
       const icono = btnCambiarVista.querySelector('i');
       const texto = btnCambiarVista.querySelector('span');
@@ -1474,6 +1501,7 @@ function alternarVistaPrevisualizacion() {
     }
   }
   actualizarTopBarTitulo();
+  actualizarBotonPlayMiniProyector();
 }
 
 /**
@@ -1483,7 +1511,8 @@ function actualizarVistaProyector() {
   if (!proyectorPreviewContent) return;
   let texto = '';
   let referencia = '';
-  if (esModoBiblia()) {
+  let isBiblia = esModoBiblia();
+  if (isBiblia) {
     // Mostrar versículo actual
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
       const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
@@ -1522,6 +1551,14 @@ function actualizarVistaProyector() {
       }
     }
   }
+  // Ajustar fuente y estilos igual que el proyector real
+  let fontSize = isBiblia ? '2.2em' : '2.2em';
+  let fontFamily = isBiblia ? "'Qwigley', 'RobotoSlab-Bold', serif" : "'RobotoSlab-Bold', serif";
+  if (isBiblia) {
+    fontSize = '1.3em'; // Más pequeño en modo Biblia
+  }
+  proyectorPreviewContent.style.fontSize = fontSize;
+  proyectorPreviewContent.style.fontFamily = fontFamily;
   proyectorPreviewContent.innerHTML = (referencia ? `<span class='referencia'>${referencia}</span>` : '') + `<span>${texto}</span>`;
 }
 
@@ -1538,6 +1575,40 @@ function actualizarTopBarTitulo() {
   }
 }
 
+function actualizarBotonPlayMiniProyector() {
+  const playMini = document.getElementById('playHimnoMiniProyector');
+  if (!playMini) return;
+  if (vistaActual === 'proyector' && !esModoBiblia() && himnoActivo) {
+    playMini.style.display = 'block';
+    if (himnoSonando) {
+      playMini.textContent = '⏹️ Detener Himno';
+      playMini.style.background = '#dc3545';
+    } else {
+      playMini.textContent = '▶️ Reproducir Himno';
+      playMini.style.background = '#28a745';
+    }
+  } else {
+    playMini.style.display = 'none';
+  }
+}
+
+function ajustarRelacionAspectoMiniProyector() {
+  if (miniProyectorContainer) {
+    miniProyectorContainer.style.aspectRatio = miniProyectorAspect;
+    // Fallback para navegadores sin aspect-ratio
+    if (!('aspectRatio' in document.body.style)) {
+      // fallback: height = width / aspect
+      const width = miniProyectorContainer.offsetWidth;
+      miniProyectorContainer.style.height = (width / miniProyectorAspect) + 'px';
+    } else {
+      miniProyectorContainer.style.height = '';
+    }
+  }
+}
+
+// Llamar también al hacer resize en el panel de control
+window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
+
 // Hacer la función cambiarModoGlobal disponible globalmente
 window.cambiarModoGlobal = cambiarModoGlobal;
 
@@ -1545,7 +1616,21 @@ window.cambiarModoGlobal = cambiarModoGlobal;
 console.log('📋 DOM cargado, iniciando aplicación...');
 document.addEventListener('DOMContentLoaded', () => {
   console.log('🎯 DOMContentLoaded disparado, llamando a inicializar()...');
-  inicializar().catch(error => {
+  inicializar().then(() => {
+    if (vistaPrevia) vistaPrevia.style.display = 'block';
+    if (vistaProyector) vistaProyector.style.display = 'none';
+    vistaActual = 'lista';
+    actualizarTopBarTitulo();
+    const botonera = document.getElementById('botoneraNavegacion');
+    if (botonera) botonera.style.display = 'flex';
+    const playMini = document.getElementById('playHimnoMiniProyector');
+    if (playMini) {
+      playMini.addEventListener('click', () => {
+        reproducirHimno();
+        actualizarBotonPlayMiniProyector();
+      });
+    }
+  }).catch(error => {
     console.error('❌ Error al inicializar la aplicación:', error);
   });
 });

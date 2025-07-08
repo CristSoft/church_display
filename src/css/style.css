@@ -541,3 +541,11 @@ hr {
     padding: 0.5em;
   }
 } 
+
+#reproductorAudio {
+  opacity: 0;
+  width:100%; 
+  margin-top:1em;
+  background: #23272b;
+  border-radius: 4px;    
+}

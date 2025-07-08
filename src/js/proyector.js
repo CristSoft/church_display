@@ -577,3 +577,17 @@ function detenerAudioHimno(fadeout = true, duracion = 2000) {
     }
 }
 
+// Función para enviar la relación de aspecto al panel de control
+function enviarRelacionAspecto() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspect = width / height;
+    socket.emit('aspect_ratio', { width, height, aspect });
+    console.log('📤 Enviando relación de aspecto:', { width, height, aspect });
+}
+
+// Enviar al cargar
+window.addEventListener('DOMContentLoaded', enviarRelacionAspecto);
+// Enviar al cambiar tamaño
+window.addEventListener('resize', enviarRelacionAspecto);
+
