@@ -265,6 +265,10 @@ async function inicializar() {
     sliderFontBibliaContainer.style.display = esBiblia ? '' : 'none';
     sliderFontHimnarioContainer.style.display = esBiblia ? 'none' : '';
   }
+  
+  // Hacer la función global para poder llamarla desde otras funciones
+  window.actualizarOpcionesModo = actualizarOpcionesModo;
+  
   actualizarOpcionesModo();
 
   // Abrir modal
@@ -600,6 +604,11 @@ function cambiarModo() {
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/himno-bg.mp4' });
   }
   
+  // Actualizar opciones del panel de configuración según el modo
+  if (typeof window.actualizarOpcionesModo === 'function') {
+    window.actualizarOpcionesModo();
+  }
+  
   // Enviar configuración actualizada según el modo
   const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
   const configEnviar = {
@@ -636,6 +645,11 @@ function cambiarModoGlobal(modo) {
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
+  }
+  
+  // Actualizar opciones del panel de configuración según el modo
+  if (typeof window.actualizarOpcionesModo === 'function') {
+    window.actualizarOpcionesModo();
   }
   
   // Enviar configuración actualizada según el modo
