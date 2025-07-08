@@ -72,6 +72,15 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   opacity: 1;
 }
 
+/* Regla para permitir override de estilos inline */
+#texto-principal.override-font-size {
+  font-size: var(--override-font-size) !important;
+}
+
+#referencia.override-font-size {
+  font-size: var(--override-ref-font-size) !important;
+}
+
 #texto-principal.fade-out {
   opacity: 0;
 }
@@ -94,6 +103,8 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   bottom: unset;
 }
 
+
+
 #referencia.fade-out {
   opacity: 0;
 }
@@ -112,7 +123,7 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   left: 50%;
   bottom: unset;
   transform: translateX(-50%);
-  font-size: 2.5vw;
+  font-size: 2.5vw !important; /* Mantener !important para CSS, pero los estilos inline tendrán prioridad */
   text-align: center;
   font-weight: bold;
   background: rgba(0,0,0,0.7);
@@ -128,6 +139,21 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   font-family: 'RobotoSlab-Bold', serif;
 }
 
+/* Modo Versículo: Contenedor del texto principal */
+#contenido.modo-versiculo #texto-principal {
+  position: relative;
+  top: 90px; /* Comienza debajo de la referencia */
+  max-height: calc(100vh - 90px); /* Altura máxima disponible */
+  display: flex;
+  align-items: center;
+  justify-content: center;  
+  padding: 0 2em;
+  margin: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: font-size 0.3s ease-in-out;
+}
+
 /* Modo Himno: Indicador de verso/coro más pequeño */
 #contenido.modo-himno #indicador-estrofa {
   font-size: 2.8vw; /* Aún más pequeño que 3.5vw */
@@ -138,7 +164,7 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   position: absolute;
   top: 20px;
   left: 20px;
-  font-size: 2.3vw; /* Más grande que 1.8vw */
+  font-size: 2.3vw !important; /* Más grande que 1.8vw */
   text-align: left;
   bottom: unset;
   transform: none;

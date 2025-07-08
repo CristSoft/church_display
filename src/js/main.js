@@ -285,6 +285,7 @@ async function inicializar() {
     config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
     guardarYEnviarConfig();
   });
+
   // Slider de fuente Himnario
   sliderFontsizeHimnario.addEventListener('input', () => {
     fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
@@ -296,6 +297,8 @@ async function inicializar() {
     config.soloReferencia = switchSoloReferencia.checked;
     guardarYEnviarConfig();
   });
+  
+
   function guardarYEnviarConfig() {
     localStorage.setItem('proyectorConfig', JSON.stringify(config));
     // Enviar config al proyector según modo
@@ -304,6 +307,11 @@ async function inicializar() {
       fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
       soloReferencia: esBiblia ? config.soloReferencia : null
     };
+    console.log('🔧 guardarYEnviarConfig llamada:', {
+      config,
+      esBiblia,
+      configEnviar
+    });
     enviarMensajeProyector('config', configEnviar);
   }
   // Enviar config inicial al abrir proyector
@@ -355,42 +363,6 @@ async function inicializar() {
 function configurarEventos() {
   // Botón abrir proyector
   elementos.abrirProyector.addEventListener('click', abrirProyector);
-
-  // Botón de prueba SocketIO
-  const btnPrueba = document.getElementById('btnPrueba');
-  if (btnPrueba) {
-    btnPrueba.addEventListener('click', () => {
-      console.log('�� Botón de prueba clickeado');
-      console.log('🔍 Estado actual:', {
-        socket: !!socket,
-        conectado: socket ? socket.connected : false,
-        url: window.location.href,
-        userAgent: navigator.userAgent
-      });
-      
-      const resultado = enviarMensajeProyector('update_text', {
-        texto: '🧪 Prueba de SocketIO exitosa desde el celular!',
-        ref: 'Test - ' + new Date().toLocaleTimeString(),
-        soloReferencia: false
-      });
-      
-      // Cambiar el botón según el resultado
-      if (resultado) {
-        btnPrueba.textContent = '✅ Enviado!';
-        btnPrueba.style.background = '#28a745';
-        console.log('✅ Prueba exitosa');
-      } else {
-        btnPrueba.textContent = '❌ Error!';
-        btnPrueba.style.background = '#dc3545';
-        console.log('❌ Prueba fallida');
-      }
-      
-      setTimeout(() => {
-        btnPrueba.textContent = '🧪 Probar SocketIO';
-        btnPrueba.style.background = '#28a745';
-      }, 3000);
-    });
-  }
 
   // Eventos modo Biblia
   elementos.versionBiblia.addEventListener('change', cambiarVersionBiblia);

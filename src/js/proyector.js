@@ -6,16 +6,30 @@ const referencia = document.getElementById('referencia');
 const contadorSeccion = document.getElementById('contador-seccion');
 const indicadorEstrofa = document.getElementById('indicador-estrofa');
 
+// Verificar que los elementos existen
+console.log('🔍 Elementos del proyector:', {
+    videoBg: !!videoBg,
+    textoPrincipal: !!textoPrincipal,
+    referencia: !!referencia,
+    contadorSeccion: !!contadorSeccion,
+    indicadorEstrofa: !!indicadorEstrofa
+});
+
 // Elemento de audio para reproducir himnos
 let audioElement = null;
 
 // 2. Eventos de conexión
 socket.on('connect', () => {
-    console.log('✅ Proyector conectado al servidor SocketIO');
+    console.log('✅ Proyector conectado al servidor SocketIO - ID:', socket.id);
 });
 
 socket.on('disconnect', () => {
     console.log('❌ Proyector desconectado del servidor SocketIO');
+});
+
+// Agregar logging para todos los eventos recibidos
+socket.onAny((eventName, ...args) => {
+    console.log('📥 Evento recibido:', eventName, args);
 });
 
 // 3. Escuchar mensajes del panel de control
@@ -82,6 +96,8 @@ socket.on('update_text', (data) => {
                 // Ocultar indicadores si no es himno
                 contadorSeccion.style.display = 'none';
                 indicadorEstrofa.style.display = 'none';
+                
+
             }
         }
         
@@ -191,20 +207,89 @@ socket.on('change_mode', (data) => {
 
 socket.on('config', (data) => {
     console.log('📥 Recibido config:', data);
+    console.log('🔍 Tipo de data:', typeof data);
+    console.log('🔍 Data.config existe:', !!data.config);
+    console.log('🔍 Data completa:', JSON.stringify(data));
+    
+    // Verificar que los elementos existen antes de procesar
+    if (!textoPrincipal) {
+        console.error('❌ Elemento textoPrincipal no encontrado');
+        return;
+    }
+    if (!referencia) {
+        console.error('❌ Elemento referencia no encontrado');
+        return;
+    }
+    
     if (data.config) {
-        // Cambiar tamaño de fuente según modo
-        textoPrincipal.style.fontSize = (data.config.fontsize || 5) + 'vw';
+        console.log('🔍 Configuración recibida:', data.config);
         
-        // Solo cambiar tamaño de referencia en modo Biblia (no en himnos)
-        if (data.config.soloReferencia !== undefined) {
-            // Si es modo Biblia (soloReferencia puede ser true o false)
-            if (data.config.soloReferencia !== null) {
-                referencia.style.fontSize = ((data.config.fontsize || 5) * 0.7) + 'vw';
-            }
-            // Si es modo Himno, mantener tamaño original de referencia
-        } else {
-            // Configuración inicial o cambio de fuente general
-            referencia.style.fontSize = ((data.config.fontsize || 5) * 0.7) + 'vw';
+        // Aplicar tamaño de fuente al texto principal
+        const fontSize = data.config.fontsize || 5;
+        console.log('🔤 Aplicando tamaño de fuente:', fontSize + 'vw');
+        
+        // Estrategia 1: Usar CSS custom properties
+        textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
+        textoPrincipal.classList.add('override-font-size');
+        
+        const refFontSize = (fontSize * 0.7);
+        referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
+        referencia.classList.add('override-font-size');
+        
+        // Estrategia 2: También aplicar estilos inline como respaldo
+        textoPrincipal.style.fontSize = fontSize + 'vw';
+        referencia.style.fontSize = refFontSize + 'vw';
+        
+        console.log('🔤 Tamaño de fuente aplicado:', fontSize + 'vw');
+        
+        // Verificar que el estilo se aplicó
+        const computedStyle = window.getComputedStyle(textoPrincipal);
+        console.log('🔍 Tamaño de fuente computado:', computedStyle.fontSize);
+        
+        console.log('🔤 Tamaño de referencia aplicado:', refFontSize + 'vw');
+        
+        // Verificar que el estilo se aplicó
+        const refComputedStyle = window.getComputedStyle(referencia);
+        console.log('🔍 Tamaño de referencia computado:', refComputedStyle.fontSize);
+        
+    } else {
+        console.warn('⚠️ No se recibió data.config en el mensaje config');
+        console.log('🔍 Intentando procesar data directamente...');
+        
+        // Intentar procesar data directamente si no tiene la estructura esperada
+        if (data.fontsize) {
+            console.log('🔍 Procesando data directa con fontsize:', data.fontsize);
+            const fontSize = data.fontsize;
+            
+            // Estrategia 1: Usar CSS custom properties
+            textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
+            textoPrincipal.classList.add('override-font-size');
+            
+            const refFontSize = (fontSize * 0.7);
+            referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
+            referencia.classList.add('override-font-size');
+            
+            // Estrategia 2: También aplicar estilos inline como respaldo
+            textoPrincipal.style.fontSize = fontSize + 'vw';
+            referencia.style.fontSize = refFontSize + 'vw';
+            
+            // Verificar inmediatamente después de aplicar
+            setTimeout(() => {
+                const computedPrincipal = window.getComputedStyle(textoPrincipal);
+                const computedRef = window.getComputedStyle(referencia);
+                console.log('🔍 Verificación de estilos aplicados:', {
+                    fontSizeSolicitado: fontSize + 'vw',
+                    fontSizeAplicado: computedPrincipal.fontSize,
+                    refFontSizeSolicitado: refFontSize + 'vw',
+                    refFontSizeAplicado: computedRef.fontSize,
+                    styleInline: textoPrincipal.style.fontSize,
+                    refStyleInline: referencia.style.fontSize,
+                    customProperty: textoPrincipal.style.getPropertyValue('--override-font-size'),
+                    refCustomProperty: referencia.style.getPropertyValue('--override-ref-font-size')
+                });
+            }, 100);
+            
+            console.log('✅ Estilos aplicados desde data directa');
         }
     }
 });
@@ -491,3 +576,4 @@ function detenerAudioHimno(fadeout = true, duracion = 2000) {
         console.error('❌ Error en detenerAudioHimno:', error);
     }
 }
+
