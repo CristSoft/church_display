@@ -97,10 +97,13 @@ function inicializarSocketIO() {
     });
     // Evento para cuando el proyector recibe un click
     socket.on('proyectorClick', () => {
+      console.log('Evento proyectorClick recibido en el panel de control');
       proyectorPendienteClick = false;
       const boton = document.getElementById('abrirProyector');
       if (boton) {
         boton.style.display = 'none';
+        boton.style.pointerEvents = '';
+        boton.style.cursor = '';
       }
     });
     console.log('🔌 SocketIO inicializado correctamente');
@@ -613,6 +616,8 @@ function abrirProyector() {
       boton.style.color = '#fff';
       boton.textContent = 'No olvides hacer click en el proyector';
       boton.style.display = '';
+      boton.style.pointerEvents = 'none';
+      boton.style.cursor = 'not-allowed';
     }
     // Monitorea si la ventana se cierra manualmente
     const checkInterval = setInterval(() => {
@@ -627,6 +632,8 @@ function abrirProyector() {
           boton.style.color = '';
           boton.textContent = 'Abrir Ventana de Proyección';
           boton.style.display = '';
+          boton.style.pointerEvents = '';
+          boton.style.cursor = '';
         }
       }
     }, 1000);
@@ -1678,12 +1685,18 @@ function actualizarVisibilidadBotonProyector() {
     boton.style.color = '#fff';
     boton.textContent = 'No olvides hacer click en el proyector';
     boton.style.display = '';
+    boton.style.pointerEvents = 'none';
+    boton.style.cursor = 'not-allowed';
   } else if (proyectorWindow && !proyectorWindow.closed && !proyectorPendienteClick) {
     boton.style.display = 'none';
+    boton.style.pointerEvents = '';
+    boton.style.cursor = '';
   } else {
     boton.style.background = '';
     boton.style.color = '';
     boton.textContent = 'Abrir Ventana de Proyección';
     boton.style.display = '';
+    boton.style.pointerEvents = '';
+    boton.style.cursor = '';
   }
 }

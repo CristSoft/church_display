@@ -112,6 +112,12 @@ def on_audio_terminado(data):
     # Reenviar a todos los clientes del panel de control
     emit('audioTerminado', data, broadcast=True, include_self=False)
 
+# --- NUEVO: Reenviar proyectorClick a todos los clientes ---
+@socketio.on('proyectorClick')
+def on_proyector_click():
+    print(f'📤 Recibido proyectorClick (reenviando a todos los clientes)')
+    emit('proyectorClick', broadcast=True, include_self=False)
+
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask-SocketIO para Church Display...")
     print("📱 Panel de control: http://localhost:8080/")
