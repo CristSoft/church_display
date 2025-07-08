@@ -9,6 +9,7 @@ console.log('🚀 main.js iniciando...');
 
 // Variables globales
 let proyectorWindow = null;
+let proyectorPendienteClick = false;
 let socket = null; // Esta será global
 let bibliaActual = null;
 let indiceHimnos = [];
@@ -94,7 +95,14 @@ function inicializarSocketIO() {
       himnoSonando = false;
       actualizarBotonPlayHimno();
     });
-    
+    // Evento para cuando el proyector recibe un click
+    socket.on('proyectorClick', () => {
+      proyectorPendienteClick = false;
+      const boton = document.getElementById('abrirProyector');
+      if (boton) {
+        boton.style.display = 'none';
+      }
+    });
     console.log('🔌 SocketIO inicializado correctamente');
   } catch (error) {
     console.error('❌ Error al inicializar SocketIO:', error);
@@ -590,13 +598,39 @@ function abrirProyector() {
         boton.style.color = '';
       }, 3000);
     }
+    actualizarVisibilidadBotonProyector();
   } else {
     // Si es PC, comportamiento normal
   if (proyectorWindow && !proyectorWindow.closed) {
     proyectorWindow.focus();
   } else {
     proyectorWindow = window.open('proyector.html', 'proyector', 'width=800,height=600');
+    proyectorPendienteClick = true;
+    // Cambia el botón a rojo y el texto
+    const boton = document.getElementById('abrirProyector');
+    if (boton) {
+      boton.style.background = '#dc3545';
+      boton.style.color = '#fff';
+      boton.textContent = 'No olvides hacer click en el proyector';
+      boton.style.display = '';
     }
+    // Monitorea si la ventana se cierra manualmente
+    const checkInterval = setInterval(() => {
+      if (!proyectorWindow || proyectorWindow.closed) {
+        clearInterval(checkInterval);
+        proyectorWindow = null;
+        proyectorPendienteClick = false;
+        // Restaura el botón
+        const boton = document.getElementById('abrirProyector');
+        if (boton) {
+          boton.style.background = '';
+          boton.style.color = '';
+          boton.textContent = 'Abrir Ventana de Proyección';
+          boton.style.display = '';
+        }
+      }
+    }, 1000);
+  }
   }
 }
 
@@ -1630,7 +1664,26 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarBotonPlayMiniProyector();
       });
     }
+    actualizarVisibilidadBotonProyector();
   }).catch(error => {
     console.error('❌ Error al inicializar la aplicación:', error);
   });
 });
+
+function actualizarVisibilidadBotonProyector() {
+  const boton = document.getElementById('abrirProyector');
+  if (!boton) return;
+  if (proyectorWindow && !proyectorWindow.closed && proyectorPendienteClick) {
+    boton.style.background = '#dc3545';
+    boton.style.color = '#fff';
+    boton.textContent = 'No olvides hacer click en el proyector';
+    boton.style.display = '';
+  } else if (proyectorWindow && !proyectorWindow.closed && !proyectorPendienteClick) {
+    boton.style.display = 'none';
+  } else {
+    boton.style.background = '';
+    boton.style.color = '';
+    boton.textContent = 'Abrir Ventana de Proyección';
+    boton.style.display = '';
+  }
+}

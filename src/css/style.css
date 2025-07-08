@@ -5,9 +5,14 @@ body {
   font-family: 'Segoe UI', Arial, sans-serif;
   margin: 0;
   padding: 2em 1em;
+  display: block;
+  align-items: center;
+  align-content: center;
 }
 
-button, select, input[type="text"] {
+button,
+select,
+input[type="text"] {
   background: #23272b;
   color: #f1f1f1;
   border: 1px solid #333;
@@ -16,7 +21,10 @@ button, select, input[type="text"] {
   margin: 0.2em 0.5em 0.2em 0;
   font-size: 1em;
 }
-button:hover, select:focus, input[type="text"]:focus {
+
+button:hover,
+select:focus,
+input[type="text"]:focus {
   background: #2c3136;
   outline: none;
 }
@@ -32,13 +40,16 @@ hr {
   gap: 0.5em;
   margin-bottom: 1em;
 }
+
 .switch-label {
   font-size: 1em;
   color: #aaa;
 }
+
 .switch-input {
   display: none;
 }
+
 .slider {
   width: 48px;
   height: 24px;
@@ -49,6 +60,7 @@ hr {
   margin: 0 0.5em;
   vertical-align: middle;
 }
+
 .slider::before {
   content: '';
   position: absolute;
@@ -60,17 +72,21 @@ hr {
   border-radius: 50%;
   transition: transform 0.2s;
 }
-.switch-input:checked + .slider::before {
+
+.switch-input:checked+.slider::before {
   transform: translateX(24px);
   background: #ffd700;
 }
 
 /* Paneles de control */
-#controlBiblia, #controlHimnario {
+#controlBiblia,
+#controlHimnario {
   margin-bottom: 1em;
   padding-bottom: 10px;
 }
-#controlBiblia[hidden], #controlHimnario[hidden] {
+
+#controlBiblia[hidden],
+#controlHimnario[hidden] {
   display: none !important;
 }
 
@@ -86,19 +102,23 @@ hr {
   z-index: 1000;
   width: 250px;
   display: none;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
+
 #sugerenciasLibros div {
   padding: 0.4em 1em;
   cursor: pointer;
   border-bottom: 1px solid #222;
 }
+
 #sugerenciasLibros div:last-child {
   border-bottom: none;
 }
+
 #sugerenciasLibros div:hover {
   background: #444;
 }
+
 #sugerenciasLibros div.selected {
   background: #0057b8;
   color: #fff;
@@ -107,24 +127,38 @@ hr {
 /* Contenedor de búsqueda de libros */
 #buscarLibro {
   position: relative;
-  width: 250px;
+  /* width: 250px; */
 }
 
 /* Contenedor de búsqueda de himnos */
 #buscarHimno {
-  width: 100%;
+  /* width: 100%; */
   max-width: 300px;
 }
 
+/* Inputs de búsqueda más anchos */
+#buscarLibro,
+#buscarHimno {
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
 /* Grillas de capítulos y versículos */
-#grillaCapitulos, #grillaVersiculos {
+#grillaCapitulos,
+#grillaVersiculos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(36px, 1fr));
   gap: 0.3em;
   margin: 0.5em 0;
   max-width: 400px;
 }
-#grillaCapitulos button, #grillaVersiculos button {
+
+#grillaCapitulos button,
+#grillaVersiculos button {
   padding: 0.3em 0;
   font-size: 0.9em;
   border-radius: 4px;
@@ -137,11 +171,15 @@ hr {
   align-items: center;
   justify-content: center;
 }
-#grillaCapitulos button:hover, #grillaVersiculos button:hover {
+
+#grillaCapitulos button:hover,
+#grillaVersiculos button:hover {
   background: #2c3136;
   border-color: #555;
 }
-#grillaCapitulos button.selected, #grillaVersiculos button.selected {
+
+#grillaCapitulos button.selected,
+#grillaVersiculos button.selected {
   background: #0057b8;
   color: #fff;
   border-color: #0057b8;
@@ -156,15 +194,19 @@ hr {
   border-radius: 4px;
   margin-bottom: 0.5em;
 }
+
 #listaHimnos div {
   padding: 0.5em 1em;
   cursor: pointer;
   border-bottom: 1px solid #222;
 }
+
 #listaHimnos div:last-child {
   border-bottom: none;
 }
-#listaHimnos div.selected, #listaHimnos div:hover {
+
+#listaHimnos div.selected,
+#listaHimnos div:hover {
   background: #0057b8;
   color: #fff;
 }
@@ -182,6 +224,7 @@ hr {
   flex-direction: column;
   gap: 0.5em;
 }
+
 .card {
   background: #222;
   border-radius: 4px;
@@ -191,6 +234,7 @@ hr {
   border: 2px solid transparent;
   transition: border 0.2s, background 0.2s;
 }
+
 .card.selected {
   border: 2px solid #ffd700;
   background: #333;
@@ -217,6 +261,7 @@ hr {
     padding: 0.5em;
     font-size: 0.95em;
   }
+
   .nav-controls {
     flex-direction: column;
     gap: 0.5em;
@@ -246,6 +291,7 @@ hr {
   gap: 2em;
   z-index: 2000;
 }
+
 .app-footer button {
   font-size: 1.1em;
   padding: 0.6em 1.4em;
@@ -255,16 +301,19 @@ hr {
   border: 1px solid #333;
   transition: background 0.2s, color 0.2s;
 }
+
 .app-footer button:hover {
   background: #2c3136;
   color: #fff;
 }
+
 @media (max-width: 600px) {
   .app-footer {
     flex-direction: column;
     gap: 0.7em;
     padding: 0.7em 0.2em;
   }
+
   .app-footer button {
     width: 100%;
     font-size: 1em;
@@ -275,15 +324,21 @@ hr {
 #configModal {
   display: none;
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.6);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
   z-index: 2000;
   justify-content: center;
   align-items: center;
 }
-#configModal[open] { display: flex; }
-#configModal > div {
+
+#configModal[open] {
+  display: flex;
+}
+
+#configModal>div {
   background: #23272b;
   color: #fff;
   border-radius: 10px;
@@ -296,18 +351,22 @@ hr {
   flex-direction: column;
   gap: 1.2em;
 }
+
 #cerrarConfig {
   position: absolute;
-  top: 10px; right: 10px;
+  top: 10px;
+  right: 10px;
   background: none;
   border: none;
   color: #ffd700;
   font-size: 1.5em;
   cursor: pointer;
 }
+
 #btnConfig {
   position: absolute;
-  top: 16px; right: 16px;
+  top: 16px;
+  right: 16px;
   background: none;
   border: none;
   cursor: pointer;
@@ -316,21 +375,29 @@ hr {
   border-radius: 50%;
   transition: background 0.2s;
 }
+
 #btnConfig:hover {
   background: #333;
 }
-#sliderFontBibliaContainer, #sliderFontHimnarioContainer {
+
+#sliderFontBibliaContainer,
+#sliderFontHimnarioContainer {
   margin-bottom: 1.5em;
 }
-#sliderFontsizeBiblia, #sliderFontsizeHimnario {
+
+#sliderFontsizeBiblia,
+#sliderFontsizeHimnario {
   width: 180px;
   margin-top: 0.5em;
 }
-#fontsizeValueBiblia, #fontsizeValueHimnario {
+
+#fontsizeValueBiblia,
+#fontsizeValueHimnario {
   color: #ffd700;
   font-weight: bold;
   margin-left: 0.5em;
 }
+
 #opcionSoloReferencia label {
   margin-right: 0.5em;
 }
@@ -351,11 +418,13 @@ hr {
   justify-content: center;
   transition: background 0.2s, border 0.2s, color 0.2s;
 }
+
 .audio-mode-btn.selected {
   background: #ffd700;
   color: #23272b;
   border-color: #ffd700;
 }
+
 .audio-mode-btn:not(.selected):hover {
   background: #2c3136;
   color: #fff;
@@ -367,31 +436,35 @@ hr {
     padding: 1em 0.5em;
     font-size: 14px;
   }
-  
+
   /* Botones más grandes para touch */
-  button, select, input[type="text"] {
+  button,
+  select,
+  input[type="text"] {
     padding: 0.8em 1em;
-    font-size: 16px; /* Evita zoom en iOS */
-    min-height: 44px; /* Tamaño mínimo para touch */
+    font-size: 16px;
+    /* Evita zoom en iOS */
+    min-height: 44px;
+    /* Tamaño mínimo para touch */
   }
-  
+
   /* Switch más grande */
   .slider {
     width: 60px;
     height: 30px;
   }
-  
+
   .slider::before {
     width: 22px;
     height: 22px;
     top: 4px;
     left: 4px;
   }
-  
-  .switch-input:checked + .slider::before {
+
+  .switch-input:checked+.slider::before {
     transform: translateX(30px);
   }
-  
+
   /* Sugerencias de libros más anchas */
   #sugerenciasLibros {
     width: calc(100% - 2em);
@@ -399,71 +472,77 @@ hr {
     left: 1em;
     right: 1em;
   }
-  
+
   /* Grillas más grandes */
-  #grillaCapitulos, #grillaVersiculos {
+  #grillaCapitulos,
+  #grillaVersiculos {
     grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
     gap: 0.5em;
   }
-  
-  #grillaCapitulos button, #grillaVersiculos button {
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
     min-width: 50px;
     height: 44px;
     font-size: 16px;
   }
-  
+
   /* Lista de himnos más alta */
   #listaHimnos {
     max-height: 300px;
   }
-  
+
   /* Vista previa más compacta */
   #vistaPrevia {
     min-height: 100px;
     padding: 0.8em;
   }
-  
+
   .card {
     padding: 0.8em 1em;
     font-size: 14px;
   }
-  
+
   /* Footer más espaciado */
   .app-footer {
     padding: 1em 0.5em;
     gap: 0.5em;
   }
-  
+
   .app-footer button {
     padding: 0.8em 1.2em;
     font-size: 16px;
     min-height: 44px;
   }
-  
+
   /* Modal de configuración más compacto */
-  #configModal > div {
+  #configModal>div {
     padding: 1.5em;
     margin: 1em;
     max-width: calc(100vw - 2em);
   }
-  
+
   /* Botones de modo de audio más grandes */
   .audio-mode-btn {
     padding: 1em 0.8em;
     min-height: 60px;
     font-size: 14px;
   }
+
   
-  /* Inputs de búsqueda más anchos */
-  #buscarLibro, #buscarHimno {
-    width: calc(100% - 1em);
-    max-width: none;
-  }
-  
+
   /* Select de versión bíblica más ancho */
   #versionBiblia {
-    width: calc(100% - 1em);
-    max-width: none;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    margin: 0 auto;
+    margin-bottom: 0.5em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;    
+
+    /* width: calc(100% - 1em);
+    max-width: none; */
   }
 }
 
@@ -473,35 +552,37 @@ hr {
     padding: 0.5em 0.3em;
     font-size: 13px;
   }
-  
+
   /* Grillas más compactas */
-  #grillaCapitulos, #grillaVersiculos {
+  #grillaCapitulos,
+  #grillaVersiculos {
     grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
     gap: 0.3em;
   }
-  
-  #grillaCapitulos button, #grillaVersiculos button {
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
     min-width: 40px;
     height: 40px;
     font-size: 14px;
   }
-  
+
   /* Footer más compacto */
   .app-footer {
     padding: 0.8em 0.3em;
   }
-  
+
   .app-footer button {
     padding: 0.6em 1em;
     font-size: 14px;
   }
-  
+
   /* Vista previa más compacta */
   #vistaPrevia {
     min-height: 80px;
     padding: 0.6em;
   }
-  
+
   .card {
     padding: 0.6em 0.8em;
     font-size: 13px;
@@ -513,39 +594,321 @@ hr {
   body {
     padding: 0.5em;
   }
-  
+
   /* Layout más compacto */
-  #controlBiblia, #controlHimnario {
+  #controlBiblia,
+  #controlHimnario {
     margin-bottom: 0.5em;
   }
-  
+
   /* Grillas más pequeñas para aprovechar el espacio */
-  #grillaCapitulos, #grillaVersiculos {
+  #grillaCapitulos,
+  #grillaVersiculos {
     grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
     gap: 0.2em;
   }
-  
-  #grillaCapitulos button, #grillaVersiculos button {
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
     min-width: 35px;
     height: 35px;
     font-size: 12px;
   }
-  
+
   /* Lista de himnos más compacta */
   #listaHimnos {
     max-height: 200px;
   }
-  
+
   /* Footer más compacto */
   .app-footer {
     padding: 0.5em;
   }
-} 
+}
 
 #reproductorAudio {
   opacity: 0;
-  width:100%; 
-  margin-top:1em;
+  width: 100%;
+  margin-top: 1em;
   background: #23272b;
-  border-radius: 4px;    
+  border-radius: 4px;
+}
+
+#abrirProyector {
+  width: 100%;
+  font-weight: bold;
+  align-content: center;
+  padding-top: 60px;
+  background-color: lightgreen;
+  color: #050f08be;
+}
+
+
+
+/* --- FOOT NAVBAR ACTIVE BUTTON --- */
+.nav-btn.active {
+  background: #ffd700 !important;
+  color: #23272b !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0003;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Mini proyector igual al proyector real */
+.mini-proyector {
+  position: relative;
+  background: #181c20;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px #000a;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-proyector-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+
+.mini-proyector-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+  color: #fff;
+  text-shadow: 0 2px 8px #000, 0 0 2px #ffd700;
+  font-family: 'Merriweather', 'Roboto Slab', serif;
+  padding: 2em 1em;
+  font-size: 2.2em;
+  line-height: 1.2;
+  user-select: none;
+  pointer-events: none;
+}
+
+.mini-proyector-content .referencia {
+  display: block;
+  font-size: 0.5em;
+  color: #ffd700;
+  margin-bottom: 0.5em;
+  text-shadow: 0 1px 4px #000;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.mini-proyector {
+  aspect-ratio: 16/9;
+  width: 100%;
+  max-width: 900px;
+}
+
+.mini-proyector-margin {
+  margin-bottom: min(22vh, 120px);
+}
+
+body {
+  padding-bottom: min(22vh, 120px);
+}
+
+.app-footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100vw;
+  z-index: 5000;
+  background: #23272b;
+  box-shadow: 0 -2px 12px #000a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em 0;
+}
+
+.botonera-navegacion {
+  position: fixed;
+  left: 0;
+  bottom: 96px;
+  /* Altura del foot navbar */
+  width: 100vw;
+  z-index: 4000;
+  background: #23272b;
+  box-shadow: 0 -2px 12px #000a;
+  display: block;
+  justify-content: center;
+  align-items: center;
+  gap: 1em;  
+  padding: 0.5em 0;
+  padding-bottom: 1.5em;
+  border-top: 1px solid #222;
+  border-bottom: 1px solid #111;
+  transition: bottom 0.2s;
+}
+
+@media (max-width: 600px) {
+  .botonera-navegacion {
+    bottom: 56px;
+  }
+}
+
+.btn-control{
+  display: flex;
+  width: 100%;
+  text-align: center;
+  align-items: center;
+}
+
+/* --- Estilos migrados desde index.html --- */
+#topBar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 56px;
+  background: #23272b;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 4000;
+  padding: 0 1.2em;
+  box-shadow: 0 2px 12px #000a;
+}
+
+#topBarTitulo {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+.btn-cambiar-vista {
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 1.5em;
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.btn-cambiar-vista-text {
+  font-size: 0.9em;
+}
+.btn-abrir-proyector {
+  /* Puedes personalizar más si lo deseas */
+}
+#configModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+  justify-content: center;
+  align-items: center;
+}
+.config-modal-content {
+  background: #23272b;
+  color: #fff;
+  border-radius: 10px;
+  padding: 2em;
+  min-width: 300px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px #000a;
+  position: relative;
+}
+.btn-cerrar-config {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+.config-titulo {
+  margin-top: 0;
+  color: #ffd700;
+}
+.slider-font-biblia-container,
+.slider-font-himnario-container,
+.opcion-solo-referencia {
+  margin-bottom: 1.5em;
+}
+
+/* --- Estilos migrados del navbar inferior de index.html --- */
+.foot-navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 64px;
+  background: #23272b;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 5000;
+  box-shadow: 0 -2px 12px #000a;
+}
+.nav-btn {
+  background: none;
+  border: none;
+  color: #ffd700;
+  font-size: 2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  outline: none;
+}
+.nav-btn-text {
+  font-size: 0.7em;
+}
+
+/* --- Estilos para los botones de navegación inferiores --- */
+.btn-control {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+  gap: 0.5em;
+  font-size: 1.1em;
+  padding: 0.5em 1.2em;
+  background: none;
+  border: none;
+  color: #ffd700;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+.btn-control:hover {
+  background: #23272b;
+  color: #fffbe7;
+}
+.btn-control-text {
+  display: inline-block;
+  text-align: center;
+}
+.btn-control i {
+  font-size: 1.2em;
+  vertical-align: middle;
+}
+#anterior i {
+  margin-right: 0.4em;
+}
+#siguiente i {
+  margin-left: 0.4em;
+}
+#playHimnoFooter i {
+  margin-right: 0.4em;
 }

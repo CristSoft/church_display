@@ -591,3 +591,7 @@ window.addEventListener('DOMContentLoaded', enviarRelacionAspecto);
 // Enviar al cambiar tamaño
 window.addEventListener('resize', enviarRelacionAspecto);
 
+document.addEventListener('click', function() {
+    socket.emit('proyectorClick');
+});
+

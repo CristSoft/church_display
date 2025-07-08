@@ -12,132 +12,35 @@
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
-    <style>
-      /* --- FOOT NAVBAR ACTIVE BUTTON --- */
-      .nav-btn.active {
-        background: #ffd700 !important;
-        color: #23272b !important;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px #0003;
-        transition: background 0.2s, color 0.2s;
-      }
-      /* Mini proyector igual al proyector real */
-      .mini-proyector {
-        position: relative;
-        background: #181c20;
-        border-radius: 12px;
-        box-shadow: 0 4px 24px #000a;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;        
-      }
-      .mini-proyector-video {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        object-fit: cover;
-        z-index: 0;
-      }
-      .mini-proyector-content {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        text-align: center;
-        color: #fff;
-        text-shadow: 0 2px 8px #000, 0 0 2px #ffd700;
-        font-family: 'Merriweather', 'Roboto Slab', serif;
-        padding: 2em 1em;
-        font-size: 2.2em;
-        line-height: 1.2;
-        user-select: none;
-        pointer-events: none;
-      }
-      .mini-proyector-content .referencia {
-        display: block;
-        font-size: 0.5em;
-        color: #ffd700;
-        margin-bottom: 0.5em;
-        text-shadow: 0 1px 4px #000;
-        font-weight: bold;
-        letter-spacing: 1px;
-      }
-      .mini-proyector {
-        aspect-ratio: 16/9;
-        width: 100%;
-        max-width: 900px;
-      }
-      .mini-proyector-margin {
-        margin-bottom: min(22vh, 120px);
-      }
-      body {
-        padding-bottom: min(22vh, 120px);
-      }
-      .app-footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100vw;
-        z-index: 5000;
-        background: #23272b;
-        box-shadow: 0 -2px 12px #000a;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1em;
-        padding: 0.5em 0;
-      }
-      .botonera-navegacion {
-        position: fixed;
-        left: 0;
-        bottom: 64px; /* Altura del foot navbar */
-        width: 100vw;
-        z-index: 4000;
-        background: #23272b;
-        box-shadow: 0 -2px 12px #000a;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1em;
-        padding: 0.5em 0;
-        border-top: 1px solid #222;
-        border-bottom: 1px solid #111;
-        transition: bottom 0.2s;
-      }
-      @media (max-width: 600px) {
-        .botonera-navegacion {
-          bottom: 56px;
-        }
-      }
-    </style>
+    
 </head>
 <body>
     <!-- Top Bar Sticky -->
-    <div id="topBar" style="position:sticky;top:0;left:0;width:100vw;height:56px;background:#23272b;color:#ffd700;display:flex;align-items:center;justify-content:space-between;z-index:4000;padding:0 1.2em;box-shadow:0 2px 12px #000a;">
-      <span id="topBarTitulo" style="font-size:1.3em;font-weight:bold;">Biblia</span>
-      <button id="btnCambiarVista" style="background:none;border:none;color:#ffd700;font-size:1.5em;cursor:pointer;outline:none;display:flex;align-items:center;gap:0.5em;">
+    <div id="topBar">
+      <span id="topBarTitulo">Biblia</span>
+      <button id="btnCambiarVista" class="btn-cambiar-vista">
         <i class="fa-solid fa-list"></i>
-        <span style="font-size:0.9em;">Lista</span>
+        <span class="btn-cambiar-vista-text">Lista</span>
       </button>
     </div>
     
-    <button id="abrirProyector">Abrir Ventana de Proyección</button>
+    <button id="abrirProyector" class="btn-abrir-proyector">Abrir Ventana de Proyección</button>
     <!-- Modal de configuración -->
-    <div id="configModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.6); z-index:2000; justify-content:center; align-items:center;">
-      <div style="background:#23272b; color:#fff; border-radius:10px; padding:2em; min-width:300px; max-width:90vw; box-shadow:0 8px 32px #000a; position:relative;">
-        <button id="cerrarConfig" style="position:absolute; top:10px; right:10px; background:none; border:none; color:#ffd700; font-size:1.5em; cursor:pointer;">&times;</button>
-        <h2 style="margin-top:0; color:#ffd700;">Configuración</h2>
-        <div id="sliderFontBibliaContainer" style="margin-bottom:1.5em;">
+    <div id="configModal">
+      <div class="config-modal-content">
+        <button id="cerrarConfig" class="btn-cerrar-config">&times;</button>
+        <h2 class="config-titulo">Configuración</h2>
+        <div id="sliderFontBibliaContainer" class="slider-font-biblia-container">
           <label for="sliderFontsizeBiblia">Tamaño de fuente versículos (Biblia):</label><br>
           <input type="range" id="sliderFontsizeBiblia" min="1.5" max="8" step="0.1" value="5">
           <span id="fontsizeValueBiblia">5vw</span>
         </div>
-        <div id="sliderFontHimnarioContainer" style="margin-bottom:1.5em;">
+        <div id="sliderFontHimnarioContainer" class="slider-font-himnario-container">
           <label for="sliderFontsizeHimnario">Tamaño de fuente himnos (Himnario):</label><br>
           <input type="range" id="sliderFontsizeHimnario" min="2" max="10" step="0.1" value="5">
           <span id="fontsizeValueHimnario">5vw</span>
         </div>
-        <div id="opcionSoloReferencia" style="margin-bottom:1.5em;">
+        <div id="opcionSoloReferencia" class="opcion-solo-referencia">
           <label for="switchSoloReferencia">Solo mostrar referencia bíblica (modo Biblia):</label>
           <input type="checkbox" id="switchSoloReferencia">
         </div>
@@ -154,18 +57,18 @@
     </div> -->
 
     <!-- FOOT NAVBAR estilo web app -->
-    <nav id="footNavbar" style="position:fixed;bottom:0;left:0;width:100vw;height:64px;background:#23272b;display:flex;justify-content:space-around;align-items:center;z-index:3000;box-shadow:0 -2px 12px #000a;">
-      <button id="navHimnario" class="nav-btn" title="Himnario" style="background:none;border:none;color:#ffd700;font-size:2em;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;outline:none;">
+    <nav id="footNavbar" class="foot-navbar">
+      <button id="navHimnario" class="nav-btn nav-himnario" title="Himnario">
         <i class="fa-solid fa-music"></i>
-        <span style="font-size:0.7em;">Himnario</span>
+        <span class="nav-btn-text">Himnario</span>
       </button>
-      <button id="navBiblia" class="nav-btn" title="Biblia" style="background:none;border:none;color:#ffd700;font-size:2em;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;outline:none;">
+      <button id="navBiblia" class="nav-btn nav-biblia" title="Biblia">
         <i class="fa-solid fa-book"></i>
-        <span style="font-size:0.7em;">Biblia</span>
+        <span class="nav-btn-text">Biblia</span>
       </button>
-      <button id="navConfig" class="nav-btn" title="Configuración" style="background:none;border:none;color:#ffd700;font-size:2em;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;outline:none;">
+      <button id="navConfig" class="nav-btn nav-config" title="Configuración">
         <i class="fa-solid fa-cog"></i>
-        <span style="font-size:0.7em;">Config</span>
+        <span class="nav-btn-text">Config</span>
       </button>
     </nav>
 
@@ -182,17 +85,6 @@
 
     <!-- Contenedor para el Himnario -->
     <div id="controlHimnario" style="display:none;">
-        <!-- <div id="audioModeButtons" style="display: flex; gap: 0.5em; margin-bottom: 0.7em; justify-content: flex-start;">
-          <button id="btnCantado" class="audio-mode-btn" title="Cantado" type="button">
-            <span style="font-size:1.3em;">🎤</span><br><span style="font-size:0.8em;">Cantado</span>
-          </button>
-          <button id="btnInstrumental" class="audio-mode-btn" title="Instrumental" type="button">
-            <span style="font-size:1.3em;">🎹</span><br><span style="font-size:0.8em;">Instrumental</span>
-          </button>
-          <button id="btnSoloLetra" class="audio-mode-btn" title="Solo letra" type="button">
-            <span style="font-size:1.3em;">📄</span><br><span style="font-size:0.8em;">Solo letra</span>
-          </button>
-        </div> -->
         <input type="text" id="buscarHimno" placeholder="Nº o Título del himno...">
         <div id="listaHimnos"></div>
     </div>
@@ -213,9 +105,18 @@
     <audio id="reproductorAudio" controls></audio>
 
     <footer id="botoneraNavegacion" class="botonera-navegacion" style="display:none;">
-      <button id="anterior">Anterior</button>
-      <button id="playHimnoFooter" style="display:none;">▶️ Play</button>
-      <button id="siguiente">Siguiente</button>
+      <button id="anterior" class="btn-control">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="btn-control-text">Anterior</span>
+      </button>
+      <button id="playHimnoFooter" style="display:none;">
+        <i class="fa-solid fa-play"></i>
+        <span class="btn-control-text">Play</span>
+      </button>
+      <button id="siguiente" class="btn-control">
+        <span class="btn-control-text">Siguiente</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
     </footer>
 
     <script src="/src/js/dataManager.js"></script>
