@@ -49,6 +49,13 @@ let miniProyectorContainer = null;
 console.log('📦 Variables globales inicializadas');
 
 /**
+ * Obtiene el valor de una variable CSS
+ */
+function getCSSVariable(variableName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+}
+
+/**
  * Inicializa SocketIO
  */
 function inicializarSocketIO() {
@@ -346,7 +353,7 @@ async function inicializar() {
     });
   }
 
-  // Estado inicial: solo la vista proyector visible
+  // Estado inicial: modo proyector visible
   if (vistaPrevia) vistaPrevia.style.display = 'none';
   if (vistaProyector) vistaProyector.style.display = 'flex';
   actualizarTopBarTitulo();
@@ -356,6 +363,15 @@ async function inicializar() {
     btnCambiarVista.addEventListener('click', () => {
       alternarVistaPrevisualizacion();
     });
+    // Configurar estado inicial del botón para modo proyector
+    const icono = btnCambiarVista.querySelector('i');
+    const texto = btnCambiarVista.querySelector('span');
+    if (icono) {
+      icono.className = 'fa-solid fa-list';
+    }
+    if (texto) {
+      texto.textContent = 'Lista';
+    }
   }
   // Zonas de navegación en modo proyector
   if (zonaRetroceder) {
@@ -1252,14 +1268,15 @@ function actualizarBotonPlayHimno() {
   if (playHimnoFooter) {
     playHimnoFooter.style.display = 'block';
     
-    // Actualizar el estado del botón según si está sonando o no
-    if (himnoSonando) {
-      playHimnoFooter.textContent = '⏹️ Detener Himno';
-      playHimnoFooter.style.background = '#dc3545';
-    } else {
-      playHimnoFooter.textContent = '▶️ Reproducir Himno';
-      playHimnoFooter.style.background = '#28a745';
-    }
+      // Actualizar el estado del botón según si está sonando o no
+  const icono = playHimnoFooter.querySelector('i');
+  if (himnoSonando) {
+    icono.className = 'fa-solid fa-stop';
+    playHimnoFooter.classList.add('playing');
+  } else {
+    icono.className = 'fa-solid fa-play';
+    playHimnoFooter.classList.remove('playing');
+  }
   }
   actualizarBotonPlayMiniProyector();
 }
@@ -1297,8 +1314,9 @@ async function reproducirHimno() {
     // Cambiar el estado del botón
     const playHimnoFooter = document.getElementById('playHimnoFooter');
     if (playHimnoFooter) {
-      playHimnoFooter.textContent = '▶️ Reproducir Himno';
-      playHimnoFooter.style.background = '#28a745';
+      const icono = playHimnoFooter.querySelector('i');
+      icono.className = 'fa-solid fa-play';
+      playHimnoFooter.classList.remove('playing');
     }
     
     console.log('✅ Comando de detención enviado al proyector');
@@ -1330,8 +1348,9 @@ async function reproducirHimno() {
       // Cambiar el estado del botón
       const playHimnoFooter = document.getElementById('playHimnoFooter');
       if (playHimnoFooter) {
-        playHimnoFooter.textContent = '⏹️ Detener Himno';
-        playHimnoFooter.style.background = '#dc3545';
+        const icono = playHimnoFooter.querySelector('i');
+        icono.className = 'fa-solid fa-stop';
+        playHimnoFooter.classList.add('playing');
       }
       
       console.log('✅ Comando de reproducción enviado al proyector');
@@ -1655,12 +1674,13 @@ function actualizarBotonPlayMiniProyector() {
   if (!playMini) return;
   if (vistaActual === 'proyector' && !esModoBiblia() && himnoActivo) {
     playMini.style.display = 'block';
+    const icono = playMini.querySelector('i');
     if (himnoSonando) {
-      playMini.textContent = '⏹️ Detener Himno';
-      playMini.style.background = '#dc3545';
+      icono.className = 'fa-solid fa-stop';
+      playMini.classList.add('playing');
     } else {
-      playMini.textContent = '▶️ Reproducir Himno';
-      playMini.style.background = '#28a745';
+      icono.className = 'fa-solid fa-play';
+      playMini.classList.remove('playing');
     }
   } else {
     playMini.style.display = 'none';
@@ -1708,6 +1728,8 @@ document.addEventListener('DOMContentLoaded', () => {
         actualizarBotonPlayMiniProyector();
       });
     }
+    actualizarVistaProyector();
+    actualizarBotonPlayMiniProyector();
     actualizarVisibilidadBotonProyector();
   }).catch(error => {
     console.error('❌ Error al inicializar la aplicación:', error);

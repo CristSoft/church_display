@@ -122,7 +122,9 @@
         <div id="zonaAvanzar" style="position:absolute;right:0;top:0;width:50%;height:100%;cursor:pointer;z-index:2;"></div>
         <div id="proyectorPreviewContent" class="mini-proyector-content" style="width:100%;text-align:center;padding:2em;font-size:2.5em;color:#fff;z-index:1;user-select:none;position:relative;"></div>
       </div>
-      <button id="playHimnoMiniProyector" style="display:none;margin: 1.2em auto 0 auto; width: 90%; max-width: 340px; font-size: 1.3em; background: #28a745; color: #fff; border: none; border-radius: 8px; padding: 0.7em 0; box-shadow: 0 2px 8px #0003; cursor: pointer; transition: background 0.2s;">▶️ Reproducir Himno</button>
+      <button id="playHimnoMiniProyector" class="btn-play-round-mini" style="display:none;margin: 1.2em auto 0 auto;">
+        <i class="fa-solid fa-play"></i>
+      </button>
     </div>
 
     <!-- Reproductor de audio para himnos -->
@@ -133,9 +135,8 @@
         <i class="fa-solid fa-arrow-left"></i>
         <span class="btn-control-text">Anterior</span>
       </button>
-      <button id="playHimnoFooter" style="display:none;">
+      <button id="playHimnoFooter" class="btn-play-round" style="display:none;">
         <i class="fa-solid fa-play"></i>
-        <span class="btn-control-text">Play</span>
       </button>
       <button id="siguiente" class="btn-control">
         <span class="btn-control-text">Siguiente</span>

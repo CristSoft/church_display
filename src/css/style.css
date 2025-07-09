@@ -4,6 +4,8 @@
   --color-gris-base:#23272b;
   /* --color-destacado: #ffd700; */
   --color-destacado: #64a8e7;
+  --color-play-btn: #64a8e7;
+  --color-stop-btn: #ff7b7b;
 }
 
 
@@ -270,19 +272,6 @@ body:not(.con-boton-proyector) #controlHimnario {
   border-radius: 4px;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  #vistaPrevia {
-    padding: 0.5em;
-    font-size: 0.95em;
-  }
-
-  .nav-controls {
-    flex-direction: column;
-    gap: 0.5em;
-  }
-}
-
 .grilla-label {
   font-weight: bold;
   color: var(--color-destacado);
@@ -322,18 +311,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   color: #fff;
 }
 
-@media (max-width: 600px) {
-  .app-footer {
-    flex-direction: column;
-    gap: 0.7em;
-    padding: 0.7em 0.2em;
-  }
 
-  .app-footer button {
-    width: 100%;
-    font-size: 1em;
-  }
-}
 
 /* --- Panel de configuración --- */
 #configModal {
@@ -445,202 +423,6 @@ body:not(.con-boton-proyector) #controlHimnario {
   color: #fff;
 }
 
-/* Estilos específicos para dispositivos móviles */
-@media (max-width: 768px) {
-  body {
-    padding: 1em 0.5em;
-    font-size: 14px;
-  }
-
-  /* Botones más grandes para touch */
-  button,
-  select,
-  input[type="text"] {
-    padding: 0.8em 1em;
-    font-size: 16px;
-    /* Evita zoom en iOS */
-    min-height: 44px;
-    /* Tamaño mínimo para touch */
-  }
-
-  /* Switch más grande */
-  .slider {
-    width: 60px;
-    height: 30px;
-  }
-
-  .slider::before {
-    width: 22px;
-    height: 22px;
-    top: 4px;
-    left: 4px;
-  }
-
-  .switch-input:checked+.slider::before {
-    transform: translateX(30px);
-  }
-
-  /* Sugerencias de libros más anchas */
-  #sugerenciasLibros {
-    width: calc(100% - 2em);
-    max-width: none;
-    left: 1em;
-    right: 1em;
-  }
-
-  /* Grillas más grandes */
-  #grillaCapitulos,
-  #grillaVersiculos {
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-    gap: 0.5em;
-  }
-
-  #grillaCapitulos button,
-  #grillaVersiculos button {
-    min-width: 50px;
-    height: 44px;
-    font-size: 16px;
-  }
-
-  /* Lista de himnos más alta */
-  #listaHimnos {
-    max-height: 300px;
-  }
-
-  /* Vista previa más compacta */
-  #vistaPrevia {
-    min-height: 100px;
-    padding: 0.8em;
-  }
-
-  .card {
-    padding: 0.8em 1em;
-    font-size: 14px;
-  }
-
-  /* Footer más espaciado */
-  .app-footer {
-    padding: 1em 0.5em;
-    gap: 0.5em;
-  }
-
-  .app-footer button {
-    padding: 0.8em 1.2em;
-    font-size: 16px;
-    min-height: 44px;
-  }
-
-  /* Modal de configuración más compacto */
-  #configModal>div {
-    padding: 1.5em;
-    margin: 1em;
-    max-width: calc(100vw - 2em);
-  }
-
-  /* Botones de modo de audio más grandes */
-  .audio-mode-btn {
-    padding: 1em 0.8em;
-    min-height: 60px;
-    font-size: 14px;
-  }
-
-  
-
-  /* Select de versión bíblica más ancho */
-  #versionBiblia {
-    width: 100%;
-    max-width: 100vw;
-    box-sizing: border-box;
-    margin: 0 auto;
-    margin-bottom: 0.5em;  
-    padding-top: 0.5em;
-    padding-left: 0.5em;
-    padding-right: 0.5em;    
-
-    /* width: calc(100% - 1em);
-    max-width: none; */
-  }
-}
-
-/* Estilos para pantallas muy pequeñas */
-@media (max-width: 480px) {
-  body {
-    padding: 0.5em 0.3em;
-    font-size: 13px;
-  }
-
-  /* Grillas más compactas */
-  #grillaCapitulos,
-  #grillaVersiculos {
-    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
-    gap: 0.3em;
-  }
-
-  #grillaCapitulos button,
-  #grillaVersiculos button {
-    min-width: 40px;
-    height: 40px;
-    font-size: 14px;
-  }
-
-  /* Footer más compacto */
-  .app-footer {
-    padding: 0.8em 0.3em;
-  }
-
-  .app-footer button {
-    padding: 0.6em 1em;
-    font-size: 14px;
-  }
-
-  /* Vista previa más compacta */
-  #vistaPrevia {
-    min-height: 80px;
-    padding: 0.6em;
-  }
-
-  .card {
-    padding: 0.6em 0.8em;
-    font-size: 13px;
-  }
-}
-
-/* Mejoras para orientación horizontal en móviles */
-@media (max-width: 768px) and (orientation: landscape) {
-  body {
-    padding: 0.5em;
-  }
-
-  /* Layout más compacto */
-  #controlBiblia,
-  #controlHimnario {
-    margin-bottom: 0.5em;
-  }
-
-  /* Grillas más pequeñas para aprovechar el espacio */
-  #grillaCapitulos,
-  #grillaVersiculos {
-    grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
-    gap: 0.2em;
-  }
-
-  #grillaCapitulos button,
-  #grillaVersiculos button {
-    min-width: 35px;
-    height: 35px;
-    font-size: 12px;
-  }
-
-  /* Lista de himnos más compacta */
-  #listaHimnos {
-    max-height: 200px;
-  }
-
-  /* Footer más compacto */
-  .app-footer {
-    padding: 0.5em;
-  }
-}
 
 #reproductorAudio {
   opacity: 0;
@@ -763,7 +545,7 @@ body {
   z-index: 4000;
   background: var(--color-gris-base);
   box-shadow: 0 -2px 12px #000a;
-  display: block;
+  display: flex;
   justify-content: center;
   align-items: center;
   gap: 1em;  
@@ -914,6 +696,7 @@ body {
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.2s;
+  height: 50px;
 }
 .btn-control:hover {
   background: var(--color-gris-base);
@@ -937,18 +720,291 @@ body {
   margin-right: 0.4em;
 }
 
+/* --- Botones de play redondos --- */
+.btn-play-round {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--color-play-btn);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px #0003; 
+}
+
+.btn-play-round:hover {
+  background: var(--color-play-btn);
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.btn-play-round.playing {
+  background: var(--color-stop-btn);
+}
+
+.btn-play-round.playing:hover {
+  background: var(--color-stop-btn);
+  opacity: 0.8;
+}
+
+.btn-play-round-mini {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--color-play-btn);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px #0003;
+}
+
+.btn-play-round-mini:hover {
+  background: var(--color-play-btn);
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.btn-play-round-mini.playing {
+  background: var(--color-stop-btn);
+}
+
+.btn-play-round-mini.playing:hover {
+  background: var(--color-stop-btn);
+  opacity: 0.8;
+}
+
+
+/* Estilos para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  body {
+    padding: 0.5em 0.3em;
+    font-size: 13px;
+  }
+
+  /* Grillas más compactas */
+  #grillaCapitulos,
+  #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+    gap: 0.3em;
+  }
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
+    min-width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  /* Footer más compacto */
+  .app-footer {
+    padding: 0.8em 0.3em;
+  }
+
+  .app-footer button {
+    padding: 0.6em 1em;
+    font-size: 14px;
+  }
+
+  /* Vista previa más compacta */
+  #vistaPrevia {
+    min-height: 80px;
+    padding: 0.6em;
+  }
+
+  .card {
+    padding: 0.6em 0.8em;
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 600px) {
   body {
     padding-top: 64px !important; /* Asegura espacio suficiente para el topbar en móvil */
   }
+
+  #vistaPrevia {
+    padding: 0.5em;
+    font-size: 0.95em;
+  }
+
+  .nav-controls {
+    flex-direction: column;
+    gap: 0.5em;
+  }
+
+  .app-footer {
+    flex-direction: column;
+    gap: 0.7em;
+    padding: 0.7em 0.2em;
+  }
+
+  .app-footer button {
+    width: 100%;
+    font-size: 1em;
+  }
 }
 
+/* Estilos específicos para dispositivos móviles */
 @media (max-width: 768px) {
-  /* Eliminar la deshabilitación visual del botón en móviles para permitir el cambio de color por JS */
-  /* #abrirProyector {
-    pointer-events: none;
-    opacity: 0.6;
-    filter: grayscale(0.5);
-    cursor: not-allowed;
-  } */
+  body {
+    padding: 1em 0.5em;
+    font-size: 14px;
+  }
+
+  /* Botones más grandes para touch */
+  button,
+  select,
+  input[type="text"] {
+    padding: 0.8em 1em;
+    font-size: 16px;
+    /* Evita zoom en iOS */
+    min-height: 44px;
+    /* Tamaño mínimo para touch */
+  }
+
+  /* Switch más grande */
+  .slider {
+    width: 60px;
+    height: 30px;
+  }
+
+  .slider::before {
+    width: 22px;
+    height: 22px;
+    top: 4px;
+    left: 4px;
+  }
+
+  .switch-input:checked+.slider::before {
+    transform: translateX(30px);
+  }
+
+  /* Sugerencias de libros más anchas */
+  #sugerenciasLibros {
+    width: calc(100% - 2em);
+    max-width: none;
+    left: 1em;
+    right: 1em;
+  }
+
+  /* Grillas más grandes */
+  #grillaCapitulos,
+  #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 0.5em;
+  }
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
+    min-width: 50px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  /* Lista de himnos más alta */
+  #listaHimnos {
+    max-height: 300px;
+  }
+
+  /* Vista previa más compacta */
+  #vistaPrevia {
+    min-height: 100px;
+    padding: 0.8em;
+  }
+
+  .card {
+    padding: 0.8em 1em;
+    font-size: 14px;
+  }
+
+  /* Footer más espaciado */
+  .app-footer {
+    padding: 1em 0.5em;
+    gap: 0.5em;
+  }
+
+  .app-footer button {
+    padding: 0.8em 1.2em;
+    font-size: 16px;
+    min-height: 44px;
+  }
+
+  /* Modal de configuración más compacto */
+  #configModal>div {
+    padding: 1.5em;
+    margin: 1em;
+    max-width: calc(100vw - 2em);
+  }
+
+  /* Botones de modo de audio más grandes */
+  .audio-mode-btn {
+    padding: 1em 0.8em;
+    min-height: 60px;
+    font-size: 14px;
+  }
+
+  
+
+  /* Select de versión bíblica más ancho */
+  #versionBiblia {
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+    margin: 0 auto;
+    margin-bottom: 0.5em;  
+    padding-top: 0.5em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;    
+
+    /* width: calc(100% - 1em);
+    max-width: none; */
+  }
+}
+
+
+/* Mejoras para orientación horizontal en móviles */
+@media (max-width: 768px) and (orientation: landscape) {
+  body {
+    padding: 0.5em;
+  }
+
+  /* Layout más compacto */
+  #controlBiblia,
+  #controlHimnario {
+    margin-bottom: 0.5em;
+  }
+
+  /* Grillas más pequeñas para aprovechar el espacio */
+  #grillaCapitulos,
+  #grillaVersiculos {
+    grid-template-columns: repeat(auto-fit, minmax(35px, 1fr));
+    gap: 0.2em;
+  }
+
+  #grillaCapitulos button,
+  #grillaVersiculos button {
+    min-width: 35px;
+    height: 35px;
+    font-size: 12px;
+  }
+
+  /* Lista de himnos más compacta */
+  #listaHimnos {
+    max-height: 200px;
+  }
+
+  /* Footer más compacto */
+  .app-footer {
+    padding: 0.5em;
+  }
 }
