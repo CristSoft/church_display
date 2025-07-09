@@ -1041,7 +1041,6 @@ function seleccionarCapitulo(event) {
 function cargarCapitulo(libro, capituloIndex) {
   elementos.vistaPrevia.innerHTML = '';
   const capítulo = bibliaActual[libro][capituloIndex];
-  
   capítulo.forEach((versiculo, index) => {
     const card = document.createElement('div');
     card.className = 'card';
@@ -1221,43 +1220,27 @@ async function seleccionarHimno(event) {
  */
 function cargarHimnoEnVistaPrevia() {
   if (!himnoActivo) return;
-  
   elementos.vistaPrevia.innerHTML = '';
-  
-  // Usar el título tal cual viene del JSON
   const tituloLimpio = himnoActivo.titulo;
-  
   // Debug: Log para verificar el título
   console.log('🔍 Debug título (cargarHimnoEnVistaPrevia):', {
     tituloLimpio: tituloLimpio,
     numero: himnoActivo.numero
   });
-  
   himnoActivo.estrofas.forEach((estrofa, index) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.estrofa = index;
-  
     if (index === 0) {
-      // Es el título
       card.innerHTML = `<strong>${himnoActivo.numero} | ${tituloLimpio}</strong>`;
     } else {
-      // Es una estrofa
       const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
       card.innerHTML = `<strong>${versoText}</strong><br>${estrofa.texto}`;
     }
-    
     elementos.vistaPrevia.appendChild(card);
-    
-    // Agregar evento de clic
-    card.addEventListener('click', manejarClicCard);
   });
-  
-  // Seleccionar la primera estrofa por defecto (título)
   estrofaActivaIndex = 0;
   resaltarCard(0);
-  
-  // Mostrar el botón de reproducción
   actualizarBotonPlayHimno();
   actualizarVistaProyector();
 }
@@ -1266,17 +1249,18 @@ function cargarHimnoEnVistaPrevia() {
  * Maneja el clic en una card de estrofa/versículo
  */
 function manejarClicCard(event) {
-  const card = event.currentTarget;
-  const estrofaIndex = parseInt(card.dataset.estrofa);
-  
-  if (esModoBiblia()) {
-    // Modo Biblia
-    versiculoActivoIndex = estrofaIndex;
-    resaltarCard(estrofaIndex);
-    enviarVersiculoAlProyector(estrofaIndex);
+  const card = event.target.closest('.card'); // Corrección
+  if (!card) return; // Añadir esta guarda
+  const esBiblia = esModoBiblia();
+  // Determinar el índice según el modo
+  if (esBiblia) {
+    const versiculoIndex = parseInt(card.dataset.versiculo);
+    versiculoActivoIndex = versiculoIndex;
+    resaltarCard(versiculoIndex);
+    enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
   } else {
-    // Modo Himnario
+    const estrofaIndex = parseInt(card.dataset.estrofa);
     estrofaActivaIndex = estrofaIndex;
     resaltarCard(estrofaIndex);
     enviarEstrofaAlProyector(estrofaIndex);
