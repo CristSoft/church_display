@@ -68,6 +68,10 @@
           <label for="switchSoloReferencia">Solo mostrar referencia bíblica (modo Biblia):</label>
           <input type="checkbox" id="switchSoloReferencia">
         </div>
+        <div id="opcionAutoFullscreen" class="opcion-auto-fullscreen">
+          <label for="switchAutoFullscreen">Auto pantalla completa en landscape (móvil):</label>
+          <input type="checkbox" id="switchAutoFullscreen" checked>
+        </div>
 
       </div>
     </div>
@@ -121,6 +125,9 @@
         <div id="zonaRetroceder" style="position:absolute;left:0;top:0;width:50%;height:100%;cursor:pointer;z-index:2;"></div>
         <div id="zonaAvanzar" style="position:absolute;right:0;top:0;width:50%;height:100%;cursor:pointer;z-index:2;"></div>
         <div id="proyectorPreviewContent" class="mini-proyector-content" style="width:100%;text-align:center;padding:2em;font-size:2.5em;color:#fff;z-index:1;user-select:none;position:relative;"></div>
+        <button id="btnFullscreenMini" class="btn-fullscreen-mini" title="Pantalla completa">
+          <i class="fa-solid fa-expand"></i>
+        </button>
       </div>
       <button id="playHimnoMiniProyector" class="btn-play-round-mini" style="display:none;margin: 1.2em auto 0 auto;">
         <i class="fa-solid fa-play"></i>
@@ -312,7 +319,11 @@
         }
         
         navHimnario.addEventListener('click', () => actualizarModo('himnario'));
-        navBiblia.addEventListener('click', () => actualizarModo('biblia'));
+        navBiblia.addEventListener('click', () => {
+          actualizarModo('biblia');
+          if (typeof window.ocultarPlayFooter === 'function') window.ocultarPlayFooter();
+          if (typeof window.actualizarBotonPlayMiniProyector === 'function') window.actualizarBotonPlayMiniProyector();
+        });
         navConfig.addEventListener('click', () => {
           configModal.style.display = 'flex';
           // Nunca dejar activo el botón de config

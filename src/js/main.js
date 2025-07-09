@@ -21,6 +21,9 @@ let himnoActivo = null;
 // Índices de selección para navegación con teclado
 let libroSugeridoIndex = -1;
 let himnoSugeridoIndex = -1;
+// Variables para pantalla completa
+let modoPantallaCompleta = false;
+let autoFullscreenLandscape = true; // Habilitado por defecto
 
 // Referencias a elementos del DOM
 let elementos = {};
@@ -381,6 +384,16 @@ async function inicializar() {
     zonaAvanzar.addEventListener('click', () => navegar(1));
   }
 
+  // Botón de pantalla completa
+  const btnFullscreenMini = document.getElementById('btnFullscreenMini');
+  if (btnFullscreenMini) {
+    btnFullscreenMini.addEventListener('click', alternarPantallaCompleta);
+  }
+
+  // Detección de orientación para auto-fullscreen
+  window.addEventListener('orientationchange', manejarCambioOrientacion);
+  window.addEventListener('resize', manejarCambioOrientacion);
+
   console.log('✅ Referencias a elementos obtenidas');
 
   // --- Configuración Panel ---
@@ -392,16 +405,20 @@ async function inicializar() {
   const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
   const switchSoloReferencia = document.getElementById('switchSoloReferencia');
   const opcionSoloReferencia = document.getElementById('opcionSoloReferencia');
+  const switchAutoFullscreen = document.getElementById('switchAutoFullscreen');
+  const opcionAutoFullscreen = document.getElementById('opcionAutoFullscreen');
   const sliderFontBibliaContainer = document.getElementById('sliderFontBibliaContainer');
   const sliderFontHimnarioContainer = document.getElementById('sliderFontHimnarioContainer');
 
   // Cargar configuración guardada
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false, autoFullscreen: true };
   sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
   fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
   sliderFontsizeHimnario.value = config.fontsizeHimnario || 5;
   fontsizeValueHimnario.textContent = (config.fontsizeHimnario || 5) + 'vw';
   switchSoloReferencia.checked = !!config.soloReferencia;
+  switchAutoFullscreen.checked = config.autoFullscreen !== false; // true por defecto
+  autoFullscreenLandscape = config.autoFullscreen !== false;
 
   // Mostrar/ocultar sliders según modo
   function actualizarOpcionesModo() {
@@ -441,6 +458,19 @@ async function inicializar() {
   switchSoloReferencia.addEventListener('change', () => {
     config.soloReferencia = switchSoloReferencia.checked;
     guardarYEnviarConfig();
+  });
+  
+  // Switch auto fullscreen
+  switchAutoFullscreen.addEventListener('change', () => {
+    config.autoFullscreen = switchAutoFullscreen.checked;
+    autoFullscreenLandscape = switchAutoFullscreen.checked;
+    localStorage.setItem('proyectorConfig', JSON.stringify(config));
+    
+    if (!autoFullscreenLandscape) {
+      document.body.classList.remove('auto-fullscreen-landscape');
+    } else {
+      manejarCambioOrientacion();
+    }
   });
   
 
@@ -748,6 +778,7 @@ function cambiarModo() {
     elementos.controlHimnario.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
+    actualizarBotonPlayMiniProyector();
   } else {
     elementos.controlBiblia.style.display = 'none';
     elementos.controlHimnario.style.display = 'block';
@@ -776,29 +807,29 @@ function cambiarModo() {
  */
 function cambiarModoGlobal(modo) {
   console.log('🔄 Cambiando modo global a:', modo);
-  
   // Actualizar el estado global
   window.modoActual = modo;
-  
   // Limpiar todo ANTES de cambiar el modo
   limpiarVistaPrevia();
   limpiarProyector();
   limpiarCamposBusqueda();
-  
   // Actualizar la interfaz
   if (modo === 'himnario') {
     elementos.controlHimnario.style.display = 'block';
     elementos.controlBiblia.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/himno-bg.mp4' });
     console.log('🎵 Modo Himnario activado - Video: /src/assets/videos/himno-bg.mp4');
+    document.body.classList.add('modo-himnario');
+    document.body.classList.remove('modo-biblia');
   } else {
     elementos.controlBiblia.style.display = 'block';
     elementos.controlHimnario.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
+    document.body.classList.add('modo-biblia');
+    document.body.classList.remove('modo-himnario');
   }
-  
   // Actualizar opciones del panel de configuración según el modo
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
@@ -813,7 +844,8 @@ function cambiarModoGlobal(modo) {
   enviarMensajeProyector('config', configEnviar);
   actualizarTopBarTitulo();
   actualizarVistaProyector();
-  
+  // Refuerzo: actualizar el botón de play del mini proyector después de cambiar de modo
+  actualizarBotonPlayMiniProyector();
   console.log('✅ Cambio de modo completado');
 }
 
@@ -1253,30 +1285,24 @@ function manejarClicCard(event) {
  * Actualiza el botón de play del himno
  */
 function actualizarBotonPlayHimno() {
-  if (!himnoActivo) {
-    ocultarPlayFooter();
+  const playHimnoFooter = document.getElementById('playHimnoFooter');
+  if (!himnoActivo || esModoBiblia()) {
+    if (playHimnoFooter) playHimnoFooter.style.display = 'none';
     actualizarBotonPlayMiniProyector();
     return;
   }
-  
-  // Verificar si existe audio para este himno
-  const numeroFormateado = himnoActivo.numero.padStart(3, '0');
-  const rutaAudio = construirRutaAudio(numeroFormateado, himnoActivo.titulo);
-  
-  // Mostrar botón de play
-  const playHimnoFooter = document.getElementById('playHimnoFooter');
+  // Solo mostrar si NO es modo Biblia
   if (playHimnoFooter) {
     playHimnoFooter.style.display = 'block';
-    
-      // Actualizar el estado del botón según si está sonando o no
-  const icono = playHimnoFooter.querySelector('i');
-  if (himnoSonando) {
-    icono.className = 'fa-solid fa-stop';
-    playHimnoFooter.classList.add('playing');
-  } else {
-    icono.className = 'fa-solid fa-play';
-    playHimnoFooter.classList.remove('playing');
-  }
+    // Actualizar el estado del botón según si está sonando o no
+    const icono = playHimnoFooter.querySelector('i');
+    if (himnoSonando) {
+      icono.className = 'fa-solid fa-stop';
+      playHimnoFooter.classList.add('playing');
+    } else {
+      icono.className = 'fa-solid fa-play';
+      playHimnoFooter.classList.remove('playing');
+    }
   }
   actualizarBotonPlayMiniProyector();
 }
@@ -1596,6 +1622,9 @@ function alternarVistaPrevisualizacion() {
   }
   actualizarTopBarTitulo();
   actualizarBotonPlayMiniProyector();
+  if (esModoBiblia()) ocultarPlayFooter();
+  // Refuerzo: actualizar el botón de play del himno
+  actualizarBotonPlayHimno();
 }
 
 /**
@@ -1672,7 +1701,16 @@ function actualizarTopBarTitulo() {
 function actualizarBotonPlayMiniProyector() {
   const playMini = document.getElementById('playHimnoMiniProyector');
   if (!playMini) return;
-  if (vistaActual === 'proyector' && !esModoBiblia() && himnoActivo) {
+  // Refuerzo: SIEMPRE ocultar en modo Biblia
+  if (esModoBiblia()) {
+    playMini.style.display = 'none';
+    return;
+  }
+  // Solo mostrar en modo Himnario y si hay himno activo
+  const debeMostrar = (himnoActivo && (
+    vistaActual === 'proyector' || modoPantallaCompleta || document.body.classList.contains('auto-fullscreen-landscape')
+  ));
+  if (debeMostrar) {
     playMini.style.display = 'block';
     const icono = playMini.querySelector('i');
     if (himnoSonando) {
@@ -1701,14 +1739,96 @@ function ajustarRelacionAspectoMiniProyector() {
   }
 }
 
+/**
+ * Alterna entre modo normal y pantalla completa
+ */
+function alternarPantallaCompleta() {
+  modoPantallaCompleta = !modoPantallaCompleta;
+  
+  if (modoPantallaCompleta) {
+    document.body.classList.add('fullscreen-mode');
+    document.body.classList.remove('auto-fullscreen-landscape');
+    const btnFullscreenMini = document.getElementById('btnFullscreenMini');
+    if (btnFullscreenMini) {
+      const icono = btnFullscreenMini.querySelector('i');
+      if (icono) {
+        icono.className = 'fa-solid fa-compress';
+      }
+      btnFullscreenMini.title = 'Salir de pantalla completa';
+    }
+    console.log('🖥️ Modo pantalla completa activado');
+  } else {
+    document.body.classList.remove('fullscreen-mode');
+    const btnFullscreenMini = document.getElementById('btnFullscreenMini');
+    if (btnFullscreenMini) {
+      const icono = btnFullscreenMini.querySelector('i');
+      if (icono) {
+        icono.className = 'fa-solid fa-expand';
+      }
+      btnFullscreenMini.title = 'Pantalla completa';
+    }
+    if (autoFullscreenLandscape && esDispositivoMovil() && window.innerWidth > window.innerHeight) {
+      document.body.classList.add('auto-fullscreen-landscape');
+    }
+    console.log('📱 Modo pantalla completa desactivado');
+  }
+  // Actualizar botón de play SIEMPRE después de cambiar pantalla completa
+  actualizarBotonPlayMiniProyector();
+  ocultarPlayFooter();
+  if (esModoBiblia()) ocultarPlayFooter();
+  // Refuerzo: actualizar el botón de play del himno
+  actualizarBotonPlayHimno();
+}
+
+/**
+ * Maneja el cambio de orientación del dispositivo
+ */
+function manejarCambioOrientacion() {
+  if (!autoFullscreenLandscape) return;
+  
+  const esLandscape = window.innerWidth > window.innerHeight;
+  const esMovil = esDispositivoMovil();
+  
+  if (esMovil && esLandscape && !modoPantallaCompleta) {
+    // Activar auto-fullscreen landscape
+    document.body.classList.add('auto-fullscreen-landscape');
+    console.log('🔄 Auto-fullscreen landscape activado');
+  } else if (esMovil && !esLandscape) {
+    // Desactivar auto-fullscreen landscape
+    document.body.classList.remove('auto-fullscreen-landscape');
+    console.log('🔄 Auto-fullscreen landscape desactivado');
+  }
+  
+  // Actualizar botón de play
+  actualizarBotonPlayMiniProyector();
+}
+
+/**
+ * Habilita o deshabilita el auto-fullscreen landscape
+ */
+function toggleAutoFullscreenLandscape() {
+  autoFullscreenLandscape = !autoFullscreenLandscape;
+  
+  if (!autoFullscreenLandscape) {
+    document.body.classList.remove('auto-fullscreen-landscape');
+  } else {
+    // Verificar si debe aplicar ahora
+    manejarCambioOrientacion();
+  }
+  
+  console.log('🔄 Auto-fullscreen landscape:', autoFullscreenLandscape ? 'habilitado' : 'deshabilitado');
+}
+
 // Llamar también al hacer resize en el panel de control
 window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
 
 // Escuchar eventos de sincronización de proyector
 // Elimina el bloque duplicado de listeners de socket para proyectorAbierto/proyectorCerrado si existe fuera de inicializarSocketIO
 
-// Hacer la función cambiarModoGlobal disponible globalmente
+// Hacer las funciones disponibles globalmente
 window.cambiarModoGlobal = cambiarModoGlobal;
+window.alternarPantallaCompleta = alternarPantallaCompleta;
+window.toggleAutoFullscreenLandscape = toggleAutoFullscreenLandscape;
 
 // Inicializar la aplicación cuando el DOM esté listo
 console.log('📋 DOM cargado, iniciando aplicación...');
@@ -1734,6 +1854,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }).catch(error => {
     console.error('❌ Error al inicializar la aplicación:', error);
   });
+  
+  // Inicializar manejo de orientación
+  setTimeout(() => {
+    manejarCambioOrientacion();
+  }, 1000);
 });
 
 function actualizarVisibilidadBotonProyector() {
