@@ -1,14 +1,14 @@
 {
-  "modo": "himnario",
+  "modo": "biblia",
   "biblia": {
     "version": "es-rv60.json",
     "libro": "Lamentaciones",
     "capitulo": 2,
-    "versiculo": 18
+    "versiculo": 20
   },
   "himnario": {
     "numero": "001",
     "titulo": "Cantad alegres al Señor",
-    "estrofa": 0
+    "estrofa": 3
   }
 }
