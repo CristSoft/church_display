@@ -1433,6 +1433,20 @@ function resaltarCard(versiculoIndex) {
       card.classList.remove('selected');
     }
   });
+  // --- NUEVO: Resaltar también el botón de versículo en la grilla ---
+  if (esModoBiblia()) {
+    const botonesVersiculos = elementos.grillaVersiculos.querySelectorAll('button');
+    botonesVersiculos.forEach((btn, idx) => {
+      btn.classList.toggle('selected', idx === versiculoIndex);
+    });
+    // Resaltar capítulo si corresponde
+    if (capituloActivo !== null) {
+      const botonesCapitulos = elementos.grillaCapitulos.querySelectorAll('button');
+      botonesCapitulos.forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === capituloActivo);
+      });
+    }
+  }
 }
 
 /**
