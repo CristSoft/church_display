@@ -814,15 +814,22 @@ function cambiarModo() {
  * Función global para cambiar modo desde el foot navbar
  * Esta función se puede llamar desde index.html
  */
-function cambiarModoGlobal(modo) {
+function cambiarModoGlobal(modo, propagar = true) {
   console.log('🔄 Cambiando modo global a:', modo);
-  // Actualizar el estado global
   window.modoActual = modo;
-  // Limpiar todo ANTES de cambiar el modo
-  limpiarVistaPrevia();
-  limpiarProyector();
-  limpiarCamposBusqueda();
-  // Actualizar la interfaz
+  // --- Actualizar visualmente los botones del navbar ---
+  const navHimnario = document.getElementById('navHimnario');
+  const navBiblia = document.getElementById('navBiblia');
+  if (navHimnario && navBiblia) {
+    navHimnario.classList.remove('active');
+    navBiblia.classList.remove('active');
+    if (modo === 'himnario') {
+      navHimnario.classList.add('active');
+    } else {
+      navBiblia.classList.add('active');
+    }
+  }
+  // NO limpiar la selección del modo anterior
   if (modo === 'himnario') {
     elementos.controlHimnario.style.display = 'block';
     elementos.controlBiblia.style.display = 'none';
@@ -830,6 +837,9 @@ function cambiarModoGlobal(modo) {
     console.log('🎵 Modo Himnario activado - Video: /src/assets/videos/himno-bg.mp4');
     document.body.classList.add('modo-himnario');
     document.body.classList.remove('modo-biblia');
+    if (window.memoriaUltima && window.memoriaUltima.himnario) {
+      seleccionarEstadoHimnario(window.memoriaUltima.himnario);
+    }
   } else {
     elementos.controlBiblia.style.display = 'block';
     elementos.controlHimnario.style.display = 'none';
@@ -838,13 +848,13 @@ function cambiarModoGlobal(modo) {
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
     document.body.classList.add('modo-biblia');
     document.body.classList.remove('modo-himnario');
+    if (window.memoriaUltima && window.memoriaUltima.biblia) {
+      seleccionarEstadoBiblia(window.memoriaUltima.biblia);
+    }
   }
-  // Actualizar opciones del panel de configuración según el modo
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-  
-  // Enviar configuración actualizada según el modo
   const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
   const configEnviar = {
     fontsize: modo === 'biblia' ? config.fontsizeBiblia : config.fontsizeHimnario,
@@ -853,9 +863,11 @@ function cambiarModoGlobal(modo) {
   enviarMensajeProyector('config', configEnviar);
   actualizarTopBarTitulo();
   actualizarVistaProyector();
-  // Refuerzo: actualizar el botón de play del mini proyector después de cambiar de modo
   actualizarBotonPlayMiniProyector();
   console.log('✅ Cambio de modo completado');
+  if (propagar) {
+    actualizarMemoriaServidor({ modo });
+  }
 }
 
 /**
@@ -1021,6 +1033,11 @@ function seleccionarLibro(event) {
     elementos.sugerenciasLibros.style.display = 'none';
     renderizarGrillaCapitulos(libro);
     libroSugeridoIndex = -1;
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'biblia',
+      biblia: { libro: libro, capitulo: null, versiculo: null }
+    });
   }
 }
 
@@ -1047,14 +1064,18 @@ function seleccionarCapitulo(event) {
   if (event.target.dataset.capitulo) {
     const capituloIndex = parseInt(event.target.dataset.capitulo);
     capituloActivo = capituloIndex;
-    // Resaltar capítulo seleccionado
     elementos.grillaCapitulos.querySelectorAll('button').forEach(btn => {
       btn.classList.remove('selected');
     });
     event.target.classList.add('selected');
     cargarCapitulo(libroActivo, capituloIndex);
     renderizarGrillaVersiculos();
-    mostrarGrillasBiblia(true); // Expandir accordions al cambiar de capítulo
+    mostrarGrillasBiblia(true);
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'biblia',
+      biblia: { libro: libroActivo, capitulo: capituloIndex, versiculo: null }
+    });
   }
 }
 
@@ -1102,7 +1123,6 @@ function seleccionarVersiculo(event) {
   if (event.target.dataset.versiculo) {
     const versiculoIndex = parseInt(event.target.dataset.versiculo);
     versiculoActivoIndex = versiculoIndex;
-    // Resaltar versículo seleccionado
     elementos.grillaVersiculos.querySelectorAll('button').forEach(btn => {
       btn.classList.remove('selected');
     });
@@ -1111,8 +1131,12 @@ function seleccionarVersiculo(event) {
     actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
-    // Ocultar accordions (accordion)
     mostrarGrillasBiblia(false);
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'biblia',
+      biblia: { libro: libroActivo, capitulo: capituloActivo, versiculo: versiculoIndex }
+    });
   }
 }
 
@@ -1167,33 +1191,22 @@ async function seleccionarHimno(event) {
   if (event.type === 'keydown' && event.selectedDiv) {
     target = event.selectedDiv;
   }
-  
   if (target && target.dataset.himno) {
     const himnoFile = target.dataset.himno;
-    
     try {
-      // Cargar el himno
       himnoActivo = await parseHymn(himnoFile);
       if (himnoActivo) {
-        // Usar el título tal cual viene del JSON
         const tituloLimpio = himnoActivo.titulo;
-        
-        // Debug: Log para verificar el título
-        console.log('🔍 Debug título (seleccionarHimno):', {
-          tituloLimpio: tituloLimpio,
-          numero: himnoActivo.numero
-        });
-        
-        // Actualizar el input con el título del himno
         elementos.buscarHimnoInput.value = `${himnoActivo.numero} - ${tituloLimpio}`;
         elementos.listaHimnos.style.display = 'none';
         himnoSugeridoIndex = -1;
-        
-        // Cargar en vista previa
         cargarHimnoEnVistaPrevia();
-        
-        // Enviar título al proyector
         enviarEstrofaAlProyector(0);
+        // Actualizar memoria
+        actualizarMemoriaServidor({
+          modo: 'himnario',
+          himnario: { numero: himnoActivo.numero, titulo: tituloLimpio, estrofa: 0 }
+        });
       }
     } catch (error) {
       console.error('Error al cargar himno:', error);
@@ -1246,12 +1259,24 @@ function manejarClicCard(event) {
     actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'biblia',
+      biblia: { libro: libroActivo, capitulo: capituloActivo, versiculo: versiculoIndex }
+    });
   } else {
     const estrofaIndex = parseInt(card.dataset.estrofa);
     estrofaActivaIndex = estrofaIndex;
     resaltarCard(estrofaIndex);
     enviarEstrofaAlProyector(estrofaIndex);
     actualizarVistaProyector();
+    // Actualizar memoria
+    if (himnoActivo) {
+      actualizarMemoriaServidor({
+        modo: 'himnario',
+        himnario: { numero: himnoActivo.numero, titulo: himnoActivo.titulo, estrofa: estrofaIndex }
+      });
+    }
   }
 }
 
@@ -1367,44 +1392,42 @@ async function reproducirHimno() {
  */
 function navegar(direccion) {
   if (esModoBiblia()) {
-    // Modo Biblia
     if (!bibliaActual || !libroActivo || capituloActivo === null || versiculoActivoIndex < 0) return;
-    
     const capítulo = bibliaActual[libroActivo][capituloActivo];
     const totalVersiculos = capítulo.length;
-    
     versiculoActivoIndex += direccion;
-    
     if (versiculoActivoIndex < 0) {
       versiculoActivoIndex = totalVersiculos - 1;
     } else if (versiculoActivoIndex >= totalVersiculos) {
       versiculoActivoIndex = 0;
     }
-    
     resaltarCard(versiculoActivoIndex);
     actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoActivoIndex);
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'biblia',
+      biblia: { libro: libroActivo, capitulo: capituloActivo, versiculo: versiculoActivoIndex }
+    });
   } else {
-    // Modo Himnario
     if (!himnoActivo || estrofaActivaIndex < 0) return;
-    
     const totalEstrofas = himnoActivo.estrofas.length;
-    
     estrofaActivaIndex += direccion;
-    
     if (estrofaActivaIndex < 0) {
       estrofaActivaIndex = totalEstrofas - 1;
     } else if (estrofaActivaIndex >= totalEstrofas) {
       estrofaActivaIndex = 0;
     }
-    
-    // Resaltar la card seleccionada
     const cards = document.querySelectorAll('.card');
     cards.forEach((card, index) => {
       card.classList.toggle('selected', index === estrofaActivaIndex);
     });
-    
     enviarEstrofaAlProyector(estrofaActivaIndex);
+    // Actualizar memoria
+    actualizarMemoriaServidor({
+      modo: 'himnario',
+      himnario: { numero: himnoActivo.numero, titulo: himnoActivo.titulo, estrofa: estrofaActivaIndex }
+    });
   }
   actualizarVistaProyector();
 }
@@ -1677,13 +1700,13 @@ function actualizarVistaProyector() {
     }
   }
   // Ajustar fuente y estilos igual que el proyector real
-  let fontSize = isBiblia ? '2.2em' : '2.2em';
-  let fontFamily = isBiblia ? "'Qwigley', 'RobotoSlab-Bold', serif" : "'RobotoSlab-Bold', serif";
-  if (isBiblia) {
-    fontSize = '1.3em'; // Más pequeño en modo Biblia
-  }
-  proyectorPreviewContent.style.fontSize = fontSize;
-  proyectorPreviewContent.style.fontFamily = fontFamily;
+  // let fontSize = isBiblia ? '2.2em' : '2.2em';
+  // let fontFamily = isBiblia ? "'Qwigley', 'RobotoSlab-Bold', serif" : "'RobotoSlab-Bold', serif";
+  // if (isBiblia) {
+  //   fontSize = '1.3em'; // Más pequeño en modo Biblia
+  // }
+  // proyectorPreviewContent.style.fontSize = fontSize;
+  // proyectorPreviewContent.style.fontFamily = fontFamily;
   proyectorPreviewContent.innerHTML = (referencia ? `<span class='referencia'>${referencia}</span>` : '') + `<span>${texto}</span>`;
 }
 
@@ -1831,6 +1854,18 @@ window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
 window.cambiarModoGlobal = cambiarModoGlobal;
 window.alternarPantallaCompleta = alternarPantallaCompleta;
 window.toggleAutoFullscreenLandscape = toggleAutoFullscreenLandscape;
+
+// --- INICIO: Identificador único de cliente para sincronización de memoria ---
+function obtenerClientId() {
+  let clientId = localStorage.getItem('clientId');
+  if (!clientId) {
+    clientId = 'cli_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('clientId', clientId);
+  }
+  return clientId;
+}
+const CLIENT_ID = obtenerClientId();
+// --- FIN ---
 
 // Inicializar la aplicación cuando el DOM esté listo
 console.log('📋 DOM cargado, iniciando aplicación...');
@@ -2018,3 +2053,110 @@ document.addEventListener('DOMContentLoaded', function() {
     clearBuscarHimno.style.display = buscarHimnoInput.value.length > 0 ? 'flex' : 'none';
   }
 });
+
+// --- INICIO: Sincronización de memoria con el servidor ---
+function solicitarMemoriaServidor() {
+  if (window.socket) {
+    window.socket.emit('get_memoria');
+  }
+}
+
+function actualizarMemoriaServidor(nuevoEstado) {
+  if (window.socket) {
+    window.socket.emit('set_memoria', { ...nuevoEstado, clientId: CLIENT_ID });
+  }
+}
+
+function aplicarMemoria(memoria) {
+  if (!memoria) return;
+  window.memoriaUltima = memoria;
+  if (window.modoActual !== memoria.modo) {
+    window.cambiarModoGlobal(memoria.modo, false);
+    return;
+  }
+  if (memoria.modo === 'biblia' && memoria.biblia) {
+    seleccionarEstadoBiblia(memoria.biblia);
+  }
+  if (memoria.modo === 'himnario' && memoria.himnario) {
+    seleccionarEstadoHimnario(memoria.himnario);
+  }
+  actualizarVistaProyector();
+  actualizarBotonPlayMiniProyector();
+  actualizarReferenciaBibliaEnVistaPrevia();
+}
+
+function seleccionarEstadoBiblia(biblia) {
+  if (!bibliaActual || !biblia.libro) return;
+  libroActivo = biblia.libro;
+  renderizarGrillaCapitulos(libroActivo);
+  // --- Actualizar input de búsqueda ---
+  if (elementos.buscarLibroInput) {
+    let textoInput = biblia.libro;
+    if (typeof biblia.capitulo === 'number' && biblia.capitulo >= 0) {
+      textoInput += ' ' + (biblia.capitulo + 1);
+      if (typeof biblia.versiculo === 'number' && biblia.versiculo >= 0) {
+        textoInput += ' ' + (biblia.versiculo + 1);
+      }
+    }
+    elementos.buscarLibroInput.value = textoInput;
+  }
+  if (typeof biblia.capitulo === 'number' && biblia.capitulo >= 0) {
+    capituloActivo = biblia.capitulo;
+    cargarCapitulo(libroActivo, capituloActivo);
+    renderizarGrillaVersiculos();
+    if (typeof biblia.versiculo === 'number' && biblia.versiculo >= 0) {
+      versiculoActivoIndex = biblia.versiculo;
+      resaltarCard(versiculoActivoIndex);
+      actualizarReferenciaBibliaEnVistaPrevia();
+      enviarVersiculoAlProyector(versiculoActivoIndex);
+    }
+  }
+}
+
+async function seleccionarEstadoHimnario(himnario) {
+  if (!himnario.numero) return;
+  // Buscar el archivo del himno en el índice
+  const himno = indiceHimnos.find(h => h.number === himnario.numero);
+  if (himno) {
+    himnoActivo = await parseHymn(himno.file);
+    if (himnoActivo) {
+      // --- Actualizar input de búsqueda ---
+      if (elementos.buscarHimnoInput) {
+        elementos.buscarHimnoInput.value = `${himnoActivo.numero} - ${himnoActivo.titulo}`;
+      }
+      cargarHimnoEnVistaPrevia();
+      if (typeof himnario.estrofa === 'number' && himnario.estrofa >= 0) {
+        estrofaActivaIndex = himnario.estrofa;
+        resaltarCard(estrofaActivaIndex);
+        enviarEstrofaAlProyector(estrofaActivaIndex);
+      }
+      // --- Forzar actualización del mini proyector con la estrofa activa ---
+      actualizarVistaProyector();
+    }
+  }
+}
+
+// Al conectar, pedir memoria
+if (typeof io !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.socket) {
+      window.socket.on('memoria_estado', aplicarMemoria);
+      window.socket.on('memoria_actualizada', function(payload) {
+        // payload puede ser { memoria, clientId }
+        let memoria = payload;
+        let fromClientId = null;
+        if (payload && typeof payload === 'object' && 'memoria' in payload) {
+          memoria = payload.memoria;
+          fromClientId = payload.clientId;
+        } else if (payload && typeof payload === 'object' && 'clientId' in payload) {
+          fromClientId = payload.clientId;
+        }
+        // Si el cambio es propio, ignorar
+        if (fromClientId && fromClientId === CLIENT_ID) return;
+        aplicarMemoria(memoria);
+      });
+      solicitarMemoriaServidor();
+    }
+  });
+}
+// --- FIN: Sincronización de memoria con el servidor ---

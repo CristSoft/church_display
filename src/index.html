@@ -337,9 +337,11 @@
           window.modoActual = modo;
         }
         
-        navHimnario.addEventListener('click', () => actualizarModo('himnario'));
+        navHimnario.addEventListener('click', () => {
+          if (typeof window.cambiarModoGlobal === 'function') window.cambiarModoGlobal('himnario', true);
+        });
         navBiblia.addEventListener('click', () => {
-          actualizarModo('biblia');
+          if (typeof window.cambiarModoGlobal === 'function') window.cambiarModoGlobal('biblia', true);
           if (typeof window.ocultarPlayFooter === 'function') window.ocultarPlayFooter();
           if (typeof window.actualizarBotonPlayMiniProyector === 'function') window.actualizarBotonPlayMiniProyector();
         });

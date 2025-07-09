@@ -1,10 +1,44 @@
 from flask import Flask, render_template, send_from_directory, request
 from flask_socketio import SocketIO, emit
 import os
+import json
+from threading import Lock
 
 # Configurar Flask para servir la carpeta 'assets' como estática
 app = Flask(__name__, static_url_path='', static_folder='assets')
 socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=True)
+
+MEMORIA_PATH = 'memoria_estado.json'
+memoria_lock = Lock()
+
+def cargar_memoria():
+    if not os.path.exists(MEMORIA_PATH):
+        memoria = {
+            "modo": "biblia",
+            "biblia": {
+                "version": "es-rv60.json",
+                "libro": None,
+                "capitulo": None,
+                "versiculo": None
+            },
+            "himnario": {
+                "numero": None,
+                "titulo": None,
+                "estrofa": None
+            }
+        }
+        guardar_memoria(memoria)
+        return memoria
+    with memoria_lock:
+        with open(MEMORIA_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+def guardar_memoria(memoria):
+    with memoria_lock:
+        with open(MEMORIA_PATH, 'w', encoding='utf-8') as f:
+            json.dump(memoria, f, ensure_ascii=False, indent=2)
+
+memoria_estado = cargar_memoria()
 
 # Restaurar la ruta personalizada para assets
 @app.route('/assets/<path:filename>')
@@ -136,6 +170,28 @@ def on_proyector_cerrado():
     proyector_abierto = False
     print(f'📤 Recibido proyectorCerrado (reenviando a todos los clientes)')
     emit('proyectorCerrado', broadcast=True)  # include_self=True por defecto
+
+# --- NUEVO: API para memoria del sistema ---
+@socketio.on('get_memoria')
+def on_get_memoria():
+    emit('memoria_estado', memoria_estado)
+
+@socketio.on('set_memoria')
+def on_set_memoria(data):
+    global memoria_estado
+    client_id = data.get('clientId')
+    print(f'📥 Actualizando memoria del sistema: {data}')
+    # Actualizar solo los campos recibidos (excepto clientId)
+    for k, v in data.items():
+        if k in ('clientId',):
+            continue
+        if k in memoria_estado and isinstance(v, dict):
+            memoria_estado[k].update(v)
+        else:
+            if k != 'clientId':
+                memoria_estado[k] = v
+    guardar_memoria(memoria_estado)
+    emit('memoria_actualizada', {'memoria': memoria_estado, 'clientId': client_id}, broadcast=True)
 
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask-SocketIO para Church Display...")
