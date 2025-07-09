@@ -885,7 +885,8 @@ async function cambiarVersionBiblia() {
  */
 function filtrarLibros() {
   if (!bibliaActual) return;
-  const texto = elementos.buscarLibroInput.value.toLowerCase().trim();
+  const textoInput = elementos.buscarLibroInput.value;
+  const texto = textoInput.toLowerCase().trim();
   if (texto.length === 0) {
     elementos.sugerenciasLibros.style.display = 'none';
     libroSugeridoIndex = -1;
@@ -912,12 +913,26 @@ function filtrarLibros() {
   );
   libroSugeridoIndex = filtrados.length > 0 ? 0 : -1;
 
-  // Si el input termina con un espacio después del nombre del libro (ignorando el espacio entre número y nombre)
-  const terminaConEspacio = /^(\d+\s)?[\wáéíóúüñ]+\s$/i.test(elementos.buscarLibroInput.value);
-  if (terminaConEspacio) {
-    elementos.sugerenciasLibros.style.display = 'none';
+  // --- NUEVO: Si el usuario ya escribió un libro válido seguido de un espacio, nunca mostrar sugerencias ---
+  // Ejemplo: "Juan "
+  const partes = textoInput.split(/\s+/);
+  let nombreLibroInput = partes[0];
+  if (partes.length > 1 && partes[0].length > 0) {
+    // Si el primer "palabra" es un libro válido y hay un espacio después
+    const libroValido = libros.find(l => l.toLowerCase() === nombreLibroInput.toLowerCase());
+    if (libroValido && textoInput.match(/^\s*\S+\s/)) {
+      elementos.sugerenciasLibros.style.display = 'none';
+    } else {
+      mostrarSugerenciasLibros(filtrados);
+    }
   } else {
-    mostrarSugerenciasLibros(filtrados);
+    // Lógica original para el caso sin espacio
+    const terminaConEspacio = /^(\d+\s)?[\wáéíóúüñ]+\s$/i.test(textoInput);
+    if (terminaConEspacio) {
+      elementos.sugerenciasLibros.style.display = 'none';
+    } else {
+      mostrarSugerenciasLibros(filtrados);
+    }
   }
 
   // Selección automática de libro/capítulo/versículo en tiempo real
@@ -1507,7 +1522,7 @@ function inicializarAudioMode() {
  */
 function manejarTeclasSugerenciasLibros(event) {
   if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
-    const sugerencias = document.querySelectorAll('.sugerenciasLibros div');
+    const sugerencias = document.querySelectorAll('#sugerenciasLibros div');
     let index = Array.from(sugerencias).findIndex(div => div.classList.contains('selected'));
     
     if (event.key === "ArrowUp") {
@@ -1517,11 +1532,18 @@ function manejarTeclasSugerenciasLibros(event) {
     } else if (event.key === "Enter") {
       const selectedDiv = sugerencias[index];
       if (selectedDiv) {
+        // Nuevo: poner el texto del sugerido en el input
+        elementos.buscarLibroInput.value = selectedDiv.textContent;
         seleccionarLibro({ type: 'click', selectedDiv });
+        // También ocultar sugerencias
+        elementos.sugerenciasLibros.style.display = 'none';
+        // Evitar el submit del formulario si lo hubiera
+        event.preventDefault();
+        return;
       }
     }
     
-  sugerencias.forEach((div, idx) => {
+    sugerencias.forEach((div, idx) => {
       div.classList.toggle('selected', idx === index);
     });
   }
@@ -1532,7 +1554,7 @@ function manejarTeclasSugerenciasLibros(event) {
  */
 function manejarTeclasListaHimnos(event) {
   if (["ArrowUp", "ArrowDown", "Enter"].includes(event.key)) {
-    const himnos = document.querySelectorAll('.listaHimnos div');
+    const himnos = document.querySelectorAll('#listaHimnos div');
     let index = Array.from(himnos).findIndex(div => div.classList.contains('selected'));
     
     if (event.key === "ArrowUp") {
@@ -1542,11 +1564,17 @@ function manejarTeclasListaHimnos(event) {
     } else if (event.key === "Enter") {
       const selectedDiv = himnos[index];
       if (selectedDiv) {
+        // Nuevo: poner el texto del sugerido en el input
+        elementos.buscarHimnoInput.value = selectedDiv.textContent;
         seleccionarHimno({ type: 'click', target: selectedDiv });
+        // También ocultar lista
+        elementos.listaHimnos.style.display = 'none';
+        event.preventDefault();
+        return;
       }
     }
     
-  himnos.forEach((div, idx) => {
+    himnos.forEach((div, idx) => {
       div.classList.toggle('selected', idx === index);
     });
   }
