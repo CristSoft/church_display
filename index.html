@@ -105,10 +105,18 @@
         <select id="versionBiblia"></select>
         <input type="text" id="buscarLibro" placeholder="Escribe un libro...">
         <div id="sugerenciasLibros"></div>
-        <div class="grilla-label">Capítulos</div>
-        <div id="grillaCapitulos"></div>
-        <div class="grilla-label">Versículos</div>
-        <div id="grillaVersiculos"></div>
+        <div class="accordion-container" id="accordionCapitulos">
+          <div class="accordion-header" id="headerCapitulos">Capítulos</div>
+          <div class="accordion-content" id="contentCapitulos">
+            <div id="grillaCapitulos"></div>
+          </div>
+        </div>
+        <div class="accordion-container" id="accordionVersiculos">
+          <div class="accordion-header" id="headerVersiculos">Versículos</div>
+          <div class="accordion-content" id="contentVersiculos">
+            <div id="grillaVersiculos"></div>
+          </div>
+        </div>
     </div>
 
     <!-- Contenedor para el Himnario -->

@@ -524,6 +524,9 @@ async function inicializar() {
   // Inicializar modo de audio
   inicializarAudioMode();
   
+  // Lógica de accordions para capítulos y versículos
+  inicializarAccordionsBiblia();
+  
   console.log('✅ Función inicializar() completada exitosamente');
   console.log('🔌 Estado final del socket:', {
     existe: typeof window.socket !== 'undefined',
@@ -616,6 +619,8 @@ function configurarEventos() {
         });
         resaltarCard(versiculoActivoIndex);
         enviarVersiculoAlProyector(versiculoActivoIndex);
+        // Ocultar grillas (accordion)
+        mostrarGrillasBiblia(false);
         e.preventDefault();
       }
     }
@@ -1014,6 +1019,7 @@ function renderizarGrillaCapitulos(libro) {
     button.dataset.capitulo = index;
     elementos.grillaCapitulos.appendChild(button);
   });
+  mostrarGrillasBiblia(true); // Expandir accordions al cambiar de libro
 }
 
 /**
@@ -1023,15 +1029,14 @@ function seleccionarCapitulo(event) {
   if (event.target.dataset.capitulo) {
     const capituloIndex = parseInt(event.target.dataset.capitulo);
     capituloActivo = capituloIndex;
-    
     // Resaltar capítulo seleccionado
     elementos.grillaCapitulos.querySelectorAll('button').forEach(btn => {
       btn.classList.remove('selected');
     });
     event.target.classList.add('selected');
-    
     cargarCapitulo(libroActivo, capituloIndex);
     renderizarGrillaVersiculos();
+    mostrarGrillasBiblia(true); // Expandir accordions al cambiar de capítulo
   }
 }
 
@@ -1081,6 +1086,8 @@ function seleccionarVersiculo(event) {
     resaltarCard(versiculoIndex);
     enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
+    // Ocultar accordions (accordion)
+    mostrarGrillasBiblia(false);
   }
 }
 
@@ -1890,5 +1897,32 @@ function actualizarVisibilidadBotonProyector() {
     boton.style.pointerEvents = '';
     boton.style.cursor = '';
     body.classList.add('con-boton-proyector');
+  }
+}
+
+// Función para mostrar/ocultar grillas de capítulos y versículos (accordion)
+function mostrarGrillasBiblia(mostrar) {
+  const contentCap = document.getElementById('contentCapitulos');
+  const contentVers = document.getElementById('contentVersiculos');
+  if (contentCap) contentCap.classList.toggle('collapsed', !mostrar);
+  if (contentVers) contentVers.classList.toggle('collapsed', !mostrar);
+}
+
+// Lógica de accordions para capítulos y versículos
+function inicializarAccordionsBiblia() {
+  const headerCap = document.getElementById('headerCapitulos');
+  const contentCap = document.getElementById('contentCapitulos');
+  const headerVers = document.getElementById('headerVersiculos');
+  const contentVers = document.getElementById('contentVersiculos');
+
+  if (headerCap && contentCap) {
+    headerCap.addEventListener('click', () => {
+      contentCap.classList.toggle('collapsed');
+    });
+  }
+  if (headerVers && contentVers) {
+    headerVers.addEventListener('click', () => {
+      contentVers.classList.toggle('collapsed');
+    });
   }
 }

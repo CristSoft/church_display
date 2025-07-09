@@ -1188,3 +1188,32 @@ body.modo-biblia #playHimnoMiniProyector {
 #zonaAvanzar:hover .mini-proyector-arrow {
   opacity: 0.55;
 }
+
+/* --- Accordions para capítulos y versículos --- */
+.accordion-container {
+  margin-bottom: 1em;
+  border-radius: 6px;
+  background: #23272b;
+  box-shadow: 0 2px 8px #0002;
+}
+.accordion-header {
+  padding: 0.7em 1em;
+  font-weight: bold;
+  color: var(--color-destacado);
+  background: #23272b;
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  user-select: none;
+  transition: background 0.2s;
+}
+.accordion-header:hover {
+  background: #2c3136;
+}
+.accordion-content {
+  padding: 0.7em 0.5em 0.5em 0.5em;
+  display: block;
+  transition: max-height 0.3s ease;
+}
+.accordion-content.collapsed {
+  display: none;
+}
