@@ -656,11 +656,10 @@ async function cargarDatosIniciales() {
       await cambiarVersionBiblia();
     }
     
-    // Cargar índice de himnos
-    console.log('🎵 Cargando índice de himnos...');
-    console.log('🔍 getHymnIndex disponible:', typeof getHymnIndex !== 'undefined' ? 'Sí' : 'No');
-    
-    indiceHimnos = await getHymnIndex();
+    // Cargar índice de himnos desde JSON
+    console.log('🎵 Cargando índice de himnos desde JSON...');
+    const resp = await fetch('/src/assets/himnos/indice_himnos.json');
+    indiceHimnos = await resp.json();
     console.log('✅ Índice de himnos cargado:', indiceHimnos ? indiceHimnos.length + ' himnos' : 'No disponible');
     
     console.log('✅ Datos iniciales cargados exitosamente');
@@ -1102,85 +1101,38 @@ function seleccionarVersiculo(event) {
 /**
  * Filtra himnos según el texto ingresado
  */
-async function filtrarHimnos() {
+function filtrarHimnos() {
   const texto = elementos.buscarHimno.value;
   const textoNormalizado = normalizarTexto(texto.toLowerCase());
-
-  // Si el usuario busca solo por número
-  const esNumero = /^\d+$/.test(textoNormalizado);
-
-  // Preparamos una lista de himnos con su relevancia
-  let himnosConRelevancia = indiceHimnos.map(himno => {
-    const tituloNormalizado = normalizarTexto(himno.title.toLowerCase());
-    let relevancia = 1000; // valor alto por defecto
-    let posicion = tituloNormalizado.length;
-
-    // Coincidencia exacta (título completo)
-    if (tituloNormalizado === textoNormalizado) {
-      relevancia = 0;
-      posicion = 0;
-    } else if (esNumero && himno.number === textoNormalizado.padStart(3, '0')) {
-      // Coincidencia exacta por número
-      relevancia = 0;
-      posicion = 0;
-    } else if (tituloNormalizado.includes(textoNormalizado)) {
-      // Coincidencia parcial en el título
-      relevancia = 1;
-      posicion = tituloNormalizado.indexOf(textoNormalizado);
-    } else if (himno.number.includes(textoNormalizado)) {
-      // Coincidencia parcial en el número
-      relevancia = 2;
-      posicion = 0;
-    }
-    return { ...himno, relevancia, posicion };
+  if (!textoNormalizado) {
+    elementos.listaHimnos.innerHTML = '';
+    elementos.listaHimnos.style.display = 'none';
+    return;
+  }
+  // Buscar en número o título simultáneamente
+  const resultados = indiceHimnos.filter(himno => {
+    const titulo = normalizarTexto(himno.title.toLowerCase());
+    const numero = himno.number;
+    return titulo.includes(textoNormalizado) || numero.includes(textoNormalizado);
   });
-
-  // Filtrar solo los que tienen alguna coincidencia
-  himnosConRelevancia = himnosConRelevancia.filter(h => h.relevancia < 1000);
-
-  // Ordenar por relevancia y posición de la coincidencia
-  himnosConRelevancia.sort((a, b) => {
-    if (a.relevancia !== b.relevancia) return a.relevancia - b.relevancia;
-    if (a.posicion !== b.posicion) return a.posicion - b.posicion;
-    // Si todo es igual, ordenar por número
-    return a.number.localeCompare(b.number);
-  });
-
   himnoSugeridoIndex = -1; // Reiniciar selección al filtrar
-  await mostrarListaHimnos(himnosConRelevancia);
+  mostrarListaHimnos(resultados);
 }
 
 /**
  * Muestra la lista de himnos filtrados
  */
-async function mostrarListaHimnos(himnos) {
+function mostrarListaHimnos(himnos) {
   elementos.listaHimnos.innerHTML = '';
-  
-  // Filtrar himnos que realmente existen
-  const himnosValidos = [];
-  for (const himno of himnos) {
-    try {
-      const response = await fetch(`/src/assets/himnos/letra/${himno.file}`, { method: 'HEAD' });
-      if (response.ok) {
-        himnosValidos.push(himno);
-      } else {
-        console.warn(`Himno no encontrado: ${himno.file}`);
-      }
-    } catch (error) {
-      console.warn(`Error al verificar himno ${himno.file}:`, error);
-    }
-  }
-  
-  // Mostrar solo los himnos válidos
-  himnosValidos.slice(0, 20).forEach((himno, idx) => {
+  // Mostrar solo los primeros 20 resultados
+  himnos.slice(0, 20).forEach((himno, idx) => {
     const div = document.createElement('div');
     div.textContent = `${himno.number} - ${himno.title}`;
     div.dataset.himno = himno.file;
     if (idx === himnoSugeridoIndex) div.classList.add('selected');
     elementos.listaHimnos.appendChild(div);
   });
-  
-  if (himnosValidos.length > 0) {
+  if (himnos.length > 0) {
     elementos.listaHimnos.style.display = 'block';
   } else {
     elementos.listaHimnos.style.display = 'none';
