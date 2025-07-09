@@ -886,7 +886,7 @@ async function cambiarVersionBiblia() {
 function filtrarLibros() {
   if (!bibliaActual) return;
   const textoInput = elementos.buscarLibroInput.value;
-  const texto = textoInput.toLowerCase().trim();
+  const texto = normalizarTexto(textoInput.toLowerCase().trim());
   if (texto.length === 0) {
     elementos.sugerenciasLibros.style.display = 'none';
     libroSugeridoIndex = -1;
@@ -895,21 +895,20 @@ function filtrarLibros() {
 
   // Expresión regular para extraer: libro, capítulo y versículo
   const regex = /^(\d+\s)?([\wáéíóúüñ]+)(?:[\s,:\.]+(\d+))?(?:[\s,:\.]+(\d+))?$/i;
-  const match = texto.match(regex);
+  const match = textoInput.match(regex);
   let nombreLibro = texto;
   let cap = null;
   let vers = null;
   if (match) {
-    nombreLibro = (match[1] ? match[1] : '') + match[2];
-    nombreLibro = nombreLibro.trim();
+    nombreLibro = normalizarTexto(((match[1] ? match[1] : '') + match[2]).trim());
     cap = match[3] ? parseInt(match[3], 10) : null;
     vers = match[4] ? parseInt(match[4], 10) : null;
   }
 
-  // Buscar libros que coincidan con el nombre
+  // Buscar libros que coincidan con el nombre (normalizado)
   const libros = Object.keys(bibliaActual);
   const filtrados = libros.filter(libro => 
-    libro.toLowerCase().includes(nombreLibro)
+    normalizarTexto(libro).includes(nombreLibro)
   );
   libroSugeridoIndex = filtrados.length > 0 ? 0 : -1;
 
@@ -919,7 +918,7 @@ function filtrarLibros() {
   let nombreLibroInput = partes[0];
   if (partes.length > 1 && partes[0].length > 0) {
     // Si el primer "palabra" es un libro válido y hay un espacio después
-    const libroValido = libros.find(l => l.toLowerCase() === nombreLibroInput.toLowerCase());
+    const libroValido = libros.find(l => normalizarTexto(l) === normalizarTexto(nombreLibroInput));
     if (libroValido && textoInput.match(/^\s*\S+\s/)) {
       elementos.sugerenciasLibros.style.display = 'none';
     } else {
@@ -936,7 +935,7 @@ function filtrarLibros() {
   }
 
   // Selección automática de libro/capítulo/versículo en tiempo real
-  const libro = libros.find(l => l.toLowerCase() === nombreLibro);
+  const libro = libros.find(l => normalizarTexto(l) === nombreLibro);
   if (libro) {
     if (libroActivo !== libro) {
       libroActivo = libro;
@@ -1128,10 +1127,12 @@ function filtrarHimnos() {
     elementos.listaHimnos.style.display = 'none';
     return;
   }
-  // Buscar SOLO en la etiqueta 'file'
+  // Buscar en número, título y archivo, todos normalizados
   const resultados = indiceHimnos.filter(himno => {
-    const file = normalizarTexto(himno.file.toLowerCase());
-    return file.includes(textoNormalizado);
+    const numero = normalizarTexto((himno.number || ''));
+    const titulo = normalizarTexto((himno.title || ''));
+    const file = normalizarTexto((himno.file || ''));
+    return numero.includes(textoNormalizado) || titulo.includes(textoNormalizado) || file.includes(textoNormalizado);
   });
   himnoSugeridoIndex = -1; // Reiniciar selección al filtrar
   mostrarListaHimnos(resultados);
