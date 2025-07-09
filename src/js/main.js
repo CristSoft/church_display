@@ -618,6 +618,7 @@ function configurarEventos() {
           btn.classList.toggle('selected', idx === versiculoActivoIndex);
         });
         resaltarCard(versiculoActivoIndex);
+        actualizarReferenciaBibliaEnVistaPrevia();
         enviarVersiculoAlProyector(versiculoActivoIndex);
         // Ocultar grillas (accordion)
         mostrarGrillasBiblia(false);
@@ -1045,6 +1046,11 @@ function seleccionarCapitulo(event) {
  */
 function cargarCapitulo(libro, capituloIndex) {
   elementos.vistaPrevia.innerHTML = '';
+  // Crear el div de referencia vacío (se llenará con la función)
+  const referenciaDiv = document.createElement('div');
+  referenciaDiv.className = 'referencia-biblia';
+  elementos.vistaPrevia.appendChild(referenciaDiv);
+
   const capítulo = bibliaActual[libro][capituloIndex];
   capítulo.forEach((versiculo, index) => {
     const card = document.createElement('div');
@@ -1053,6 +1059,7 @@ function cargarCapitulo(libro, capituloIndex) {
     card.innerHTML = `<strong>${versiculo.verse}</strong> ${versiculo.text}`;
     elementos.vistaPrevia.appendChild(card);
   });
+  actualizarReferenciaBibliaEnVistaPrevia();
   actualizarVistaProyector();
 }
 
@@ -1084,6 +1091,7 @@ function seleccionarVersiculo(event) {
     });
     event.target.classList.add('selected');
     resaltarCard(versiculoIndex);
+    actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
     // Ocultar accordions (accordion)
@@ -1264,6 +1272,7 @@ function manejarClicCard(event) {
     const versiculoIndex = parseInt(card.dataset.versiculo);
     versiculoActivoIndex = versiculoIndex;
     resaltarCard(versiculoIndex);
+    actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
   } else {
@@ -1402,6 +1411,7 @@ function navegar(direccion) {
     }
     
     resaltarCard(versiculoActivoIndex);
+    actualizarReferenciaBibliaEnVistaPrevia();
     enviarVersiculoAlProyector(versiculoActivoIndex);
   } else {
     // Modo Himnario
@@ -1925,4 +1935,25 @@ function inicializarAccordionsBiblia() {
       contentVers.classList.toggle('collapsed');
     });
   }
+}
+
+// Nueva función para actualizar la referencia en la vista previa
+function actualizarReferenciaBibliaEnVistaPrevia() {
+  // Buscar el div de referencia
+  let referenciaDiv = elementos.vistaPrevia.querySelector('.referencia-biblia');
+  if (!referenciaDiv) {
+    referenciaDiv = document.createElement('div');
+    referenciaDiv.className = 'referencia-biblia';
+    elementos.vistaPrevia.prepend(referenciaDiv);
+  }
+  if (!bibliaActual || !libroActivo || capituloActivo === null) {
+    referenciaDiv.textContent = '';
+    return;
+  }
+  let referenciaTexto = `${libroActivo} ${capituloActivo + 1}`;
+  if (typeof versiculoActivoIndex === 'number' && versiculoActivoIndex >= 0 && bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex]) {
+    const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
+    referenciaTexto = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
+  }
+  referenciaDiv.textContent = referenciaTexto;
 }

@@ -1217,3 +1217,10 @@ body.modo-biblia #playHimnoMiniProyector {
 .accordion-content.collapsed {
   display: none;
 }
+
+.referencia-biblia {
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--color-destacado);
+  margin: 0.5em 0 1em 0;
+}
