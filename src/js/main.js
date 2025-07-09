@@ -251,21 +251,23 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   
   // Usar el título tal cual viene del JSON
   const tituloLimpio = himnoActivo.titulo;
+  // Obtener el número sin ceros a la izquierda
+  const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
   
   // Debug: Log para verificar el título
   console.log('🔍 Debug título:', {
     tituloLimpio: tituloLimpio,
-    numero: himnoActivo.numero
+    numero: numeroSinCeros
   });
   
   if (esTitulo) {
     // Es el título del himno
     enviarMensajeProyector('update_text', {
-      texto: `${himnoActivo.numero} | ${tituloLimpio}`,
-      ref: `Himno ${himnoActivo.numero} - ${tituloLimpio}`,
+      texto: `${numeroSinCeros} | ${tituloLimpio}`,
+      ref: `Himno ${numeroSinCeros} - ${tituloLimpio}`,
       himnoData: {
         esTitulo: true,
-        numero: himnoActivo.numero,
+        numero: numeroSinCeros,
         titulo: tituloLimpio,
         totalEstrofas: himnoActivo.estrofas.length
       }
@@ -274,14 +276,14 @@ function enviarEstrofaAlProyector(estrofaIndex) {
     // Es una estrofa
     const textoEstrofa = estrofa.texto; // Usar el texto de la estrofa
     const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
-    const ref = `${himnoActivo.numero} | ${tituloLimpio} - ${versoText}`;
+    const ref = `${numeroSinCeros} | ${tituloLimpio} - ${versoText}`;
     
     enviarMensajeProyector('update_text', {
       texto: textoEstrofa,
       ref: ref,
       himnoData: {
         esTitulo: false,
-        numero: himnoActivo.numero,
+        numero: numeroSinCeros,
         titulo: tituloLimpio,
         verso: estrofa.verso,
         estrofaIndex: estrofaIndex,
@@ -295,7 +297,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   console.log('📤 Estrofa enviada al proyector:', {
     index: estrofaIndex,
     esTitulo: esTitulo,
-    texto: esTitulo ? `${himnoActivo.numero} | ${tituloLimpio}` : estrofa.texto,
+    texto: esTitulo ? `${numeroSinCeros} | ${tituloLimpio}` : estrofa.texto,
     verso: esTitulo ? 'Título' : estrofa.verso
   });
 }
@@ -317,11 +319,13 @@ async function inicializar() {
     controlBiblia: document.getElementById('controlBiblia'),
     controlHimnario: document.getElementById('controlHimnario'),
     versionBiblia: document.getElementById('versionBiblia'),
-    buscarLibro: document.getElementById('buscarLibro'),
+    buscarLibroInput: document.getElementById('buscarLibroInput'),
+    clearBuscarLibro: document.getElementById('clearBuscarLibro'),
     sugerenciasLibros: document.getElementById('sugerenciasLibros'),
     grillaCapitulos: document.getElementById('grillaCapitulos'),
     grillaVersiculos: document.getElementById('grillaVersiculos'),
-    buscarHimno: document.getElementById('buscarHimno'),
+    buscarHimnoInput: document.getElementById('buscarHimnoInput'),
+    clearBuscarHimno: document.getElementById('clearBuscarHimno'),
     listaHimnos: document.getElementById('listaHimnos'),
     vistaPrevia: document.getElementById('vistaPrevia'),
     anterior: document.getElementById('anterior'),
@@ -544,24 +548,24 @@ function configurarEventos() {
 
   // Eventos modo Biblia
   elementos.versionBiblia.addEventListener('change', cambiarVersionBiblia);
-  elementos.buscarLibro.addEventListener('keyup', function(e) {
+  elementos.buscarLibroInput.addEventListener('keyup', function(e) {
     if (["ArrowUp", "ArrowDown", "Enter"].includes(e.key)) return;
     filtrarLibros();
   });
   elementos.sugerenciasLibros.addEventListener('click', seleccionarLibro);
   // Navegación con teclado en sugerencias de libros
-  elementos.buscarLibro.addEventListener('keydown', manejarTeclasSugerenciasLibros);
+  elementos.buscarLibroInput.addEventListener('keydown', manejarTeclasSugerenciasLibros);
   elementos.grillaCapitulos.addEventListener('click', seleccionarCapitulo);
   elementos.grillaVersiculos.addEventListener('click', seleccionarVersiculo);
 
   // Eventos modo Himnario
-  elementos.buscarHimno.addEventListener('keyup', function(e) {
+  elementos.buscarHimnoInput.addEventListener('keyup', function(e) {
     if (["ArrowUp", "ArrowDown", "Enter"].includes(e.key)) return;
     filtrarHimnos();
   });
   elementos.listaHimnos.addEventListener('click', seleccionarHimno);
   // Navegación con teclado en lista de himnos
-  elementos.buscarHimno.addEventListener('keydown', manejarTeclasListaHimnos);
+  elementos.buscarHimnoInput.addEventListener('keydown', manejarTeclasListaHimnos);
 
   // Navegación
   elementos.anterior.addEventListener('click', () => navegar(-1));
@@ -578,16 +582,16 @@ function configurarEventos() {
   
   // Ocultar sugerencias cuando se hace clic fuera
   document.addEventListener('click', (event) => {
-    if (!elementos.buscarLibro.contains(event.target) && !elementos.sugerenciasLibros.contains(event.target)) {
+    if (!elementos.buscarLibroInput.contains(event.target) && !elementos.sugerenciasLibros.contains(event.target)) {
       elementos.sugerenciasLibros.style.display = 'none';
     }
   });
 
   // En configurarEventos, agregar este event listener:
-  elementos.buscarLibro.addEventListener('keydown', function(e) {
+  elementos.buscarLibroInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       // Si ya hay libro, capítulo y versículo válidos, lanzar al proyector
-      const texto = elementos.buscarLibro.value.toLowerCase().trim();
+      const texto = elementos.buscarLibroInput.value.toLowerCase().trim();
       // Expresión regular para extraer: libro, capítulo y versículo
       const regex = /^(\d+\s)?([\wáéíóúüñ]+)(?:[\s,:\.]+(\d+))?(?:[\s,:\.]+(\d+))?$/i;
       const match = texto.match(regex);
@@ -881,7 +885,7 @@ async function cambiarVersionBiblia() {
  */
 function filtrarLibros() {
   if (!bibliaActual) return;
-  const texto = elementos.buscarLibro.value.toLowerCase().trim();
+  const texto = elementos.buscarLibroInput.value.toLowerCase().trim();
   if (texto.length === 0) {
     elementos.sugerenciasLibros.style.display = 'none';
     libroSugeridoIndex = -1;
@@ -909,7 +913,7 @@ function filtrarLibros() {
   libroSugeridoIndex = filtrados.length > 0 ? 0 : -1;
 
   // Si el input termina con un espacio después del nombre del libro (ignorando el espacio entre número y nombre)
-  const terminaConEspacio = /^(\d+\s)?[\wáéíóúüñ]+\s$/i.test(elementos.buscarLibro.value);
+  const terminaConEspacio = /^(\d+\s)?[\wáéíóúüñ]+\s$/i.test(elementos.buscarLibroInput.value);
   if (terminaConEspacio) {
     elementos.sugerenciasLibros.style.display = 'none';
   } else {
@@ -970,7 +974,7 @@ function mostrarSugerenciasLibros(libros = null) {
   if (librosAMostrar.length > 0) {
     elementos.sugerenciasLibros.style.display = 'block';
     // Posicionar las sugerencias debajo del input
-    const inputRect = elementos.buscarLibro.getBoundingClientRect();
+    const inputRect = elementos.buscarLibroInput.getBoundingClientRect();
     elementos.sugerenciasLibros.style.top = (inputRect.bottom + 5) + 'px';
     elementos.sugerenciasLibros.style.left = inputRect.left + 'px';
     // Asegurar resaltado visual correcto después de renderizar
@@ -999,7 +1003,7 @@ function seleccionarLibro(event) {
   if (target && target.dataset.libro) {
     const libro = target.dataset.libro;
     libroActivo = libro;
-    elementos.buscarLibro.value = libro;
+    elementos.buscarLibroInput.value = libro;
     elementos.sugerenciasLibros.style.display = 'none';
     renderizarGrillaCapitulos(libro);
     libroSugeridoIndex = -1;
@@ -1102,18 +1106,17 @@ function seleccionarVersiculo(event) {
  * Filtra himnos según el texto ingresado
  */
 function filtrarHimnos() {
-  const texto = elementos.buscarHimno.value;
+  const texto = elementos.buscarHimnoInput.value;
   const textoNormalizado = normalizarTexto(texto.toLowerCase());
   if (!textoNormalizado) {
     elementos.listaHimnos.innerHTML = '';
     elementos.listaHimnos.style.display = 'none';
     return;
   }
-  // Buscar en número o título simultáneamente
+  // Buscar SOLO en la etiqueta 'file'
   const resultados = indiceHimnos.filter(himno => {
-    const titulo = normalizarTexto(himno.title.toLowerCase());
-    const numero = himno.number;
-    return titulo.includes(textoNormalizado) || numero.includes(textoNormalizado);
+    const file = normalizarTexto(himno.file.toLowerCase());
+    return file.includes(textoNormalizado);
   });
   himnoSugeridoIndex = -1; // Reiniciar selección al filtrar
   mostrarListaHimnos(resultados);
@@ -1166,7 +1169,7 @@ async function seleccionarHimno(event) {
         });
         
         // Actualizar el input con el título del himno
-        elementos.buscarHimno.value = `${himnoActivo.numero} - ${tituloLimpio}`;
+        elementos.buscarHimnoInput.value = `${himnoActivo.numero} - ${tituloLimpio}`;
         elementos.listaHimnos.style.display = 'none';
         himnoSugeridoIndex = -1;
         
@@ -1471,11 +1474,11 @@ function limpiarProyector() {
  */
 function limpiarCamposBusqueda() {
   console.log('🧹 Limpiando campos de búsqueda...');
-  if (elementos.buscarLibro) {
-    elementos.buscarLibro.value = '';
+  if (elementos.buscarLibroInput) {
+    elementos.buscarLibroInput.value = '';
   }
-  if (elementos.buscarHimno) {
-    elementos.buscarHimno.value = '';
+  if (elementos.buscarHimnoInput) {
+    elementos.buscarHimnoInput.value = '';
   }
   if (elementos.sugerenciasLibros) {
     elementos.sugerenciasLibros.style.display = 'none';
@@ -1909,3 +1912,80 @@ function actualizarReferenciaBibliaEnVistaPrevia() {
   }
   referenciaDiv.textContent = referenciaTexto;
 }
+
+// --- Clear buttons para inputs de búsqueda ---
+function toggleClearBtn(input, btn) {
+  if (input.value.length > 0) {
+    btn.style.display = 'flex';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+if (elementos.buscarLibroInput && elementos.clearBuscarLibro) {
+  elementos.buscarLibroInput.addEventListener('input', function() {
+    toggleClearBtn(elementos.buscarLibroInput, elementos.clearBuscarLibro);
+  });
+  elementos.clearBuscarLibro.addEventListener('click', function() {
+    elementos.buscarLibroInput.value = '';
+    elementos.clearBuscarLibro.style.display = 'none';
+    elementos.sugerenciasLibros.style.display = 'none';
+    limpiarGrillas();
+  });
+  // Inicializar visibilidad
+  toggleClearBtn(elementos.buscarLibroInput, elementos.clearBuscarLibro);
+}
+if (elementos.buscarHimnoInput && elementos.clearBuscarHimno) {
+  elementos.buscarHimnoInput.addEventListener('input', function() {
+    toggleClearBtn(elementos.buscarHimnoInput, elementos.clearBuscarHimno);
+  });
+  elementos.clearBuscarHimno.addEventListener('click', function() {
+    elementos.buscarHimnoInput.value = '';
+    elementos.clearBuscarHimno.style.display = 'none';
+    elementos.listaHimnos.style.display = 'none';
+  });
+  // Inicializar visibilidad
+  toggleClearBtn(elementos.buscarHimnoInput, elementos.clearBuscarHimno);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // --- Limpiar libro ---
+  const buscarLibroInput = document.getElementById('buscarLibroInput');
+  const clearBuscarLibro = document.getElementById('clearBuscarLibro');
+  if (buscarLibroInput && clearBuscarLibro) {
+    buscarLibroInput.addEventListener('input', function() {
+      clearBuscarLibro.style.display = buscarLibroInput.value.length > 0 ? 'flex' : 'none';
+    });
+    clearBuscarLibro.addEventListener('click', function(e) {
+      buscarLibroInput.value = '';
+      clearBuscarLibro.style.display = 'none';
+      const sugerenciasLibros = document.getElementById('sugerenciasLibros');
+      if (sugerenciasLibros) sugerenciasLibros.style.display = 'none';
+      if (typeof limpiarGrillas === 'function') limpiarGrillas();
+      buscarLibroInput.focus();
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    // Inicializar visibilidad
+    clearBuscarLibro.style.display = buscarLibroInput.value.length > 0 ? 'flex' : 'none';
+  }
+
+  // --- Limpiar himno ---
+  const buscarHimnoInput = document.getElementById('buscarHimnoInput');
+  const clearBuscarHimno = document.getElementById('clearBuscarHimno');
+  if (buscarHimnoInput && clearBuscarHimno) {
+    buscarHimnoInput.addEventListener('input', function() {
+      clearBuscarHimno.style.display = buscarHimnoInput.value.length > 0 ? 'flex' : 'none';
+    });
+    clearBuscarHimno.addEventListener('click', function(e) {
+      buscarHimnoInput.value = '';
+      clearBuscarHimno.style.display = 'none';
+      const listaHimnos = document.getElementById('listaHimnos');
+      if (listaHimnos) listaHimnos.style.display = 'none';
+      buscarHimnoInput.focus();
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    // Inicializar visibilidad
+    clearBuscarHimno.style.display = buscarHimnoInput.value.length > 0 ? 'flex' : 'none';
+  }
+});

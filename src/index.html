@@ -103,7 +103,10 @@
     <!-- Contenedor para la Biblia -->
     <div id="controlBiblia">
         <select id="versionBiblia"></select>
-        <input type="text" id="buscarLibro" placeholder="Escribe un libro...">
+        <div id="buscarLibro" style="position:relative;">
+          <input type="text" id="buscarLibroInput" placeholder="Escribe un libro..." style="width:100%;">
+          <button id="clearBuscarLibro" class="clear-input-btn" type="button" title="Limpiar" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         <div id="sugerenciasLibros"></div>
         <div class="accordion-container" id="accordionCapitulos">
           <div class="accordion-header" id="headerCapitulos">Capítulos</div>
@@ -122,7 +125,10 @@
 
     <!-- Contenedor para el Himnario -->
     <div id="controlHimnario" style="display:none;">
-        <input type="text" id="buscarHimno" placeholder="Nº o Título del himno...">
+        <div id="buscarHimno" style="position:relative;">
+          <input type="text" id="buscarHimnoInput" placeholder="Nº o Título del himno..." style="width:100%;">
+          <button id="clearBuscarHimno" class="clear-input-btn" type="button" title="Limpiar" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         <div id="listaHimnos"></div>
     </div>
     

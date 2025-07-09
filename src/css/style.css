@@ -145,12 +145,15 @@ body:not(.con-boton-proyector) #controlHimnario {
 #buscarLibro {
   position: relative;
   /* width: 250px; */
+  margin: 0 auto;
+  margin-bottom: 0.5em;
 }
 
 /* Contenedor de búsqueda de himnos */
 #buscarHimno {
   /* width: 100%; */
   max-width: 300px;
+  margin: 0 auto;
 }
 
 /* Inputs de búsqueda más anchos */
@@ -158,10 +161,16 @@ body:not(.con-boton-proyector) #controlHimnario {
 #buscarHimno {
   width: 100%;
   max-width: 100vw;
-  box-sizing: border-box;
-  margin: 0 auto;
+  box-sizing: border-box;  
   padding-left: 0.5em;
   padding-right: 0.5em;
+}
+
+/* Ajuste para inputs con botón clear (X) */
+#buscarLibro input[type="text"],
+#buscarHimno input[type="text"] {
+  padding-right: 2.2em !important;
+  box-sizing: border-box;
 }
 
 /* Grillas de capítulos y versículos */
@@ -176,7 +185,7 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 #grillaCapitulos button,
 #grillaVersiculos button {
-  padding: 0.3em 0;
+  padding: 0.3em 0;  
   font-size: 0.9em;
   border-radius: 4px;
   background: var(--color-gris-base);
@@ -1191,7 +1200,7 @@ body.modo-biblia #playHimnoMiniProyector {
 
 /* --- Accordions para capítulos y versículos --- */
 .accordion-container {
-  margin-bottom: 1em;
+  margin-bottom: 0.5em;
   border-radius: 6px;
   background: #23272b;
   box-shadow: 0 2px 8px #0002;
@@ -1223,4 +1232,53 @@ body.modo-biblia #playHimnoMiniProyector {
   font-size: 1.2em;
   color: var(--color-destacado);
   margin: 0.5em 0 1em 0;
+}
+
+/* --- Botón limpiar input (X) --- */
+.clear-input-btn {
+  position: absolute;
+  right: 0.8em;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none !important;
+  border: none !important;
+  color: #e0e0e0 !important;
+  font-size: 1.4em !important;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  opacity: 1;
+  z-index: 20;
+  line-height: 1;
+  box-shadow: none;
+  border-radius: 0;
+  width: auto !important;
+  height: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-input-btn:hover {
+  color: #ff7b7b !important;
+}
+
+.clear-input-btn .fa-xmark {
+  pointer-events: none;
+}
+.clear-input-btn .fallback-x {
+  color: #e0e0e0 !important;
+  font-size: 1.1em !important;
+  font-weight: normal;
+  display: inline;
+  vertical-align: middle;
+  pointer-events: none;
+}
+.clear-input-btn i:empty + .fallback-x,
+.clear-input-btn i:not(.fa-solid):not(.fa-xmark) + .fallback-x {
+  display: inline;
 }
