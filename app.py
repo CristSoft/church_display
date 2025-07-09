@@ -29,7 +29,7 @@ def src_assets(filename):
 
 @app.route('/')
 def control():
-    return send_from_directory('.', 'index.html')
+    return send_from_directory('src', 'index.html')
 
 @app.route('/proyector')
 def proyector():
