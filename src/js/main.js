@@ -1049,6 +1049,7 @@ function cargarCapitulo(libro, capituloIndex) {
     card.innerHTML = `<strong>${versiculo.verse}</strong> ${versiculo.text}`;
     elementos.vistaPrevia.appendChild(card);
   });
+  actualizarVistaProyector();
 }
 
 /**
@@ -1073,15 +1074,14 @@ function seleccionarVersiculo(event) {
   if (event.target.dataset.versiculo) {
     const versiculoIndex = parseInt(event.target.dataset.versiculo);
     versiculoActivoIndex = versiculoIndex;
-    
     // Resaltar versículo seleccionado
     elementos.grillaVersiculos.querySelectorAll('button').forEach(btn => {
       btn.classList.remove('selected');
     });
     event.target.classList.add('selected');
-    
     resaltarCard(versiculoIndex);
     enviarVersiculoAlProyector(versiculoIndex);
+    actualizarVistaProyector();
   }
 }
 
@@ -1259,6 +1259,7 @@ function cargarHimnoEnVistaPrevia() {
   
   // Mostrar el botón de reproducción
   actualizarBotonPlayHimno();
+  actualizarVistaProyector();
 }
 
 /**
@@ -1273,11 +1274,13 @@ function manejarClicCard(event) {
     versiculoActivoIndex = estrofaIndex;
     resaltarCard(estrofaIndex);
     enviarVersiculoAlProyector(estrofaIndex);
+    actualizarVistaProyector();
   } else {
     // Modo Himnario
     estrofaActivaIndex = estrofaIndex;
     resaltarCard(estrofaIndex);
     enviarEstrofaAlProyector(estrofaIndex);
+    actualizarVistaProyector();
   }
 }
 
