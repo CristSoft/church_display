@@ -613,9 +613,9 @@ body {
 .btn-cambiar-vista-text {
   font-size: 0.9em;
 }
-.btn-abrir-proyector {
-  /* Puedes personalizar más si lo deseas */
-}
+/* .btn-abrir-proyector {
+} */
+
 #configModal {
   display: none;
   position: fixed;
@@ -889,6 +889,10 @@ body.modo-biblia #playHimnoMiniProyector {
   display: none !important;
 }
 
+#botoneraNavegacion {
+  margin-bottom: -35px;
+}
+
 /* --- Detección automática de landscape --- */
 @media (orientation: landscape) and (max-width: 768px) {
   body.auto-fullscreen-landscape {
@@ -999,6 +1003,10 @@ body.modo-biblia #playHimnoMiniProyector {
     padding: 0.6em 0.8em;
     font-size: 13px;
   }
+
+  #botoneraNavegacion {
+    margin-bottom: 0;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1025,6 +1033,10 @@ body.modo-biblia #playHimnoMiniProyector {
   .app-footer button {
     width: 100%;
     font-size: 1em;
+  }
+
+  #botoneraNavegacion {
+    margin-bottom: 0;
   }
 }
 
@@ -1143,6 +1155,10 @@ body.modo-biblia #playHimnoMiniProyector {
     /* width: calc(100% - 1em);
     max-width: none; */
   }
+
+  #botoneraNavegacion {
+    margin-bottom: 0;
+  }
 }
 
 
@@ -1180,6 +1196,10 @@ body.modo-biblia #playHimnoMiniProyector {
   /* Footer más compacto */
   .app-footer {
     padding: 0.5em;
+  }
+
+  #botoneraNavegacion {
+    margin-bottom: 0;
   }
 }
 
