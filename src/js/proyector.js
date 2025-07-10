@@ -69,14 +69,13 @@ socket.on('update_text', (data) => {
                 // Quitar clase de versículo bíblico si es himno
                 textoPrincipal.classList.remove('versiculo-biblia');
                 referencia.style.display = 'none';
-                
+                // Refuerzo: ocultar SIEMPRE antes de mostrar
+                contadorSeccion.style.display = 'none';
+                contadorSeccion.classList.remove('visible');
+                indicadorEstrofa.style.display = 'none';
+                indicadorEstrofa.classList.remove('visible');
                 // Manejar indicadores de himno
                 mostrarIndicadoresHimno(data.himnoData);
-                // Aseguramos que el indicador de versículo se oculte si no corresponde
-                if (!data.himnoData.verso) {
-                    indicadorEstrofa.style.display = 'none';
-                    indicadorEstrofa.classList.remove('visible');
-                }
             } else {
                 // Modo versículo normal
                 contenido.classList.remove('modo-himno');
@@ -241,7 +240,7 @@ socket.on('change_mode', (data) => {
 socket.on('config', (data) => {
     console.log('📥 Recibido config:', data);
     console.log('🔍 Tipo de data:', typeof data);
-    console.log('�� Data.config existe:', !!data.config);
+    console.log('🔍 Data.config existe:', !!data.config);
     console.log('🔍 Data completa:', JSON.stringify(data));
     
     // Verificar que los elementos existen antes de procesar
@@ -339,44 +338,61 @@ socket.on('detenerAudio', (data) => {
 
 /**
  * Muestra los indicadores específicos para himnos
- * @param {Object} himnoData - Datos del himno { esTitulo, numero, titulo, verso, estrofaIndex, totalEstrofas, seccionActual, totalSecciones }
+ * @param {Object} himnoData - Datos del himno { esTitulo, numero, titulo, verse, estrofaIndex, totalEstrofas, seccionActual, totalSecciones }
  */
 function mostrarIndicadoresHimno(himnoData) {
-    if (himnoData.esTitulo) {
-        // Es el título del himno - mostrar formato especial
+    console.log('[DEBUG] mostrarIndicadoresHimno - himnoData:', himnoData);
+    // Refuerzo: ocultar siempre el indicador en el título o en la sección 0
+    if (himnoData.esTitulo || himnoData.estrofaIndex === 0 || himnoData.seccionActual === 0) {
         textoPrincipal.classList.add('titulo-himno');
-        textoPrincipal.innerHTML = `${himnoData.numero} - ${himnoData.titulo}`;
-        
-        // Ocultar indicadores
+        // Mostrar el mismo texto que en la lista (con '|')
+        const numeroSinCeros = String(parseInt(himnoData.numero, 10));
+        textoPrincipal.innerHTML = `${numeroSinCeros} | ${himnoData.titulo}`;
+        // Ocultar indicadores SIEMPRE
         contadorSeccion.style.display = 'none';
+        contadorSeccion.classList.remove('visible');
         indicadorEstrofa.style.display = 'none';
+        indicadorEstrofa.classList.remove('visible');
+        return; // Salir de la función para evitar mostrar el indicador
+    }
+    // Es una estrofa - mostrar indicadores solo si estrofaIndex >= 1
+    textoPrincipal.classList.remove('titulo-himno');
+    // Mostrar contador de sección
+    if (himnoData.seccionActual !== undefined && himnoData.totalSecciones !== undefined) {
+        contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
+        contadorSeccion.style.display = '';
+        contadorSeccion.classList.add('visible');
     } else {
-        // Es una estrofa - mostrar indicadores
-        textoPrincipal.classList.remove('titulo-himno');
-        
-        // Mostrar contador de sección
-        if (himnoData.seccionActual !== undefined && himnoData.totalSecciones !== undefined) {
-            contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
-            contadorSeccion.style.display = '';
-            contadorSeccion.classList.add('visible');
+        contadorSeccion.style.display = 'none';
+    }
+    // Indicador de estrofa/verse/coro solo si estrofaIndex >= 1
+    let versoText = '';
+    const totalVerses = himnoData.verses ? parseInt(himnoData.verses, 10) : undefined;
+    if (himnoData.estrofaIndex >= 1) {
+        if (typeof himnoData.verse === 'string' && himnoData.verse.toLowerCase().startsWith('coro')) {
+            // Si es "coro" o "coro x"
+            let numCoro = 1;
+            const match = himnoData.verse.match(/coro\s*(\d+)?/i);
+            if (match && match[1]) {
+                numCoro = parseInt(match[1], 10);
+            }
+            versoText = `Coro ${numCoro} de ${totalVerses}`;
+        } else if (typeof himnoData.verse !== 'undefined' && totalVerses && himnoData.verse !== null && himnoData.verse !== '') {
+            versoText = `Verso ${himnoData.verse} de ${totalVerses}`;
         } else {
-            contadorSeccion.style.display = 'none';
+            versoText = '';
         }
-        
-        // Mostrar indicador de estrofa SOLO si corresponde a himno (puede ser útil para "Coro" o versos)
-        if (himnoData.verso === 'coro') {
-            indicadorEstrofa.textContent = 'Coro';
-            indicadorEstrofa.style.display = '';
-            indicadorEstrofa.classList.add('visible');
-        } else if (himnoData.verso) {
-            indicadorEstrofa.textContent = `Verso ${himnoData.verso} de ${himnoData.totalSecciones}`;
-            indicadorEstrofa.style.display = '';
-            indicadorEstrofa.classList.add('visible');
-        } else {
-            // Si no hay verso, ocultar
-            indicadorEstrofa.style.display = 'none';
-            indicadorEstrofa.classList.remove('visible');
-        }
+    }
+    console.log('[DEBUG] versoText calculado:', versoText);
+    if (versoText) {
+        indicadorEstrofa.textContent = versoText;
+        indicadorEstrofa.style.display = '';
+        indicadorEstrofa.classList.add('visible');
+        console.log('[DEBUG] Mostrando indicadorEstrofa:', versoText);
+    } else {
+        indicadorEstrofa.style.display = 'none';
+        indicadorEstrofa.classList.remove('visible');
+        console.log('[DEBUG] Ocultando indicadorEstrofa');
     }
 }
 

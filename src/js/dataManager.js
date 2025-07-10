@@ -765,56 +765,44 @@ async function parseHymn(hymnFileName) {
     const response = await fetch(`/src/assets/himnos/letra/${hymnFileName}`);
     if (!response.ok) throw new Error('No se pudo cargar el himno');
     const data = await response.json();
-    
     // Extraer el número del nombre del archivo (ej: "246 - Te quiero, mi Señor.json" -> "246")
-    const numeroMatch = hymnFileName.match(/^(\d+)/);
+    const numeroMatch = hymnFileName.match(/^([0-9]+)/);
     const numero = numeroMatch ? numeroMatch[1] : '';
-    
-    // Usar el título original del JSON sin filtrar
     const tituloOriginal = data.title || 'Himno';
-    
-    // Convertir la estructura de sections a estrofas
     const himno = {
-      titulo: tituloOriginal, // Usar el título original sin filtrar
-      numero: numero, // Usar el número extraído del nombre del archivo
+      titulo: tituloOriginal,
+      numero: numero,
       estrofas: [],
-      sections: data.sections || {}
+      sections: data.sections || {},
+      verses: data.verses // <-- Aseguramos que la clave 'verses' esté presente
     };
-    
-    // Agregar el título como primera estrofa (índice 0)
     const tituloLimpio = tituloOriginal.replace(/^Himno\s*#?\d*\s*/, '').trim();
     himno.estrofas.push({
-      verso: 'titulo',
+      verse: 'titulo',
       texto: `${numero} | ${tituloLimpio}`,
       sectionKey: 'titulo'
     });
-    
-    // Procesar las secciones y convertirlas a estrofas (empezando desde índice 1)
     if (data.sections) {
       const sectionKeys = Object.keys(data.sections).sort((a, b) => parseInt(a) - parseInt(b));
-      
       sectionKeys.forEach(sectionKey => {
         const section = data.sections[sectionKey];
         if (section && section.text && Array.isArray(section.text)) {
-          // Unir las líneas de texto en una sola estrofa
           const textoCompleto = section.text.join('\n');
-          
           himno.estrofas.push({
-            verso: section.verse || sectionKey,
+            verse: section.verse || sectionKey,
             texto: textoCompleto,
             sectionKey: sectionKey
           });
         }
       });
     }
-    
     console.log('📖 Himno cargado:', {
       numero: himno.numero,
       titulo: himno.titulo,
       estrofas: himno.estrofas.length,
-      estructura: himno.estrofas.map((e, i) => `${i}: ${e.verso}`)
+      estructura: himno.estrofas.map((e, i) => `${i}: ${e.verse}`),
+      verses: himno.verses
     });
-    
     return himno;
   } catch (err) {
     console.error('Error al cargar el himno:', err);

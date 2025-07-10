@@ -4,99 +4,99 @@
   "verses": "3",
   "sections": {
     "1": {
+      "verse": "coro 1",
+      "text": [
+        "¡Santo! ¡Santo! ¡Santo!",
+        "Tu gloria llena cielo y tierra."
+      ]
+    },
+    "2": {
+      "verse": "coro 1",
+      "text": [
+        "¡Hosanna, hosanna, gloria a Dios!"
+      ]
+    },
+    "3": {
       "verse": "1",
       "text": [
         "Te bendecimos, te adoramos,",
         "glorificamos tu nombre, oh Dios."
       ]
     },
-    "2": {
+    "4": {
       "verse": "1",
       "text": [
         "¡Oh, Rey del cielo, oye clemente"
       ]
     },
-    "3": {
+    "5": {
       "verse": "1",
       "text": [
         "nuestra ferviente y humilde voz!"
       ]
     },
-    "4": {
-      "verse": "coro",
+    "6": {
+      "verse": "coro 2",
       "text": [
         "¡Santo! ¡Santo! ¡Santo!",
         "Tu gloria llena cielo y tierra."
       ]
     },
-    "5": {
-      "verse": "coro",
+    "7": {
+      "verse": "coro 2",
       "text": [
         "¡Hosanna, hosanna, gloria a Dios!"
       ]
     },
-    "6": {
+    "8": {
       "verse": "2",
       "text": [
         "Perdona al hombre la falta impía;"
       ]
     },
-    "7": {
+    "9": {
       "verse": "2",
       "text": [
         "mira a tu Hijo, mi Redentor.",
         "Ferviente entonces el alma mía"
       ]
     },
-    "8": {
+    "10": {
       "verse": "2",
       "text": [
         "pueda alabarte con todo amor."
       ]
     },
-    "9": {
-      "verse": "coro",
+    "11": {
+      "verse": "coro 3",
       "text": [
         "¡Santo! ¡Santo! ¡Santo!",
         "Tu gloria llena cielo y tierra."
       ]
     },
-    "10": {
-      "verse": "coro",
+    "12": {
+      "verse": "coro 3",
       "text": [
         "¡Hosanna, hosanna, gloria a Dios!"
       ]
     },
-    "11": {
+    "13": {
       "verse": "3",
       "text": [
         "Dignos seamos de bendecirte,",
         "limpias las almas de todo mal."
       ]
     },
-    "12": {
+    "14": {
       "verse": "3",
       "text": [
         "Cielos y tierra cantan tu nombre,"
       ]
     },
-    "13": {
+    "15": {
       "verse": "3",
       "text": [
         "¡oh Dios, oh Padre, Rey celestial!"
-      ]
-    },
-    "14": {
-      "verse": "coro",
-      "text": [
-        "¡Santo! ¡Santo! ¡Santo!",
-        "Tu gloria llena cielo y tierra."
-      ]
-    },
-    "15": {
-      "verse": "coro",
-      "text": [
-        "¡Hosanna, hosanna, gloria a Dios!"
       ]
     }
   }
