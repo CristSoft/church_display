@@ -498,7 +498,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   text-align: center;
   color: #fff;
   text-shadow: 0 2px 8px #000, 0 0 2px var(--color-destacado);
-  font-family: 'RobotoSlab-Bold', serif !important;
+  font-family: 'DroidSerif', serif !important;
   padding: 2em 1em;
   font-size: 3.5vw !important;
   line-height: 1.2;
@@ -540,8 +540,8 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 .mini-proyector.modo-biblia .mini-proyector-content {
   position: relative;
-  top: 30px;
-  max-height: calc(100% - 30px);
+  top: 5px; /* Reducido de 30px a 10px para subir el texto */
+  max-height: calc(100% - 10px); /* Ajustado para mantener proporción */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -549,6 +549,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   margin: 0;
   width: 100%;
   box-sizing: border-box;
+  padding-top: 0.1em; /* Ajuste para subir el texto, igual que en el proyector principal */
 }
 
 /* Modo Himno en mini proyector - Los indicadores ahora se manejan con elementos separados en el HTML */

@@ -2,13 +2,13 @@
   "modo": "biblia",
   "biblia": {
     "version": "es-rv60.json",
-    "libro": "Lamentaciones",
-    "capitulo": 2,
-    "versiculo": 11
+    "libro": "Éxodo",
+    "capitulo": 32,
+    "versiculo": 0
   },
   "himnario": {
     "numero": "054",
     "titulo": "Tan bueno es Dios",
-    "estrofa": 3
+    "estrofa": 0
   }
 }

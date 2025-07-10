@@ -8,6 +8,11 @@
   src: url('/src/assets/fonts/Handlee-Regular.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'DroidSerif-BoldItalic';
+  src: url('/src/assets/fonts/DroidSerif.ttf') format('truetype');
+}
+
 body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; color: white; }
 #video-bg {
   position: fixed;
@@ -110,7 +115,7 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 }
 
 #texto-principal.versiculo-biblia {
-  font-family: 'Qwigley', cursive;
+  font-family: 'DroidSerif-BoldItalic', serif;
   font-weight: bold;
 }
 
@@ -142,12 +147,14 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 /* Modo Versículo: Contenedor del texto principal */
 #contenido.modo-versiculo #texto-principal {
   position: relative;
-  top: 90px; /* Comienza debajo de la referencia */
-  max-height: calc(100vh - 90px); /* Altura máxima disponible */
+  /* top: 90px;  Eliminado para subir el texto */
+  padding-top: 0.5em; /* Ajusta este valor si es necesario */
+  max-height: calc(100vh - 90px);
   display: flex;
   align-items: center;
   justify-content: center;  
-  padding: 0 2em;
+  padding-left: 2em;
+  padding-right: 2em;
   margin: 0;
   width: 100%;
   box-sizing: border-box;
