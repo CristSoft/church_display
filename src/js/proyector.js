@@ -101,6 +101,39 @@ socket.on('update_text', (data) => {
             }
         }
         
+        // Mostrar título del himno en esquina superior izquierda si es himno
+        if (data.himnoData && !data.himnoData.esTitulo) {
+            // Crear o actualizar elemento para título del himno
+            let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+            if (!tituloHimnoElement) {
+                tituloHimnoElement = document.createElement('div');
+                tituloHimnoElement.id = 'titulo-himno-proyector';
+                tituloHimnoElement.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    left: 20px;
+                    font-size: 2.3vw;
+                    font-weight: bold;
+                    color: #fff;
+                    text-shadow: 0 2px 8px #000;
+                    z-index: 10;
+                    max-width: 40%;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                `;
+                document.getElementById('contenido').appendChild(tituloHimnoElement);
+            }
+            tituloHimnoElement.textContent = `${data.himnoData.numero} - ${data.himnoData.titulo}`;
+            tituloHimnoElement.style.display = 'block';
+        } else {
+            // Ocultar título del himno si no es himno o es título
+            const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+            if (tituloHimnoElement) {
+                tituloHimnoElement.style.display = 'none';
+            }
+        }
+        
         // Remover clases de fade-out para mostrar el nuevo texto
         textoPrincipal.classList.remove('fade-out');
         referencia.classList.remove('fade-out');
@@ -208,7 +241,7 @@ socket.on('change_mode', (data) => {
 socket.on('config', (data) => {
     console.log('📥 Recibido config:', data);
     console.log('🔍 Tipo de data:', typeof data);
-    console.log('🔍 Data.config existe:', !!data.config);
+    console.log('�� Data.config existe:', !!data.config);
     console.log('🔍 Data completa:', JSON.stringify(data));
     
     // Verificar que los elementos existen antes de procesar
@@ -312,7 +345,7 @@ function mostrarIndicadoresHimno(himnoData) {
     if (himnoData.esTitulo) {
         // Es el título del himno - mostrar formato especial
         textoPrincipal.classList.add('titulo-himno');
-        textoPrincipal.innerHTML = `${himnoData.numero} | ${himnoData.titulo}`;
+        textoPrincipal.innerHTML = `${himnoData.numero} - ${himnoData.titulo}`;
         
         // Ocultar indicadores
         contadorSeccion.style.display = 'none';
@@ -336,7 +369,7 @@ function mostrarIndicadoresHimno(himnoData) {
             indicadorEstrofa.style.display = '';
             indicadorEstrofa.classList.add('visible');
         } else if (himnoData.verso) {
-            indicadorEstrofa.textContent = `Verso ${himnoData.verso}`;
+            indicadorEstrofa.textContent = `Verso ${himnoData.verso} de ${himnoData.totalSecciones}`;
             indicadorEstrofa.style.display = '';
             indicadorEstrofa.classList.add('visible');
         } else {

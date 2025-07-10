@@ -263,8 +263,8 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   if (esTitulo) {
     // Es el título del himno
     enviarMensajeProyector('update_text', {
-      texto: `${numeroSinCeros} | ${tituloLimpio}`,
-      ref: `Himno ${numeroSinCeros} - ${tituloLimpio}`,
+      texto: `${numeroSinCeros} - ${tituloLimpio}`,
+      ref: `${numeroSinCeros} - ${tituloLimpio}`,
       himnoData: {
         esTitulo: true,
         numero: numeroSinCeros,
@@ -275,8 +275,8 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   } else {
     // Es una estrofa
     const textoEstrofa = estrofa.texto; // Usar el texto de la estrofa
-    const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
-    const ref = `${numeroSinCeros} | ${tituloLimpio} - ${versoText}`;
+    const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso} de ${himnoActivo.estrofas.length - 1}`;
+    const ref = `${numeroSinCeros} - ${tituloLimpio}`;
     
     enviarMensajeProyector('update_text', {
       texto: textoEstrofa,
@@ -297,7 +297,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
   console.log('📤 Estrofa enviada al proyector:', {
     index: estrofaIndex,
     esTitulo: esTitulo,
-    texto: esTitulo ? `${numeroSinCeros} | ${tituloLimpio}` : estrofa.texto,
+    texto: esTitulo ? `${numeroSinCeros} - ${tituloLimpio}` : estrofa.texto,
     verso: esTitulo ? 'Título' : estrofa.verso
   });
 }
@@ -1660,6 +1660,22 @@ function actualizarVistaProyector() {
   let texto = '';
   let referencia = '';
   let isBiblia = esModoBiblia();
+  
+  // Obtener referencias a los nuevos elementos
+  const miniProyectorTituloHimno = document.getElementById('miniProyectorTituloHimno');
+  const miniProyectorContador = document.getElementById('miniProyectorContador');
+  
+  // Actualizar clase del contenedor del mini proyector
+  const miniProyectorContainer = document.getElementById('vistaProyector');
+  if (miniProyectorContainer) {
+    miniProyectorContainer.classList.remove('modo-biblia', 'modo-himno');
+    miniProyectorContainer.classList.add(isBiblia ? 'modo-biblia' : 'modo-himno');
+  }
+  
+  // Ocultar elementos de himno por defecto
+  if (miniProyectorTituloHimno) miniProyectorTituloHimno.style.display = 'none';
+  if (miniProyectorContador) miniProyectorContador.style.display = 'none';
+  
   if (isBiblia) {
     // Mostrar versículo actual
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
@@ -1681,15 +1697,37 @@ function actualizarVistaProyector() {
     if (himnoActivo && estrofaActivaIndex >= 0) {
       const estrofa = himnoActivo.estrofas[estrofaActivaIndex];
       if (estrofaActivaIndex === 0) {
-        referencia = `Himno ${himnoActivo.numero}`;
+        // Es el título del himno
+        if (miniProyectorTituloHimno) {
+          const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
+          miniProyectorTituloHimno.textContent = `${numeroSinCeros} - ${himnoActivo.titulo}`;
+          miniProyectorTituloHimno.style.display = 'block';
+        }
         texto = himnoActivo.titulo;
       } else {
-        const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
-        referencia = `${himnoActivo.numero} - ${versoText}`;
+        // Es una estrofa
+        if (miniProyectorTituloHimno) {
+          const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
+          miniProyectorTituloHimno.textContent = `${numeroSinCeros} - ${himnoActivo.titulo}`;
+          miniProyectorTituloHimno.style.display = 'block';
+        }
+        
+        if (miniProyectorContador) {
+          miniProyectorContador.textContent = `${estrofaActivaIndex}/${himnoActivo.estrofas.length - 1}`;
+          miniProyectorContador.style.display = 'block';
+        }
+        
+        const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso} de ${himnoActivo.estrofas.length - 1}`;
         texto = estrofa.texto.replace(/\n/g, '<br>');
+        
+        // Agregar indicador de verso justo encima del texto
+        proyectorPreviewContent.innerHTML = `
+          <div class="indicador-estrofa" style="font-size:1.2vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;margin-bottom:0.5em;">${versoText}</div>
+          <span>${texto}</span>
+        `;
+        return;
       }
     } else {
-      referencia = '';
       texto = '<span style="color:#ffd700;">Selecciona un himno</span>';
     }
     // Video de fondo Himnario
@@ -1699,6 +1737,7 @@ function actualizarVistaProyector() {
       }
     }
   }
+  
   // Ajustar fuente y estilos igual que el proyector real
   // let fontSize = isBiblia ? '2.2em' : '2.2em';
   // let fontFamily = isBiblia ? "'Qwigley', 'RobotoSlab-Bold', serif" : "'RobotoSlab-Bold', serif";
