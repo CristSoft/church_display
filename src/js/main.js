@@ -1675,7 +1675,18 @@ function actualizarVistaProyector() {
         miniProyectorVideo.src = '/src/assets/videos/verso-bg.mp4';
       }
     }
+    // --- NUEVO: Mostrar referencia en el div externo ---
+    const refDiv = document.getElementById('miniProyectorReferencia');
+    if (refDiv) {
+      refDiv.style.display = referencia ? '' : 'none';
+      refDiv.textContent = referencia;
+    }
+    proyectorPreviewContent.innerHTML = `<span>${texto}</span>`;
+    return;
   } else {
+    // Ocultar referencia externa en modo himnario
+    const refDiv = document.getElementById('miniProyectorReferencia');
+    if (refDiv) refDiv.style.display = 'none';
     if (himnoActivo && estrofaActivaIndex >= 0) {
       const estrofa = himnoActivo.estrofas[estrofaActivaIndex];
       const totalVerses = himnoActivo.verses ? parseInt(himnoActivo.verses, 10) : undefined;
