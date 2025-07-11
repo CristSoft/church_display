@@ -2139,14 +2139,24 @@ function actualizarVistaProyector() {
       refDiv.textContent = referencia;
     }
     // --- NUEVO: Aplicar tamaño de fuente y soloReferencia usando CSS custom properties ---
-    proyectorPreviewContent.style.setProperty('--font-size', `${fontsizeBiblia}vw`);
-    // --- NUEVO: También aplicar directamente al elemento para asegurar que funcione ---
-    proyectorPreviewContent.style.fontSize = `${fontsizeBiblia}vw`;
-    console.log('🔤 Aplicando tamaño de fuente al mini proyector:', `${fontsizeBiblia}vw`);
-    if (soloReferencia) {
-      proyectorPreviewContent.innerHTML = `<span class="texto-dinamico" style="color:#fff;">${referencia}</span>`;
+    // Detectar si estamos en el mini proyector del panel de control
+    let esMiniProyectorPanel = false;
+    if (miniProyectorContainer && miniProyectorContainer.contains(proyectorPreviewContent)) {
+      esMiniProyectorPanel = true;
+    }
+    if (esMiniProyectorPanel) {
+      // Calcular el tamaño de fuente en píxeles relativo al ancho del mini proyector
+      const ancho = miniProyectorContainer.offsetWidth;
+      const fontSizePx = ancho * (fontsizeBiblia / 100);
+      proyectorPreviewContent.style.fontSize = `${fontSizePx}px`;
     } else {
-      proyectorPreviewContent.innerHTML = `<span class="texto-dinamico">${texto}</span>`;
+      proyectorPreviewContent.style.fontSize = `${fontsizeBiblia}vw`;
+    }
+    console.log('🔤 Aplicando tamaño de fuente al mini proyector:', esMiniProyectorPanel ? `${proyectorPreviewContent.style.fontSize} (px)` : `${fontsizeBiblia}vw`);
+    if (soloReferencia) {
+      proyectorPreviewContent.innerHTML = `<span class=\"texto-dinamico\" style=\"color:#fff;\">${referencia}</span>`;
+    } else {
+      proyectorPreviewContent.innerHTML = `<span class=\"texto-dinamico\">${texto}</span>`;
     }
     return;
   } else {
