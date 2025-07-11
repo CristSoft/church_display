@@ -666,6 +666,8 @@ async function inicializar() {
   
   // Configurar controles del mini proyector
   await configurarControlesMiniProyector();
+  // Inicializar accordions del himnario
+  inicializarAccordionsHimnario();
 
   // Cargar datos iniciales
   await cargarDatosIniciales();
@@ -870,11 +872,22 @@ async function configurarControlesMiniProyector() {
   function actualizarVisibilidadControles() {
     const esBiblia = esModoBiblia();
     const esVistaProyector = vistaActual === 'proyector';
-    
+    const miniProyectorControls = document.getElementById('miniProyectorControls');
+    const controlesBiblia = document.getElementById('miniProyectorControlesBiblia');
+    const controlesHimnario = document.getElementById('miniProyectorControlesHimnario');
+
     if (esBiblia && esVistaProyector) {
-      miniProyectorControls.classList.add('visible');
+      if (controlesBiblia) controlesBiblia.style.display = '';
+      if (controlesHimnario) controlesHimnario.style.display = 'none';
+      if (miniProyectorControls) miniProyectorControls.classList.add('visible');
+    } else if (!esBiblia && esVistaProyector) {
+      if (controlesBiblia) controlesBiblia.style.display = 'none';
+      if (controlesHimnario) controlesHimnario.style.display = '';
+      if (miniProyectorControls) miniProyectorControls.classList.add('visible');
     } else {
-      miniProyectorControls.classList.remove('visible');
+      if (controlesBiblia) controlesBiblia.style.display = 'none';
+      if (controlesHimnario) controlesHimnario.style.display = 'none';
+      if (miniProyectorControls) miniProyectorControls.classList.remove('visible');
     }
   }
   
@@ -2660,3 +2673,113 @@ if (typeof io !== 'undefined') {
   });
 }
 // --- FIN: Sincronización de memoria con el servidor ---
+
+// --- Lógica de accordions para controles del Himnario ---
+function inicializarAccordionsHimnario() {
+  // Tamaño texto principal
+  const cardFontsize = document.getElementById('cardFontsizeHimnario');
+  const headerFontsize = cardFontsize?.querySelector('.accordion-header');
+  const contentFontsize = document.getElementById('contentFontsizeHimnario');
+  const sliderFontsize = document.getElementById('miniSliderFontsizeHimnario');
+  const valueFontsize = document.getElementById('miniFontsizeValueHimnario');
+  if (headerFontsize && contentFontsize) {
+    headerFontsize.addEventListener('click', () => {
+      contentFontsize.style.display = (contentFontsize.style.display === 'none' || !contentFontsize.style.display) ? 'block' : 'none';
+    });
+  }
+  if (sliderFontsize && valueFontsize) {
+    sliderFontsize.addEventListener('input', () => {
+      valueFontsize.textContent = sliderFontsize.value + '%';
+    });
+  }
+
+  // Indicador de verso
+  const cardIndicador = document.getElementById('cardIndicadorVerso');
+  const headerIndicador = cardIndicador?.querySelector('.accordion-header');
+  const contentIndicador = document.getElementById('contentIndicadorVerso');
+  const sliderIndicador = document.getElementById('miniSliderIndicadorVerso');
+  const valueIndicador = document.getElementById('miniIndicadorVersoValue');
+  const checkIndicador = document.getElementById('miniCheckIndicadorVerso');
+  function actualizarEstadoIndicador() {
+    if (checkIndicador.checked) {
+      cardIndicador.classList.remove('disabled');
+    } else {
+      cardIndicador.classList.add('disabled');
+      contentIndicador.style.display = 'none';
+    }
+  }
+  if (headerIndicador && contentIndicador && checkIndicador) {
+    headerIndicador.addEventListener('click', () => {
+      if (checkIndicador.checked) {
+        contentIndicador.style.display = (contentIndicador.style.display === 'none' || !contentIndicador.style.display) ? 'block' : 'none';
+      }
+    });
+    checkIndicador.addEventListener('change', actualizarEstadoIndicador);
+    actualizarEstadoIndicador();
+  }
+  if (sliderIndicador && valueIndicador) {
+    sliderIndicador.addEventListener('input', () => {
+      valueIndicador.textContent = sliderIndicador.value + '%';
+    });
+  }
+
+  // Título del himno
+  const cardNombre = document.getElementById('cardNombreHimno');
+  const headerNombre = cardNombre?.querySelector('.accordion-header');
+  const contentNombre = document.getElementById('contentNombreHimno');
+  const sliderNombre = document.getElementById('miniSliderNombreHimno');
+  const valueNombre = document.getElementById('miniNombreHimnoValue');
+  const checkNombre = document.getElementById('miniCheckNombreHimno');
+  function actualizarEstadoNombre() {
+    if (checkNombre.checked) {
+      cardNombre.classList.remove('disabled');
+    } else {
+      cardNombre.classList.add('disabled');
+      contentNombre.style.display = 'none';
+    }
+  }
+  if (headerNombre && contentNombre && checkNombre) {
+    headerNombre.addEventListener('click', () => {
+      if (checkNombre.checked) {
+        contentNombre.style.display = (contentNombre.style.display === 'none' || !contentNombre.style.display) ? 'block' : 'none';
+      }
+    });
+    checkNombre.addEventListener('change', actualizarEstadoNombre);
+    actualizarEstadoNombre();
+  }
+  if (sliderNombre && valueNombre) {
+    sliderNombre.addEventListener('input', () => {
+      valueNombre.textContent = sliderNombre.value + '%';
+    });
+  }
+
+  // Secciones
+  const cardSeccion = document.getElementById('cardSeccionActualTotal');
+  const headerSeccion = cardSeccion?.querySelector('.accordion-header');
+  const contentSeccion = document.getElementById('contentSeccionActualTotal');
+  const sliderSeccion = document.getElementById('miniSliderSeccionActualTotal');
+  const valueSeccion = document.getElementById('miniSeccionActualTotalValue');
+  const checkSeccion = document.getElementById('miniCheckSeccionActualTotal');
+  function actualizarEstadoSeccion() {
+    if (checkSeccion.checked) {
+      cardSeccion.classList.remove('disabled');
+    } else {
+      cardSeccion.classList.add('disabled');
+      contentSeccion.style.display = 'none';
+    }
+  }
+  if (headerSeccion && contentSeccion && checkSeccion) {
+    headerSeccion.addEventListener('click', () => {
+      if (checkSeccion.checked) {
+        contentSeccion.style.display = (contentSeccion.style.display === 'none' || !contentSeccion.style.display) ? 'block' : 'none';
+      }
+    });
+    checkSeccion.addEventListener('change', actualizarEstadoSeccion);
+    actualizarEstadoSeccion();
+  }
+  if (sliderSeccion && valueSeccion) {
+    sliderSeccion.addEventListener('input', () => {
+      valueSeccion.textContent = sliderSeccion.value + '%';
+    });
+  }
+}

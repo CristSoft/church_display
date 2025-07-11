@@ -1685,3 +1685,69 @@ body.modo-biblia #playHimnoMiniProyector {
   transition: background 0.2s, color 0.2s !important;
   cursor: default !important;
 }
+
+/* --- Accordions para controles del Himnario --- */
+.accordion-card {
+  background: #23272b;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0002;
+  margin-bottom: 0.7em;
+  border: 1.5px solid #222;
+  transition: background 0.2s, color 0.2s;
+}
+.accordion-card .accordion-header {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 1.2em 1em 1.2em;
+  font-size: 1.05em;
+  font-weight: bold;
+  color: #f1f1f1;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.accordion-card .accordion-header input[type="checkbox"] {
+  margin-right: 1em;
+  accent-color: var(--color-destacado);
+  transform: scale(1.2);
+}
+.accordion-card .accordion-content {
+  padding: 1em 1.2em 1em 1.2em;
+  background: #181c20;
+  border-top: 1px solid #222;
+  display: block;
+  animation: accordion-fadein 0.2s;
+}
+@keyframes accordion-fadein {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.accordion-card.disabled {
+  background: #181c20 !important;
+  color: #888 !important;
+  opacity: 1;
+}
+.accordion-card.disabled .accordion-header {
+  color: #888 !important;
+}
+.accordion-card.disabled .accordion-header input[type="checkbox"] {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+.accordion-card.disabled .accordion-header .control-label,
+.accordion-card.disabled .accordion-content {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.accordion-card .control-label {
+  font-weight: normal;
+  color: inherit;
+  font-size: 1em;
+}
+.accordion-card input[type="range"] {
+  width: 100%;
+  margin-top: 0.5em;
+  margin-bottom: 0.2em;
+}

@@ -190,18 +190,63 @@
       </div>
       <!-- Controles de configuración debajo del mini proyector -->
       <div id="miniProyectorControls" class="mini-proyector-controls">
-        <div class="control-group">
-          <label class="control-label">Tamaño de texto:</label>
-          <div class="slider-container">
-            <input type="range" id="miniSliderFontsizeBiblia" min="1" max="100" step="1" value="54">
-            <span id="miniFontsizeValueBiblia" class="slider-value">54%</span>
+        <!-- Controles de Biblia -->
+        <div id="miniProyectorControlesBiblia">
+          <div class="control-group" id="miniProyectorControlBiblia">
+            <label class="control-label">Tamaño de texto:</label>
+            <div class="slider-container">
+              <input type="range" id="miniSliderFontsizeBiblia" min="1" max="100" step="1" value="54">
+              <span id="miniFontsizeValueBiblia" class="slider-value">54%</span>
+            </div>
+          </div>
+          <div class="control-group" id="miniProyectorControlSoloReferencia">
+            <label class="control-label">Solo referencia:</label>
+            <div class="switch-container">
+              <input type="checkbox" id="miniSwitchSoloReferencia" class="switch-input">
+              <span class="slider"></span>
+            </div>
           </div>
         </div>
-        <div class="control-group">
-          <label class="control-label">Solo referencia:</label>
-          <div class="switch-container">
-            <input type="checkbox" id="miniSwitchSoloReferencia" class="switch-input">
-            <span class="slider"></span>
+        <!-- Controles de Himnario -->
+        <div id="miniProyectorControlesHimnario">
+          <!-- Tamaño texto principal -->
+          <div class="accordion-card" id="cardFontsizeHimnario">
+            <div class="accordion-header">
+              <span class="control-label">Tamaño de texto principal: <span id="miniFontsizeValueHimnario">52%</span></span>
+            </div>
+            <div class="accordion-content" id="contentFontsizeHimnario" style="display:none;">
+              <input type="range" id="miniSliderFontsizeHimnario" min="1" max="100" step="1" value="52">
+            </div>
+          </div>
+          <!-- Indicador de verso -->
+          <div class="accordion-card" id="cardIndicadorVerso">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckIndicadorVerso">
+              <span class="control-label">Indicador de verso: <span id="miniIndicadorVersoValue">56%</span></span>
+            </div>
+            <div class="accordion-content" id="contentIndicadorVerso" style="display:none;">
+              <input type="range" id="miniSliderIndicadorVerso" min="1" max="100" step="1" value="56">
+            </div>
+          </div>
+          <!-- Título del himno -->
+          <div class="accordion-card" id="cardNombreHimno">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckNombreHimno">
+              <span class="control-label">Título del himno: <span id="miniNombreHimnoValue">52%</span></span>
+            </div>
+            <div class="accordion-content" id="contentNombreHimno" style="display:none;">
+              <input type="range" id="miniSliderNombreHimno" min="1" max="100" step="1" value="52">
+            </div>
+          </div>
+          <!-- Secciones -->
+          <div class="accordion-card" id="cardSeccionActualTotal">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckSeccionActualTotal">
+              <span class="control-label">Secciones: <span id="miniSeccionActualTotalValue">57%</span></span>
+            </div>
+            <div class="accordion-content" id="contentSeccionActualTotal" style="display:none;">
+              <input type="range" id="miniSliderSeccionActualTotal" min="1" max="100" step="1" value="57">
+            </div>
           </div>
         </div>
       </div>
@@ -579,3 +624,4 @@
     </script>
 </body>
 </html>
+
