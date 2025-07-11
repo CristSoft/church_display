@@ -498,12 +498,17 @@ body:not(.con-boton-proyector) #controlHimnario {
   text-align: center;
   color: #fff;
   text-shadow: 0 2px 8px #000, 0 0 2px var(--color-destacado);
-  font-family: 'DroidSerif', serif !important;
+  font-family: 'DroidSerif', serif;
   padding: 2em 1em;
-  font-size: 2.5vw; /* Reducido de 3.5vw y removido !important */
+  font-size: 2.5vw; /* Tamaño base */
   line-height: 1.2;
   user-select: none;
   pointer-events: none;
+}
+
+/* --- NUEVO: Clase para texto dinámico usando CSS custom properties --- */
+.mini-proyector-content .texto-dinamico {
+  font-size: inherit; /* Heredar del padre */
 }
 
 .mini-proyector-content .referencia {
@@ -650,12 +655,16 @@ body.con-ip-label #topBar {
   top: 0; /* Por encima del topBar */
   left: 0;
   width: 100vw;
-  background: #17a2b8;
-  color: #fff;
+  /* background: #17a2b8; */
+  background: var(--color-gris-base);
+  color: #17a2b8;;
   padding: 0.5em 1em;
+  padding-top: 0;
+  padding-bottom: 1em;
   text-align: center;
+  vertical-align: top;
   font-size: 0.9em;
-  z-index: 5000; /* Por encima del topBar */
+  z-index: 3000; /* Por encima del topBar */
   box-shadow: 0 2px 8px #0004;
   display: none; /* Oculto por defecto */
 }

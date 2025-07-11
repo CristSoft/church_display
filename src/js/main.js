@@ -25,6 +25,14 @@ let himnoSugeridoIndex = -1;
 let modoPantallaCompleta = false;
 let autoFullscreenLandscape = true; // Habilitado por defecto
 
+// --- NUEVO: Variable global para configuración ---
+let config = {
+  fontsizeBiblia: 5,
+  fontsizeHimnario: 5,
+  soloReferencia: false,
+  autoFullscreen: true
+};
+
 // Referencias a elementos del DOM
 let elementos = {};
 
@@ -112,6 +120,7 @@ function inicializarSocketIO() {
       
       // Ignorar si el cambio es propio
       if (data.clientId === CLIENT_ID) {
+        console.log('🔄 Ignorando cambio propio');
         return;
       }
       
@@ -481,6 +490,12 @@ async function inicializar() {
 
   // Cargar configuración guardada
   let config = await obtenerConfiguracion();
+  // --- NUEVO: Asignar a la variable global config ---
+  window.config = config;
+  console.log('📋 Configuración cargada para modo Biblia (global):', config);
+  
+  // Convertir el valor vw guardado a porcentaje para el slider
+  const porcentajeInicial = vwAPorcentaje(config.fontsizeBiblia || 5);
   sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
   fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
   switchSoloReferencia.checked = !!config.soloReferencia;
@@ -514,11 +529,13 @@ async function inicializar() {
   sliderFontsizeBiblia.addEventListener('input', async () => {
     fontsizeValueBiblia.textContent = sliderFontsizeBiblia.value + 'vw';
     config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
+    console.log('🔧 Configuración actualizada (slider biblia):', config.fontsizeBiblia);
     await guardarYEnviarConfig();
     // Sincronizar con mini proyector
     if (typeof window.actualizarMiniProyector === 'function') {
       await window.actualizarMiniProyector();
     }
+    console.log('🔄 Llamando a actualizarVistaProyector...');
     actualizarVistaProyector();
     
     // Emitir evento de socket para sincronizar con otros dispositivos
@@ -533,17 +550,22 @@ async function inicializar() {
         valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
     }
   });
 
   // Switch solo referencia
   switchSoloReferencia.addEventListener('change', async () => {
     config.soloReferencia = switchSoloReferencia.checked;
+    console.log('🔧 Configuración actualizada (solo referencia):', config.soloReferencia);
     await guardarYEnviarConfig();
     // Sincronizar con mini proyector
     if (typeof window.actualizarMiniProyector === 'function') {
       await window.actualizarMiniProyector();
     }
+    console.log('🔄 Llamando a actualizarVistaProyector...');
     actualizarVistaProyector();
     
     // Emitir evento de socket para sincronizar con otros dispositivos
@@ -558,6 +580,9 @@ async function inicializar() {
         valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
     }
   });
 
@@ -569,11 +594,19 @@ async function inicializar() {
     
     // Emitir evento de socket para sincronizar con otros dispositivos
     if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'fontsizeHimnario',
+        valor: config.fontsizeHimnario,
+        clientId: CLIENT_ID
+      });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'fontsizeHimnario',
         valor: config.fontsizeHimnario,
         clientId: CLIENT_ID
       });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
     }
   });
   
@@ -581,8 +614,6 @@ async function inicializar() {
   switchAutoFullscreen.addEventListener('change', () => {
     config.autoFullscreen = switchAutoFullscreen.checked;
     autoFullscreenLandscape = switchAutoFullscreen.checked;
-    localStorage.setItem('proyectorConfig', JSON.stringify(config));
-    
     if (!autoFullscreenLandscape) {
       document.body.classList.remove('auto-fullscreen-landscape');
     } else {
@@ -654,6 +685,10 @@ async function inicializar() {
     socket: window.socket,
     conectado: window.socket ? window.socket.connected : 'N/A'
   });
+  
+  // --- NUEVO: Llamada explícita para actualizar la vista inicial ---
+  console.log('🔄 Llamada inicial a actualizarVistaProyector...');
+  actualizarVistaProyector();
 }
 
 /**
@@ -694,8 +729,8 @@ async function configurarControlesMiniProyector() {
   const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
   const switchSoloReferencia = document.getElementById('switchSoloReferencia');
   
-  // Cargar configuración guardada
-  let config = await obtenerConfiguracion();
+  // --- NUEVO: Usar la variable config global en lugar de una local ---
+  console.log('🔧 Configuración inicial para controles mini proyector:', config);
   
   // Convertir el valor vw guardado a porcentaje para el slider
   const porcentajeInicial = vwAPorcentaje(config.fontsizeBiblia || 5);
@@ -712,6 +747,11 @@ async function configurarControlesMiniProyector() {
     
     miniFontsizeValueBiblia.textContent = porcentaje + '%';
     config.fontsizeBiblia = vw;
+    console.log('🔧 Configuración actualizada desde mini proyector (slider):', {
+      porcentaje: porcentaje,
+      vw: vw,
+      configLocal: config.fontsizeBiblia
+    });
     
     // Sincronizar con controles del panel principal
     if (sliderFontsizeBiblia) {
@@ -734,6 +774,7 @@ async function configurarControlesMiniProyector() {
       configEnviar: configEnviar
     });
     enviarMensajeProyector('config', configEnviar);
+    console.log('🔄 Llamando a actualizarVistaProyector desde mini proyector...');
     actualizarVistaProyector();
     
     // Emitir evento de socket para sincronizar con otros dispositivos
@@ -748,11 +789,18 @@ async function configurarControlesMiniProyector() {
         valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada (mini proyector)');
     }
   });
   
   miniSwitchSoloReferencia.addEventListener('change', async () => {
     config.soloReferencia = miniSwitchSoloReferencia.checked;
+    console.log('🔧 Configuración actualizada desde mini proyector (switch):', {
+      soloReferencia: config.soloReferencia,
+      configLocal: config.soloReferencia
+    });
     
     // Sincronizar con controles del panel principal
     if (switchSoloReferencia) {
@@ -779,6 +827,7 @@ async function configurarControlesMiniProyector() {
       console.log('🔄 Reenviando versículo con nueva configuración...');
       await enviarVersiculoAlProyector(versiculoActivoIndex);
     }
+    console.log('🔄 Llamando a actualizarVistaProyector desde mini proyector (switch)...');
     actualizarVistaProyector();
     
     // Emitir evento de socket para sincronizar con otros dispositivos
@@ -793,6 +842,9 @@ async function configurarControlesMiniProyector() {
         valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada (mini proyector)');
     }
   });
   
@@ -831,7 +883,6 @@ async function configurarControlesMiniProyector() {
   
   // Función para actualizar mini proyector en tiempo real
   async function actualizarMiniProyector() {
-    const config = await obtenerConfiguracion();
     const porcentaje = vwAPorcentaje(config.fontsizeBiblia || 5);
     
     if (miniSliderFontsizeBiblia) {
@@ -1103,7 +1154,9 @@ async function cambiarModo() {
     
     // Cargar configuración desde config.json para modo Biblia
     const config = await obtenerConfiguracion();
-    console.log('📋 Configuración cargada para modo Biblia:', config);
+    // --- NUEVO: Asignar a la variable global config ---
+    window.config = config;
+    console.log('📋 Configuración cargada para modo Biblia (global):', config);
     
     // Actualizar controles del panel principal
     const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
@@ -1153,6 +1206,7 @@ async function cambiarModo() {
   
   actualizarTopBarTitulo();
   actualizarVistaProyector();
+  console.log('✅ Modo cambiado exitosamente');
 }
 
 /**
@@ -2040,7 +2094,11 @@ function alternarVistaPrevisualizacion() {
  * Actualiza el contenido de la vista tipo proyector
  */
 function actualizarVistaProyector() {
-  if (!proyectorPreviewContent) return;
+  console.log('🔄 actualizarVistaProyector llamada');
+  if (!proyectorPreviewContent) {
+    console.error('❌ proyectorPreviewContent no encontrado');
+    return;
+  }
   let texto = '';
   let referencia = '';
   let isBiblia = esModoBiblia();
@@ -2054,26 +2112,11 @@ function actualizarVistaProyector() {
   if (miniProyectorTituloHimno) miniProyectorTituloHimno.style.display = 'none';
   if (miniProyectorContador) miniProyectorContador.style.display = 'none';
 
-  // --- NUEVO: Leer configuración actual para el mini proyector ---
-  let fontsizeBiblia = 5;
-  let soloReferencia = false;
-  if (isBiblia) {
-    // Intentar leer del slider y switch, si existen
-    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
-    const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
-    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
-    const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
-    if (sliderFontsizeBiblia && document.body.classList.contains('modo-biblia')) {
-      fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value) || 5;
-    } else if (miniSliderFontsizeBiblia) {
-      fontsizeBiblia = porcentajeAVw(parseInt(miniSliderFontsizeBiblia.value));
-    }
-    if (switchSoloReferencia && document.body.classList.contains('modo-biblia')) {
-      soloReferencia = switchSoloReferencia.checked;
-    } else if (miniSwitchSoloReferencia) {
-      soloReferencia = miniSwitchSoloReferencia.checked;
-    }
-  }
+  // --- NUEVO: Usar la variable config global ---
+  let fontsizeBiblia = config.fontsizeBiblia || 5;
+  let soloReferencia = config.soloReferencia || false;
+  console.log('🔧 Configuración para mini proyector:', { fontsizeBiblia, soloReferencia, isBiblia });
+  console.log('🔧 Variable config global:', config);
 
   if (isBiblia) {
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
@@ -2094,14 +2137,16 @@ function actualizarVistaProyector() {
     if (refDiv) {
       refDiv.style.display = referencia ? '' : 'none';
       refDiv.textContent = referencia;
-      // refDiv.style.fontSize = (fontsizeBiblia * 0.7) + 'vw'; // Eliminado para mantener tamaño fijo
     }
-    // --- NUEVO: Aplicar tamaño de fuente y soloReferencia ---
-    proyectorPreviewContent.style.fontSize = '';
+    // --- NUEVO: Aplicar tamaño de fuente y soloReferencia usando CSS custom properties ---
+    proyectorPreviewContent.style.setProperty('--font-size', `${fontsizeBiblia}vw`);
+    // --- NUEVO: También aplicar directamente al elemento para asegurar que funcione ---
+    proyectorPreviewContent.style.fontSize = `${fontsizeBiblia}vw`;
+    console.log('🔤 Aplicando tamaño de fuente al mini proyector:', `${fontsizeBiblia}vw`);
     if (soloReferencia) {
-      proyectorPreviewContent.innerHTML = `<span style='color:#fff;font-size:${fontsizeBiblia}vw;'>${referencia}</span>`;
+      proyectorPreviewContent.innerHTML = `<span class="texto-dinamico" style="color:#fff;">${referencia}</span>`;
     } else {
-      proyectorPreviewContent.innerHTML = `<span style='font-size:${fontsizeBiblia}vw;'>${texto}</span>`;
+      proyectorPreviewContent.innerHTML = `<span class="texto-dinamico">${texto}</span>`;
     }
     return;
   } else {
@@ -2298,6 +2343,7 @@ window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
 window.cambiarModoGlobal = cambiarModoGlobal;
 window.alternarPantallaCompleta = alternarPantallaCompleta;
 window.toggleAutoFullscreenLandscape = toggleAutoFullscreenLandscape;
+window.actualizarVistaProyector = actualizarVistaProyector;
 
 // --- INICIO: Identificador único de cliente para sincronización de memoria ---
 function obtenerClientId() {

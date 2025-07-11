@@ -528,5 +528,55 @@
         }
       });
     </script>
+    <!-- Script de prueba para verificar sincronización -->
+    <script>
+      // Función para probar la sincronización
+      function probarSincronizacion() {
+        console.log('🧪 Probando sincronización...');
+        console.log('🔌 Socket disponible:', typeof window.socket !== 'undefined');
+        console.log('🔌 Socket conectado:', window.socket ? window.socket.connected : 'N/A');
+        console.log('📋 Configuración actual:', window.config);
+        
+        if (window.socket && window.socket.connected) {
+          // Probar emisión de evento
+          window.socket.emit('configuracion_actualizada', {
+            tipo: 'fontsizeBiblia',
+            valor: 6.5,
+            clientId: 'TEST_' + Date.now()
+          });
+          console.log('✅ Evento de prueba emitido');
+        } else {
+          console.error('❌ Socket no disponible para prueba');
+        }
+      }
+      
+      // Función para probar la configuración local
+      function probarConfiguracionLocal() {
+        console.log('🧪 Probando configuración local...');
+        console.log('📋 Configuración actual:', window.config);
+        
+        if (window.config) {
+          // Cambiar el tamaño de fuente
+          window.config.fontsizeBiblia = 4.5;
+          console.log('🔧 Configuración modificada:', window.config);
+          
+          // Llamar a actualizarVistaProyector
+          if (typeof window.actualizarVistaProyector === 'function') {
+            console.log('🔄 Llamando a actualizarVistaProyector...');
+            window.actualizarVistaProyector();
+          } else {
+            console.error('❌ actualizarVistaProyector no disponible');
+          }
+        } else {
+          console.error('❌ Configuración no disponible');
+        }
+      }
+      
+      // Ejecutar prueba después de 5 segundos
+      setTimeout(probarSincronizacion, 5000);
+      
+      // Ejecutar prueba de configuración local después de 7 segundos
+      setTimeout(probarConfiguracionLocal, 7000);
+    </script>
 </body>
 </html>

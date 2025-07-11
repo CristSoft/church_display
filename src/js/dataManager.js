@@ -870,30 +870,25 @@ async function guardarConfiguracion(config) {
 }
 
 /**
- * Obtiene la configuración combinando config.json y localStorage
+ * Obtiene la configuración SOLO desde config.json
  * @returns {Promise<Object>} Objeto con la configuración
  */
 async function obtenerConfiguracion() {
-  // Primero intentar cargar desde config.json
+  // Solo cargar desde config.json
   const configJson = await cargarConfiguracion();
-  
-  // Luego cargar desde localStorage como respaldo
-  const configLocal = JSON.parse(localStorage.getItem('proyectorConfig')) || {};
-  
-  // Combinar configuraciones, dando prioridad a config.json
-  const configCombinada = {
-    fontsizeBiblia: configJson.fontsizeBiblia || configLocal.fontsizeBiblia || 5,
-    fontsizeHimnario: configJson.fontsizeHimnario || configLocal.fontsizeHimnario || 5,
-    soloReferencia: configJson.soloReferencia !== undefined ? configJson.soloReferencia : (configLocal.soloReferencia !== undefined ? configLocal.soloReferencia : false),
-    autoFullscreen: configJson.autoFullscreen !== undefined ? configJson.autoFullscreen : (configLocal.autoFullscreen !== undefined ? configLocal.autoFullscreen : true)
+  // Si no se pudo cargar, usar valores por defecto
+  const config = {
+    fontsizeBiblia: configJson.fontsizeBiblia || 5,
+    fontsizeHimnario: configJson.fontsizeHimnario || 5,
+    soloReferencia: configJson.soloReferencia !== undefined ? configJson.soloReferencia : false,
+    autoFullscreen: configJson.autoFullscreen !== undefined ? configJson.autoFullscreen : true
   };
-  
-  console.log('📋 Configuración combinada:', configCombinada);
-  return configCombinada;
+  console.log('📋 Configuración obtenida del servidor:', config);
+  return config;
 }
 
 /**
- * Guarda la configuración tanto en config.json como en localStorage
+ * Guarda la configuración SOLO en config.json
  * @param {Object} config - Objeto con la configuración a guardar
  * @returns {Promise<boolean>} true si se guardó correctamente
  */
@@ -901,11 +896,7 @@ async function guardarConfiguracionCompleta(config) {
   try {
     // Guardar en config.json
     const guardadoJson = await guardarConfiguracion(config);
-    
-    // Guardar en localStorage como respaldo
-    localStorage.setItem('proyectorConfig', JSON.stringify(config));
-    
-    console.log('💾 Configuración guardada completa:', config);
+    console.log('💾 Configuración guardada en el servidor:', config);
     return guardadoJson;
   } catch (error) {
     console.error('❌ Error al guardar configuración completa:', error);

@@ -2,13 +2,13 @@
   "modo": "biblia",
   "biblia": {
     "version": "es-rv60.json",
-    "libro": "Éxodo",
-    "capitulo": 14,
-    "versiculo": 25
+    "libro": "Salmos",
+    "capitulo": 22,
+    "versiculo": 3
   },
   "himnario": {
-    "numero": "001",
-    "titulo": "Cantad alegres al Señor",
-    "estrofa": 1
+    "numero": "004",
+    "titulo": "Alabanzas sin cesar",
+    "estrofa": 4
   }
 }
