@@ -1,5 +1,5 @@
 {
-  "modo": "biblia",
+  "modo": "himnario",
   "biblia": {
     "version": "es-rv60.json",
     "libro": "Salmos",
@@ -9,6 +9,6 @@
   "himnario": {
     "numero": "004",
     "titulo": "Alabanzas sin cesar",
-    "estrofa": 12
+    "estrofa": 1
   }
 }

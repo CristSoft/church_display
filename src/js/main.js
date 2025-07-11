@@ -2192,7 +2192,7 @@ function actualizarVistaProyector() {
         }
         texto = estrofa.texto.replace(/\n/g, '<br>');
         proyectorPreviewContent.innerHTML = `
-          <div class="indicador-estrofa" style="font-size:2.5vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;margin-bottom:1em;">${versoText + " de " + totalVerses}</div>
+          <div class="indicador-estrofa" style="font-size:2.5vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;margin-bottom:1em;">${versoText}</div>
           <span>${texto}</span>
         `;
         return;
