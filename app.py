@@ -193,6 +193,49 @@ def on_set_memoria(data):
     guardar_memoria(memoria_estado)
     emit('memoria_actualizada', {'memoria': memoria_estado, 'clientId': client_id}, broadcast=True)
 
+# --- NUEVO: Endpoints para config.json ---
+@app.route('/config.json', methods=['GET'])
+def get_config():
+    """Obtiene la configuración desde config.json"""
+    try:
+        if os.path.exists('config.json'):
+            with open('config.json', 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                print(f'📋 Configuración cargada: {config}')
+                return json.dumps(config, ensure_ascii=False, indent=2)
+        else:
+            # Crear configuración por defecto
+            config_default = {
+                "fontsizeBiblia": 5,
+                "fontsizeHimnario": 5,
+                "soloReferencia": False,
+                "autoFullscreen": True
+            }
+            print(f'📋 Configuración por defecto creada: {config_default}')
+            return json.dumps(config_default, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f'❌ Error al cargar config.json: {e}')
+        return json.dumps({"error": str(e)}), 500
+
+@app.route('/config.json', methods=['POST'])
+def save_config():
+    """Guarda la configuración en config.json"""
+    try:
+        config = request.get_json()
+        if config is None:
+            return json.dumps({"error": "No se recibió JSON válido"}), 400
+        
+        print(f'💾 Guardando configuración: {config}')
+        
+        with open('config.json', 'w', encoding='utf-8') as f:
+            json.dump(config, f, ensure_ascii=False, indent=2)
+        
+        print(f'✅ Configuración guardada exitosamente')
+        return json.dumps({"success": True, "message": "Configuración guardada"})
+    except Exception as e:
+        print(f'❌ Error al guardar config.json: {e}')
+        return json.dumps({"error": str(e)}), 500
+
 if __name__ == '__main__':
     print("🚀 Iniciando servidor Flask-SocketIO para Church Display...")
     print("📱 Panel de control: http://localhost:8080/")

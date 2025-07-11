@@ -810,6 +810,109 @@ async function parseHymn(hymnFileName) {
   }
 }
 
+/**
+ * Carga la configuración desde config.json
+ * @returns {Promise<Object>} Objeto con la configuración
+ */
+async function cargarConfiguracion() {
+  try {
+    const response = await fetch('/config.json');
+    if (response.ok) {
+      const config = await response.json();
+      console.log('📋 Configuración cargada desde config.json:', config);
+      return config;
+    } else {
+      console.log('⚠️ No se pudo cargar config.json, usando configuración por defecto');
+      return {
+        fontsizeBiblia: 5,
+        fontsizeHimnario: 5,
+        soloReferencia: false,
+        autoFullscreen: true
+      };
+    }
+  } catch (error) {
+    console.error('❌ Error al cargar configuración:', error);
+    return {
+      fontsizeBiblia: 5,
+      fontsizeHimnario: 5,
+      soloReferencia: false,
+      autoFullscreen: true
+    };
+  }
+}
+
+/**
+ * Guarda la configuración en config.json
+ * @param {Object} config - Objeto con la configuración a guardar
+ * @returns {Promise<boolean>} true si se guardó correctamente
+ */
+async function guardarConfiguracion(config) {
+  try {
+    const response = await fetch('/config.json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config, null, 2)
+    });
+    
+    if (response.ok) {
+      console.log('✅ Configuración guardada en config.json:', config);
+      return true;
+    } else {
+      console.error('❌ Error al guardar configuración:', response.status, response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error al guardar configuración:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtiene la configuración combinando config.json y localStorage
+ * @returns {Promise<Object>} Objeto con la configuración
+ */
+async function obtenerConfiguracion() {
+  // Primero intentar cargar desde config.json
+  const configJson = await cargarConfiguracion();
+  
+  // Luego cargar desde localStorage como respaldo
+  const configLocal = JSON.parse(localStorage.getItem('proyectorConfig')) || {};
+  
+  // Combinar configuraciones, dando prioridad a config.json
+  const configCombinada = {
+    fontsizeBiblia: configJson.fontsizeBiblia || configLocal.fontsizeBiblia || 5,
+    fontsizeHimnario: configJson.fontsizeHimnario || configLocal.fontsizeHimnario || 5,
+    soloReferencia: configJson.soloReferencia !== undefined ? configJson.soloReferencia : (configLocal.soloReferencia !== undefined ? configLocal.soloReferencia : false),
+    autoFullscreen: configJson.autoFullscreen !== undefined ? configJson.autoFullscreen : (configLocal.autoFullscreen !== undefined ? configLocal.autoFullscreen : true)
+  };
+  
+  console.log('📋 Configuración combinada:', configCombinada);
+  return configCombinada;
+}
+
+/**
+ * Guarda la configuración tanto en config.json como en localStorage
+ * @param {Object} config - Objeto con la configuración a guardar
+ * @returns {Promise<boolean>} true si se guardó correctamente
+ */
+async function guardarConfiguracionCompleta(config) {
+  try {
+    // Guardar en config.json
+    const guardadoJson = await guardarConfiguracion(config);
+    
+    // Guardar en localStorage como respaldo
+    localStorage.setItem('proyectorConfig', JSON.stringify(config));
+    
+    console.log('💾 Configuración guardada completa:', config);
+    return guardadoJson;
+  } catch (error) {
+    console.error('❌ Error al guardar configuración completa:', error);
+    return false;
+  }
+}
+
 // Hacer las funciones disponibles globalmente
 console.log('🌐 Haciendo funciones disponibles globalmente...');
 window.getBibleVersions = getBibleVersions;

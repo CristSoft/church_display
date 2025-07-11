@@ -3,12 +3,12 @@
   "biblia": {
     "version": "es-rv60.json",
     "libro": "Éxodo",
-    "capitulo": 32,
-    "versiculo": 0
+    "capitulo": 14,
+    "versiculo": 22
   },
   "himnario": {
-    "numero": "054",
-    "titulo": "Tan bueno es Dios",
-    "estrofa": 0
+    "numero": "001",
+    "titulo": "Cantad alegres al Señor",
+    "estrofa": 1
   }
 }

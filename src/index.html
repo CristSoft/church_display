@@ -54,20 +54,26 @@
       <div class="config-modal-content">
         <button id="cerrarConfig" class="btn-cerrar-config">&times;</button>
         <h2 class="config-titulo">Configuración</h2>
+        
+        <!-- Configuración para Biblia -->
         <div id="sliderFontBibliaContainer" class="slider-font-biblia-container">
-          <label for="sliderFontsizeBiblia">Tamaño de fuente versículos (Biblia):</label><br>
-          <input type="range" id="sliderFontsizeBiblia" min="1.5" max="8" step="0.1" value="5">
+          <label for="sliderFontsizeBiblia">Tamaño de fuente Biblia:</label><br>
+          <input type="range" id="sliderFontsizeBiblia" min="2" max="10" step="0.1" value="5">
           <span id="fontsizeValueBiblia">5vw</span>
         </div>
+        
+        <div id="opcionSoloReferencia" class="opcion-solo-referencia">
+          <label for="switchSoloReferencia">Solo referencia (Biblia):</label>
+          <input type="checkbox" id="switchSoloReferencia">
+        </div>
+        
+        <!-- Configuración para Himnario -->
         <div id="sliderFontHimnarioContainer" class="slider-font-himnario-container">
           <label for="sliderFontsizeHimnario">Tamaño de fuente himnos (Himnario):</label><br>
           <input type="range" id="sliderFontsizeHimnario" min="2" max="10" step="0.1" value="5">
           <span id="fontsizeValueHimnario">5vw</span>
         </div>
-        <div id="opcionSoloReferencia" class="opcion-solo-referencia">
-          <label for="switchSoloReferencia">Solo mostrar referencia bíblica (modo Biblia):</label>
-          <input type="checkbox" id="switchSoloReferencia">
-        </div>
+        
         <div id="opcionAutoFullscreen" class="opcion-auto-fullscreen">
           <label for="switchAutoFullscreen">Auto pantalla completa en landscape (móvil):</label>
           <input type="checkbox" id="switchAutoFullscreen" checked>
@@ -159,6 +165,24 @@
       <button id="playHimnoMiniProyector" class="btn-play-round-mini" style="display:none;margin: 1.2em auto 0 auto;">
         <i class="fa-solid fa-play"></i>
       </button>
+      
+      <!-- Controles de configuración debajo del mini proyector -->
+      <div id="miniProyectorControls" class="mini-proyector-controls">
+        <div class="control-group">
+          <label class="control-label">Tamaño de texto:</label>
+          <div class="slider-container">
+            <input type="range" id="miniSliderFontsizeBiblia" min="1" max="100" step="1" value="54">
+            <span id="miniFontsizeValueBiblia" class="slider-value">54%</span>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Solo referencia:</label>
+          <div class="switch-container">
+            <input type="checkbox" id="miniSwitchSoloReferencia" class="switch-input">
+            <span class="slider"></span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Reproductor de audio para himnos -->

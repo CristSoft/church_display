@@ -56,8 +56,8 @@ socket.on('update_text', (data) => {
             // Ocultar indicadores de himno
             contadorSeccion.style.display = 'none';
             indicadorEstrofa.style.display = 'none';
-            // Quitar clase de versículo bíblico
-            textoPrincipal.classList.remove('versiculo-biblia');
+            // Aplicar clase de versículo bíblico para usar la misma fuente
+            textoPrincipal.classList.add('versiculo-biblia');
         } else {
             if (data.himnoData) {
                 // Modo himno

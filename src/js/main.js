@@ -211,7 +211,7 @@ function enviarMensajeProyector(tipo, data) {
 /**
  * Envía un versículo al proyector
  */
-function enviarVersiculoAlProyector(versiculoIndex) {
+async function enviarVersiculoAlProyector(versiculoIndex) {
   if (!bibliaActual || !libroActivo || capituloActivo === null || versiculoIndex < 0) {
     console.warn('⚠️ No hay versículo válido para enviar');
     return;
@@ -220,8 +220,8 @@ function enviarVersiculoAlProyector(versiculoIndex) {
   const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoIndex];
   const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
   
-  // Obtener configuración
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  // Obtener configuración actualizada
+  const config = await obtenerConfiguracion();
   if (config.soloReferencia) {
     enviarMensajeProyector('update_text', {
       texto: referencia,
@@ -397,31 +397,30 @@ async function inicializar() {
   const cerrarConfig = document.getElementById('cerrarConfig');
   const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
   const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
   const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
   const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
-  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
-  const opcionSoloReferencia = document.getElementById('opcionSoloReferencia');
   const switchAutoFullscreen = document.getElementById('switchAutoFullscreen');
   const opcionAutoFullscreen = document.getElementById('opcionAutoFullscreen');
   const sliderFontBibliaContainer = document.getElementById('sliderFontBibliaContainer');
   const sliderFontHimnarioContainer = document.getElementById('sliderFontHimnarioContainer');
 
   // Cargar configuración guardada
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false, autoFullscreen: true };
+  let config = await obtenerConfiguracion();
   sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
   fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+  switchSoloReferencia.checked = !!config.soloReferencia;
   sliderFontsizeHimnario.value = config.fontsizeHimnario || 5;
   fontsizeValueHimnario.textContent = (config.fontsizeHimnario || 5) + 'vw';
-  switchSoloReferencia.checked = !!config.soloReferencia;
   switchAutoFullscreen.checked = config.autoFullscreen !== false; // true por defecto
   autoFullscreenLandscape = config.autoFullscreen !== false;
 
   // Mostrar/ocultar sliders según modo
   function actualizarOpcionesModo() {
     const esBiblia = esModoBiblia();
-    opcionSoloReferencia.style.display = esBiblia ? '' : 'none';
     sliderFontBibliaContainer.style.display = esBiblia ? '' : 'none';
     sliderFontHimnarioContainer.style.display = esBiblia ? 'none' : '';
+    opcionSoloReferencia.style.display = esBiblia ? '' : 'none';
   }
   
   // Hacer la función global para poder llamarla desde otras funciones
@@ -438,22 +437,33 @@ async function inicializar() {
   });
 
   // Slider de fuente Biblia
-  sliderFontsizeBiblia.addEventListener('input', () => {
+  sliderFontsizeBiblia.addEventListener('input', async () => {
     fontsizeValueBiblia.textContent = sliderFontsizeBiblia.value + 'vw';
     config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
-    guardarYEnviarConfig();
+    await guardarYEnviarConfig();
+    // Sincronizar con mini proyector
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    actualizarVistaProyector();
+  });
+
+  // Switch solo referencia
+  switchSoloReferencia.addEventListener('change', async () => {
+    config.soloReferencia = switchSoloReferencia.checked;
+    await guardarYEnviarConfig();
+    // Sincronizar con mini proyector
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    actualizarVistaProyector();
   });
 
   // Slider de fuente Himnario
-  sliderFontsizeHimnario.addEventListener('input', () => {
+  sliderFontsizeHimnario.addEventListener('input', async () => {
     fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
     config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
-    guardarYEnviarConfig();
-  });
-  // Switch solo referencia
-  switchSoloReferencia.addEventListener('change', () => {
-    config.soloReferencia = switchSoloReferencia.checked;
-    guardarYEnviarConfig();
+    await guardarYEnviarConfig();
   });
   
   // Switch auto fullscreen
@@ -470,8 +480,9 @@ async function inicializar() {
   });
   
 
-  function guardarYEnviarConfig() {
-    localStorage.setItem('proyectorConfig', JSON.stringify(config));
+  async function guardarYEnviarConfig() {
+    await guardarConfiguracionCompleta(config);
+    
     // Enviar config al proyector según modo
     const esBiblia = esModoBiblia();
     const configEnviar = {
@@ -510,12 +521,15 @@ async function inicializar() {
 
   // Configurar eventos
   configurarEventos();
+  
+  // Configurar controles del mini proyector
+  await configurarControlesMiniProyector();
 
   // Cargar datos iniciales
   await cargarDatosIniciales();
   
   // Establecer modo inicial
-  cambiarModo();
+  await cambiarModo();
 
   // Inicializar modo de audio
   inicializarAudioMode();
@@ -529,6 +543,173 @@ async function inicializar() {
     socket: window.socket,
     conectado: window.socket ? window.socket.connected : 'N/A'
   });
+}
+
+/**
+ * Convierte porcentaje a vw
+ * @param {number} porcentaje - Valor de 1 a 100
+ * @returns {number} - Valor en vw de 1.5 a 8
+ */
+function porcentajeAVw(porcentaje) {
+  const minVw = 1.5;
+  const maxVw = 8;
+  const rangoVw = maxVw - minVw;
+  return minVw + (rangoVw * (porcentaje - 1) / 99);
+}
+
+/**
+ * Convierte vw a porcentaje
+ * @param {number} vw - Valor en vw de 1.5 a 8
+ * @returns {number} - Valor de 1 a 100
+ */
+function vwAPorcentaje(vw) {
+  const minVw = 1.5;
+  const maxVw = 8;
+  const rangoVw = maxVw - minVw;
+  return Math.round(1 + (99 * (vw - minVw) / rangoVw));
+}
+
+/**
+ * Configura los controles del mini proyector
+ */
+async function configurarControlesMiniProyector() {
+  const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
+  const miniFontsizeValueBiblia = document.getElementById('miniFontsizeValueBiblia');
+  const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
+  const miniProyectorControls = document.getElementById('miniProyectorControls');
+  
+  // Referencias a los controles del panel principal
+  const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+  const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+  
+  // Cargar configuración guardada
+  let config = await obtenerConfiguracion();
+  
+  // Convertir el valor vw guardado a porcentaje para el slider
+  const porcentajeInicial = vwAPorcentaje(config.fontsizeBiblia || 5);
+  
+  // Inicializar valores
+  miniSliderFontsizeBiblia.value = porcentajeInicial;
+  miniFontsizeValueBiblia.textContent = porcentajeInicial + '%';
+  miniSwitchSoloReferencia.checked = !!config.soloReferencia;
+  
+  // Event listeners
+  miniSliderFontsizeBiblia.addEventListener('input', async () => {
+    const porcentaje = parseInt(miniSliderFontsizeBiblia.value);
+    const vw = porcentajeAVw(porcentaje);
+    
+    miniFontsizeValueBiblia.textContent = porcentaje + '%';
+    config.fontsizeBiblia = vw;
+    
+    // Sincronizar con controles del panel principal
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = vw;
+      fontsizeValueBiblia.textContent = vw + 'vw';
+    }
+    
+    // Guardar y enviar configuración
+    await guardarConfiguracionCompleta(config);
+    
+    // Enviar config al proyector según modo
+    const esBiblia = esModoBiblia();
+    const configEnviar = {
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
+    };
+    console.log('🔧 Configuración actualizada desde mini proyector:', {
+      porcentaje: porcentaje,
+      vw: vw,
+      configEnviar: configEnviar
+    });
+    enviarMensajeProyector('config', configEnviar);
+    actualizarVistaProyector();
+  });
+  
+  miniSwitchSoloReferencia.addEventListener('change', async () => {
+    config.soloReferencia = miniSwitchSoloReferencia.checked;
+    
+    // Sincronizar con controles del panel principal
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = config.soloReferencia;
+    }
+    
+    // Guardar y enviar configuración
+    await guardarConfiguracionCompleta(config);
+    
+    // Enviar config al proyector según modo
+    const esBiblia = esModoBiblia();
+    const configEnviar = {
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
+    };
+    console.log('🔧 Configuración actualizada desde mini proyector:', {
+      soloReferencia: config.soloReferencia,
+      configEnviar: configEnviar
+    });
+    enviarMensajeProyector('config', configEnviar);
+    
+    // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+    if (esBiblia && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+      console.log('🔄 Reenviando versículo con nueva configuración...');
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }
+    actualizarVistaProyector();
+  });
+  
+  // Hacer el switch clickeable
+  const switchContainer = miniSwitchSoloReferencia.parentElement;
+  switchContainer.addEventListener('click', (e) => {
+    // Evitar doble trigger si se hace clic directamente en el input
+    if (e.target === miniSwitchSoloReferencia) return;
+    
+    console.log('🔘 Switch clickeado, estado anterior:', miniSwitchSoloReferencia.checked);
+    
+    // Toggle del switch
+    miniSwitchSoloReferencia.checked = !miniSwitchSoloReferencia.checked;
+    
+    console.log('🔘 Switch clickeado, estado nuevo:', miniSwitchSoloReferencia.checked);
+    
+    // Trigger del evento change
+    const event = new Event('change', { bubbles: true });
+    miniSwitchSoloReferencia.dispatchEvent(event);
+  });
+  
+  // Mostrar controles solo en modo biblia y vista proyector
+  function actualizarVisibilidadControles() {
+    const esBiblia = esModoBiblia();
+    const esVistaProyector = vistaActual === 'proyector';
+    
+    if (esBiblia && esVistaProyector) {
+      miniProyectorControls.classList.add('visible');
+    } else {
+      miniProyectorControls.classList.remove('visible');
+    }
+  }
+  
+  // Hacer la función global para poder llamarla desde otras funciones
+  window.actualizarVisibilidadControles = actualizarVisibilidadControles;
+  
+  // Función para actualizar mini proyector en tiempo real
+  async function actualizarMiniProyector() {
+    const config = await obtenerConfiguracion();
+    const porcentaje = vwAPorcentaje(config.fontsizeBiblia || 5);
+    
+    if (miniSliderFontsizeBiblia) {
+      miniSliderFontsizeBiblia.value = porcentaje;
+      miniFontsizeValueBiblia.textContent = porcentaje + '%';
+    }
+    
+    if (miniSwitchSoloReferencia) {
+      miniSwitchSoloReferencia.checked = !!config.soloReferencia;
+    }
+  }
+  
+  // Hacer la función global
+  window.actualizarMiniProyector = actualizarMiniProyector;
+  
+  // Actualizar visibilidad inicial
+  actualizarVisibilidadControles();
 }
 
 /**
@@ -766,7 +947,7 @@ function mostrarInstruccionesMovil() {
 /**
  * Cambia entre modo Biblia e Himnario
  */
-function cambiarModo() {
+async function cambiarModo() {
   const esBiblia = esModoBiblia();
   
   // Limpiar todo ANTES de cambiar el modo
@@ -780,6 +961,25 @@ function cambiarModo() {
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
     actualizarBotonPlayMiniProyector();
+    
+    // Cargar configuración desde config.json para modo Biblia
+    const config = await obtenerConfiguracion();
+    console.log('📋 Configuración cargada para modo Biblia:', config);
+    
+    // Actualizar controles del panel principal
+    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+    const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+      fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+    }
+    
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = !!config.soloReferencia;
+    }
+    
   } else {
     elementos.controlBiblia.style.display = 'none';
     elementos.controlHimnario.style.display = 'block';
@@ -792,12 +992,26 @@ function cambiarModo() {
   }
   
   // Enviar configuración actualizada según el modo
-  const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  const config = await obtenerConfiguracion();
   const configEnviar = {
     fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
     soloReferencia: esBiblia ? config.soloReferencia : null
   };
   enviarMensajeProyector('config', configEnviar);
+  
+  // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+  if (esBiblia && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+    console.log('🔄 Reenviando versículo con nueva configuración al cambiar modo...');
+    setTimeout(async () => {
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }, 100);
+  }
+  
+  // Actualizar mini proyector si está disponible
+  if (typeof window.actualizarMiniProyector === 'function') {
+    await window.actualizarMiniProyector();
+  }
+  
   actualizarTopBarTitulo();
   actualizarVistaProyector();
 }
@@ -806,7 +1020,7 @@ function cambiarModo() {
  * Función global para cambiar modo desde el foot navbar
  * Esta función se puede llamar desde index.html
  */
-function cambiarModoGlobal(modo, propagar = true) {
+async function cambiarModoGlobal(modo, propagar = true) {
   console.log('🔄 Cambiando modo global a:', modo);
   window.modoActual = modo;
   // --- Actualizar visualmente los botones del navbar ---
@@ -840,6 +1054,25 @@ function cambiarModoGlobal(modo, propagar = true) {
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
     document.body.classList.add('modo-biblia');
     document.body.classList.remove('modo-himnario');
+    
+    // Cargar configuración desde config.json para modo Biblia
+    const config = await obtenerConfiguracion();
+    console.log('📋 Configuración cargada para modo Biblia (global):', config);
+    
+    // Actualizar controles del panel principal
+    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+    const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+      fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+    }
+    
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = !!config.soloReferencia;
+    }
+    
     if (window.memoriaUltima && window.memoriaUltima.biblia) {
       seleccionarEstadoBiblia(window.memoriaUltima.biblia);
     }
@@ -847,15 +1080,32 @@ function cambiarModoGlobal(modo, propagar = true) {
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-  const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  const config = await obtenerConfiguracion();
   const configEnviar = {
     fontsize: modo === 'biblia' ? config.fontsizeBiblia : config.fontsizeHimnario,
     soloReferencia: modo === 'biblia' ? config.soloReferencia : null
   };
   enviarMensajeProyector('config', configEnviar);
+  
+  // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+  if (modo === 'biblia' && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+    console.log('🔄 Reenviando versículo con nueva configuración al cambiar modo global...');
+    setTimeout(async () => {
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }, 100);
+  }
+  
+  // Actualizar mini proyector si está disponible
+  if (typeof window.actualizarMiniProyector === 'function') {
+    await window.actualizarMiniProyector();
+  }
+  
   actualizarTopBarTitulo();
   actualizarVistaProyector();
   actualizarBotonPlayMiniProyector();
+  if (typeof window.actualizarVisibilidadControles === 'function') {
+    window.actualizarVisibilidadControles();
+  }
   console.log('✅ Cambio de modo completado');
   if (propagar) {
     actualizarMemoriaServidor({ modo });
@@ -1111,7 +1361,7 @@ function renderizarGrillaVersiculos() {
 /**
  * Selecciona un versículo
  */
-function seleccionarVersiculo(event) {
+async function seleccionarVersiculo(event) {
   if (event.target.dataset.versiculo) {
     const versiculoIndex = parseInt(event.target.dataset.versiculo);
     versiculoActivoIndex = versiculoIndex;
@@ -1121,7 +1371,7 @@ function seleccionarVersiculo(event) {
     event.target.classList.add('selected');
     resaltarCard(versiculoIndex);
     actualizarReferenciaBibliaEnVistaPrevia();
-    enviarVersiculoAlProyector(versiculoIndex);
+    await enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
     mostrarGrillasBiblia(false);
     // Actualizar memoria
@@ -1239,7 +1489,7 @@ function cargarHimnoEnVistaPrevia() {
 /**
  * Maneja el clic en una card de estrofa/versículo
  */
-function manejarClicCard(event) {
+async function manejarClicCard(event) {
   const card = event.target.closest('.card'); // Corrección
   if (!card) return; // Añadir esta guarda
   const esBiblia = esModoBiblia();
@@ -1249,7 +1499,7 @@ function manejarClicCard(event) {
     versiculoActivoIndex = versiculoIndex;
     resaltarCard(versiculoIndex);
     actualizarReferenciaBibliaEnVistaPrevia();
-    enviarVersiculoAlProyector(versiculoIndex);
+    await enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
     // Actualizar memoria
     actualizarMemoriaServidor({
@@ -1639,6 +1889,9 @@ function alternarVistaPrevisualizacion() {
   }
   actualizarTopBarTitulo();
   actualizarBotonPlayMiniProyector();
+  if (typeof window.actualizarVisibilidadControles === 'function') {
+    window.actualizarVisibilidadControles();
+  }
   if (esModoBiblia()) ocultarPlayFooter();
   // Refuerzo: actualizar el botón de play del himno
   actualizarBotonPlayHimno();
@@ -1661,6 +1914,28 @@ function actualizarVistaProyector() {
   }
   if (miniProyectorTituloHimno) miniProyectorTituloHimno.style.display = 'none';
   if (miniProyectorContador) miniProyectorContador.style.display = 'none';
+
+  // --- NUEVO: Leer configuración actual para el mini proyector ---
+  let fontsizeBiblia = 5;
+  let soloReferencia = false;
+  if (isBiblia) {
+    // Intentar leer del slider y switch, si existen
+    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+    const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
+    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
+    if (sliderFontsizeBiblia && document.body.classList.contains('modo-biblia')) {
+      fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value) || 5;
+    } else if (miniSliderFontsizeBiblia) {
+      fontsizeBiblia = porcentajeAVw(parseInt(miniSliderFontsizeBiblia.value));
+    }
+    if (switchSoloReferencia && document.body.classList.contains('modo-biblia')) {
+      soloReferencia = switchSoloReferencia.checked;
+    } else if (miniSwitchSoloReferencia) {
+      soloReferencia = miniSwitchSoloReferencia.checked;
+    }
+  }
+
   if (isBiblia) {
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
       const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
@@ -1680,8 +1955,15 @@ function actualizarVistaProyector() {
     if (refDiv) {
       refDiv.style.display = referencia ? '' : 'none';
       refDiv.textContent = referencia;
+      // refDiv.style.fontSize = (fontsizeBiblia * 0.7) + 'vw'; // Eliminado para mantener tamaño fijo
     }
-    proyectorPreviewContent.innerHTML = `<span>${texto}</span>`;
+    // --- NUEVO: Aplicar tamaño de fuente y soloReferencia ---
+    proyectorPreviewContent.style.fontSize = '';
+    if (soloReferencia) {
+      proyectorPreviewContent.innerHTML = `<span style='color:#fff;font-size:${fontsizeBiblia}vw;'>${referencia}</span>`;
+    } else {
+      proyectorPreviewContent.innerHTML = `<span style='font-size:${fontsizeBiblia}vw;'>${texto}</span>`;
+    }
     return;
   } else {
     // Ocultar referencia externa en modo himnario
@@ -2090,7 +2372,7 @@ function actualizarMemoriaServidor(nuevoEstado) {
   }
 }
 
-function aplicarMemoria(memoria) {
+async function aplicarMemoria(memoria) {
   if (!memoria) return;
   window.memoriaUltima = memoria;
   if (window.modoActual !== memoria.modo) {
@@ -2098,7 +2380,7 @@ function aplicarMemoria(memoria) {
     return;
   }
   if (memoria.modo === 'biblia' && memoria.biblia) {
-    seleccionarEstadoBiblia(memoria.biblia);
+    await seleccionarEstadoBiblia(memoria.biblia);
   }
   if (memoria.modo === 'himnario' && memoria.himnario) {
     seleccionarEstadoHimnario(memoria.himnario);
@@ -2108,7 +2390,7 @@ function aplicarMemoria(memoria) {
   actualizarReferenciaBibliaEnVistaPrevia();
 }
 
-function seleccionarEstadoBiblia(biblia) {
+async function seleccionarEstadoBiblia(biblia) {
   if (!bibliaActual || !biblia.libro) return;
   libroActivo = biblia.libro;
   renderizarGrillaCapitulos(libroActivo);
@@ -2131,7 +2413,7 @@ function seleccionarEstadoBiblia(biblia) {
       versiculoActivoIndex = biblia.versiculo;
       resaltarCard(versiculoActivoIndex);
       actualizarReferenciaBibliaEnVistaPrevia();
-      enviarVersiculoAlProyector(versiculoActivoIndex);
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
     }
   }
 }
@@ -2163,8 +2445,8 @@ async function seleccionarEstadoHimnario(himnario) {
 if (typeof io !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function() {
     if (window.socket) {
-      window.socket.on('memoria_estado', aplicarMemoria);
-      window.socket.on('memoria_actualizada', function(payload) {
+      window.socket.on('memoria_estado', async (memoria) => await aplicarMemoria(memoria));
+      window.socket.on('memoria_actualizada', async function(payload) {
         // payload puede ser { memoria, clientId }
         let memoria = payload;
         let fromClientId = null;
@@ -2176,7 +2458,7 @@ if (typeof io !== 'undefined') {
         }
         // Si el cambio es propio, ignorar
         if (fromClientId && fromClientId === CLIENT_ID) return;
-        aplicarMemoria(memoria);
+        await aplicarMemoria(memoria);
       });
       solicitarMemoriaServidor();
     }
