@@ -105,6 +105,80 @@ function inicializarSocketIO() {
       himnoSonando = false;
       actualizarBotonPlayHimno();
     });
+    
+    // Evento para recibir cambios de configuración de otros dispositivos
+    socket.on('configuracion_actualizada', async (data) => {
+      console.log('📥 Configuración actualizada desde otro dispositivo:', data);
+      
+      // Ignorar si el cambio es propio
+      if (data.clientId === CLIENT_ID) {
+        return;
+      }
+      
+      // Actualizar configuración local según el tipo
+      switch (data.tipo) {
+        case 'fontsizeBiblia':
+          config.fontsizeBiblia = data.valor;
+          // Actualizar controles del panel principal
+          const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+          const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+          if (sliderFontsizeBiblia && fontsizeValueBiblia) {
+            sliderFontsizeBiblia.value = data.valor;
+            fontsizeValueBiblia.textContent = data.valor + 'vw';
+          }
+          // Actualizar controles del mini proyector
+          const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
+          const miniFontsizeValueBiblia = document.getElementById('miniFontsizeValueBiblia');
+          if (miniSliderFontsizeBiblia && miniFontsizeValueBiblia) {
+            const porcentaje = vwAPorcentaje(data.valor);
+            miniSliderFontsizeBiblia.value = porcentaje;
+            miniFontsizeValueBiblia.textContent = porcentaje + '%';
+          }
+          break;
+          
+        case 'soloReferencia':
+          config.soloReferencia = data.valor;
+          // Actualizar controles del panel principal
+          const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+          if (switchSoloReferencia) {
+            switchSoloReferencia.checked = data.valor;
+          }
+          // Actualizar controles del mini proyector
+          const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
+          if (miniSwitchSoloReferencia) {
+            miniSwitchSoloReferencia.checked = data.valor;
+          }
+          break;
+          
+        case 'fontsizeHimnario':
+          config.fontsizeHimnario = data.valor;
+          // Actualizar controles del panel principal
+          const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
+          const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
+          if (sliderFontsizeHimnario && fontsizeValueHimnario) {
+            sliderFontsizeHimnario.value = data.valor;
+            fontsizeValueHimnario.textContent = data.valor + 'vw';
+          }
+          break;
+      }
+      
+      // Guardar configuración
+      await guardarConfiguracionCompleta(config);
+      
+      // Actualizar vista del proyector
+      actualizarVistaProyector();
+      
+      // Enviar configuración al proyector
+      const esBiblia = esModoBiblia();
+      const configEnviar = {
+        fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+        soloReferencia: esBiblia ? config.soloReferencia : null
+      };
+      enviarMensajeProyector('config', configEnviar);
+      
+      console.log('✅ Configuración sincronizada desde otro dispositivo');
+    });
+    
     // Evento para cuando el proyector recibe un click
     socket.on('proyectorClick', () => {
       console.log('Evento proyectorClick recibido en el panel de control');
@@ -446,6 +520,20 @@ async function inicializar() {
       await window.actualizarMiniProyector();
     }
     actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'fontsizeBiblia',
+        valor: config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeBiblia',
+        valor: config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+    }
   });
 
   // Switch solo referencia
@@ -457,6 +545,20 @@ async function inicializar() {
       await window.actualizarMiniProyector();
     }
     actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'soloReferencia',
+        valor: config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'soloReferencia',
+        valor: config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+    }
   });
 
   // Slider de fuente Himnario
@@ -464,6 +566,15 @@ async function inicializar() {
     fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
     config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
     await guardarYEnviarConfig();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeHimnario',
+        valor: config.fontsizeHimnario,
+        clientId: CLIENT_ID
+      });
+    }
   });
   
   // Switch auto fullscreen
@@ -624,6 +735,20 @@ async function configurarControlesMiniProyector() {
     });
     enviarMensajeProyector('config', configEnviar);
     actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
+        tipo: 'fontsizeBiblia',
+        valor: config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeBiblia',
+        valor: config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+    }
   });
   
   miniSwitchSoloReferencia.addEventListener('change', async () => {
@@ -655,6 +780,20 @@ async function configurarControlesMiniProyector() {
       await enviarVersiculoAlProyector(versiculoActivoIndex);
     }
     actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
+        tipo: 'soloReferencia',
+        valor: config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'soloReferencia',
+        valor: config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+    }
   });
   
   // Hacer el switch clickeable

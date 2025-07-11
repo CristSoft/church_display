@@ -24,6 +24,15 @@
       </button>
     </div>
     
+    <!-- Label para mostrar IP en PC -->
+    <div id="ipLabel" class="ip-label">
+      <i class="fa-solid fa-wifi"></i>
+      <span id="ipText">Conectándose...</span>
+      <button id="btnQR" class="btn-qr" title="Mostrar código QR">
+        <i class="fa-solid fa-qrcode"></i>
+      </button>
+    </div>
+    
     <button id="abrirProyector" class="btn-abrir-proyector proyector-normal">Abrir Ventana de Proyección</button>
     <!-- Script para deshabilitar el botón en móviles -->
     <!--
@@ -81,6 +90,20 @@
 
       </div>
     </div>
+    
+    <!-- Modal del código QR -->
+    <div id="qrModal" class="qr-modal">
+      <div class="qr-modal-content">
+        <button id="cerrarQR" class="btn-cerrar-qr">&times;</button>
+        <h2 class="qr-titulo">Código QR para Acceso Remoto</h2>
+        <div class="qr-container">
+          <div id="qrImage" class="qr-image"></div>
+          <p id="qrUrl" class="qr-url"></p>
+          <p class="qr-instructions">Escanea este código QR con tu celular para acceder al panel de control</p>
+        </div>
+      </div>
+    </div>
+    
     <hr>
     <!-- Switch para Biblia/Himnario -->
     <!-- <div class="switch-container">
@@ -391,6 +414,118 @@
         
         // Inicializar modo
         actualizarModo('biblia');
+      });
+    </script>
+
+    <!-- Script para mostrar IP en PC -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Función para detectar si es dispositivo móvil
+        function esDispositivoMovil() {
+          return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        }
+        
+        // Solo mostrar en PC
+        if (!esDispositivoMovil()) {
+          const ipLabel = document.getElementById('ipLabel');
+          const ipText = document.getElementById('ipText');
+          const body = document.body;
+          
+          // Mostrar el label
+          ipLabel.classList.add('visible');
+          body.classList.add('con-ip-label');
+          
+          // Función para obtener la IP
+          async function obtenerIP() {
+            try {
+              // Intentar obtener la IP del servidor
+              const response = await fetch('/get_ip');
+              if (response.ok) {
+                const data = await response.json();
+                if (data.ip && data.ip !== 'IP_LOCAL') {
+                  ipText.textContent = `Para usar el control remoto desde el móvil, escribí esta dirección en el navegador de tu celu: ${data.ip}:8080`;
+                  return;
+                }
+              }
+            } catch (error) {
+              console.log('No se pudo obtener la IP del servidor:', error);
+            }
+            
+            // Si no se pudo obtener la IP, mostrar mensaje genérico
+            ipText.textContent = 'Conectese a esta dirección Wi-Fi desde su móvil: [IP_WIFI]:8080';
+            
+            // Intentar obtener la IP del navegador como fallback
+            try {
+              const response = await fetch('https://api.ipify.org?format=json');
+              const data = await response.json();
+              if (data.ip) {
+                ipText.textContent = `Conectese a esta dirección Wi-Fi desde su móvil: ${data.ip}:8080`;
+              }
+            } catch (error) {
+              console.log('No se pudo obtener la IP externa:', error);
+            }
+          }
+          
+          // Obtener la IP
+          obtenerIP();
+          
+          // Reintentar cada 30 segundos por si la red cambia
+          setInterval(obtenerIP, 30000);
+          
+          // Configurar botón QR
+          const btnQR = document.getElementById('btnQR');
+          const qrModal = document.getElementById('qrModal');
+          const cerrarQR = document.getElementById('cerrarQR');
+          const qrImage = document.getElementById('qrImage');
+          const qrUrl = document.getElementById('qrUrl');
+          
+          if (btnQR) {
+            btnQR.addEventListener('click', async () => {
+              try {
+                // Mostrar loading
+                qrImage.innerHTML = '<div class="qr-loading"><i class="fa-solid fa-spinner fa-spin"></i> Generando QR...</div>';
+                qrModal.style.display = 'flex';
+                
+                // Obtener el código QR del servidor
+                const response = await fetch('/qr_ip');
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.qr && data.url) {
+                    // Mostrar la imagen QR
+                    qrImage.innerHTML = `<img src="data:image/png;base64,${data.qr}" alt="Código QR" style="max-width: 100%; height: auto;">`;
+                    qrUrl.textContent = data.url;
+                  } else {
+                    qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error al generar QR</div>';
+                    qrUrl.textContent = 'No se pudo generar el código QR';
+                  }
+                } else {
+                  qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error del servidor</div>';
+                  qrUrl.textContent = 'Error al conectar con el servidor';
+                }
+              } catch (error) {
+                console.error('Error al generar QR:', error);
+                qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error de conexión</div>';
+                qrUrl.textContent = 'Error de conexión';
+              }
+            });
+          }
+          
+          // Cerrar modal QR
+          if (cerrarQR) {
+            cerrarQR.addEventListener('click', () => {
+              qrModal.style.display = 'none';
+            });
+          }
+          
+          // Cerrar modal QR al hacer clic fuera
+          if (qrModal) {
+            qrModal.addEventListener('click', (e) => {
+              if (e.target === qrModal) {
+                qrModal.style.display = 'none';
+              }
+            });
+          }
+        }
       });
     </script>
 </body>

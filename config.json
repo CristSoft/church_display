@@ -1,6 +1,6 @@
 {
-  "fontsizeBiblia": 6.292929292929293,
+  "fontsizeBiblia": 2.616161616161616,
   "fontsizeHimnario": 5,
-  "soloReferencia": true,
+  "soloReferencia": false,
   "autoFullscreen": true
 }

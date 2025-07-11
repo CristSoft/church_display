@@ -1,8 +1,11 @@
-from flask import Flask, render_template, send_from_directory, request
+from flask import Flask, render_template, send_from_directory, request, Response
 from flask_socketio import SocketIO, emit
 import os
 import json
 from threading import Lock
+import qrcode
+import io
+import base64
 
 # Configurar Flask para servir la carpeta 'assets' como estática
 app = Flask(__name__, static_url_path='', static_folder='assets')
@@ -193,6 +196,12 @@ def on_set_memoria(data):
     guardar_memoria(memoria_estado)
     emit('memoria_actualizada', {'memoria': memoria_estado, 'clientId': client_id}, broadcast=True)
 
+@socketio.on('configuracion_actualizada')
+def on_configuracion_actualizada(data):
+    print(f'📤 Recibido configuracion_actualizada: {data}')
+    # Reenviar a todos los clientes excepto al que lo envió
+    emit('configuracion_actualizada', data, broadcast=True, include_self=False)
+
 # --- NUEVO: Endpoints para config.json ---
 @app.route('/config.json', methods=['GET'])
 def get_config():
@@ -234,6 +243,306 @@ def save_config():
         return json.dumps({"success": True, "message": "Configuración guardada"})
     except Exception as e:
         print(f'❌ Error al guardar config.json: {e}')
+        return json.dumps({"error": str(e)}), 500
+
+@app.route('/get_ip')
+def get_ip():
+    """Obtiene la IP local del servidor"""
+    try:
+        import socket
+        import subprocess
+        import platform
+        
+        # En Windows, usar ipconfig para obtener la IP de Wi-Fi específicamente
+        if platform.system() == "Windows":
+            try:
+                result = subprocess.run(['ipconfig'], capture_output=True, text=True, shell=True)
+                lines = result.stdout.split('\n')
+                wifi_ip = None
+                current_adapter = None
+                
+                for line in lines:
+                    line = line.strip()
+                    
+                    # Detectar adaptadores de red
+                    if 'Wi-Fi' in line or 'Wireless' in line or 'WLAN' in line:
+                        current_adapter = 'wifi'
+                    elif 'Ethernet' in line or 'Local Area Connection' in line:
+                        current_adapter = 'ethernet'
+                    elif 'Loopback' in line:
+                        current_adapter = None
+                    
+                    # Buscar IPs en el adaptador Wi-Fi
+                    if current_adapter == 'wifi' and 'IPv4' in line:
+                        # Extraer la IP de la línea
+                        if ':' in line:
+                            ip_part = line.split(':')[-1].strip()
+                            # Verificar que sea una IP válida
+                            if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                if not ip_part.startswith('169.254.'):  # Excluir IPs de link-local
+                                    wifi_ip = ip_part
+                                    print(f'🌐 IP Wi-Fi detectada: {wifi_ip}')
+                                    return json.dumps({"ip": wifi_ip})
+                
+                # Si no se encontró IP de Wi-Fi, buscar cualquier IP local
+                for line in lines:
+                    if 'IPv4' in line and ('192.168.' in line or '10.' in line or '172.' in line):
+                        if ':' in line:
+                            ip_part = line.split(':')[-1].strip()
+                            if ip_part and not ip_part.startswith('169.254.'):
+                                print(f'🌐 IP local detectada (fallback): {ip_part}')
+                                return json.dumps({"ip": ip_part})
+                                
+            except Exception as e:
+                print(f'❌ Error al ejecutar ipconfig: {e}')
+        
+        # En Linux/macOS, usar ifconfig o ip para obtener la IP de Wi-Fi
+        elif platform.system() in ["Linux", "Darwin"]:
+            try:
+                # Intentar con 'ip' command primero (más moderno)
+                result = subprocess.run(['ip', 'addr', 'show'], capture_output=True, text=True)
+                if result.returncode == 0:
+                    lines = result.stdout.split('\n')
+                    current_interface = None
+                    
+                    for line in lines:
+                        line = line.strip()
+                        
+                        # Detectar interfaces Wi-Fi
+                        if 'wlan' in line or 'wifi' in line or 'wireless' in line:
+                            current_interface = 'wifi'
+                        elif 'eth' in line or 'en' in line:
+                            current_interface = 'ethernet'
+                        
+                        # Buscar IPs en interfaces Wi-Fi
+                        if current_interface == 'wifi' and 'inet ' in line:
+                            ip_part = line.split('inet ')[1].split('/')[0].strip()
+                            if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                if not ip_part.startswith('169.254.'):
+                                    print(f'🌐 IP Wi-Fi detectada (Linux/macOS): {ip_part}')
+                                    return json.dumps({"ip": ip_part})
+                
+                # Fallback a ifconfig
+                result = subprocess.run(['ifconfig'], capture_output=True, text=True)
+                if result.returncode == 0:
+                    lines = result.stdout.split('\n')
+                    current_interface = None
+                    
+                    for line in lines:
+                        line = line.strip()
+                        
+                        # Detectar interfaces Wi-Fi
+                        if 'wlan' in line or 'wifi' in line or 'wireless' in line:
+                            current_interface = 'wifi'
+                        elif 'eth' in line or 'en' in line:
+                            current_interface = 'ethernet'
+                        
+                        # Buscar IPs en interfaces Wi-Fi
+                        if current_interface == 'wifi' and 'inet ' in line:
+                            ip_part = line.split('inet ')[1].split(' ')[0].strip()
+                            if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                if not ip_part.startswith('169.254.'):
+                                    print(f'🌐 IP Wi-Fi detectada (ifconfig): {ip_part}')
+                                    return json.dumps({"ip": ip_part})
+                                    
+            except Exception as e:
+                print(f'❌ Error al ejecutar comandos de red en Linux/macOS: {e}')
+        
+        # Fallback: usar socket
+        hostname = socket.gethostname()
+        local_ip = socket.gethostbyname(hostname)
+        
+        # Verificar que no sea localhost
+        if local_ip != '127.0.0.1':
+            print(f'🌐 IP local detectada (socket): {local_ip}')
+            return json.dumps({"ip": local_ip})
+        
+        # Si es localhost, intentar obtener todas las IPs
+        try:
+            # Obtener todas las IPs del sistema
+            ips = []
+            for info in socket.getaddrinfo(hostname, None):
+                ip = info[4][0]
+                if ip != '127.0.0.1' and not ip.startswith('169.254.'):
+                    ips.append(ip)
+            
+            if ips:
+                # Usar la primera IP válida
+                print(f'🌐 IP local detectada (getaddrinfo): {ips[0]}')
+                return json.dumps({"ip": ips[0]})
+        except Exception as e:
+            print(f'❌ Error al obtener IPs adicionales: {e}')
+        
+        # Último fallback: usar la IP del cliente
+        client_ip = request.remote_addr
+        if client_ip != '127.0.0.1':
+            print(f'🌐 Usando IP del cliente: {client_ip}')
+            return json.dumps({"ip": client_ip})
+        
+        # Si todo falla, mostrar un mensaje genérico
+        print('❌ No se pudo detectar la IP local')
+        return json.dumps({"ip": "IP_LOCAL"})
+        
+    except Exception as e:
+        print(f'❌ Error al obtener IP local: {e}')
+        return json.dumps({"ip": "IP_LOCAL"})
+
+@app.route('/qr_ip')
+def qr_ip():
+    """Genera un código QR con la IP local del servidor"""
+    try:
+        # Obtener la IP usando la misma lógica que get_ip
+        import socket
+        import subprocess
+        import platform
+        
+        ip_address = None
+        
+        # En Windows, usar ipconfig para obtener la IP de Wi-Fi específicamente
+        if platform.system() == "Windows":
+            try:
+                result = subprocess.run(['ipconfig'], capture_output=True, text=True, shell=True)
+                lines = result.stdout.split('\n')
+                wifi_ip = None
+                current_adapter = None
+                
+                for line in lines:
+                    line = line.strip()
+                    
+                    # Detectar adaptadores de red
+                    if 'Wi-Fi' in line or 'Wireless' in line or 'WLAN' in line:
+                        current_adapter = 'wifi'
+                    elif 'Ethernet' in line or 'Local Area Connection' in line:
+                        current_adapter = 'ethernet'
+                    elif 'Loopback' in line:
+                        current_adapter = None
+                    
+                    # Buscar IPs en el adaptador Wi-Fi
+                    if current_adapter == 'wifi' and 'IPv4' in line:
+                        # Extraer la IP de la línea
+                        if ':' in line:
+                            ip_part = line.split(':')[-1].strip()
+                            # Verificar que sea una IP válida
+                            if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                if not ip_part.startswith('169.254.'):  # Excluir IPs de link-local
+                                    wifi_ip = ip_part
+                                    ip_address = wifi_ip
+                                    break
+                
+                # Si no se encontró IP de Wi-Fi, buscar cualquier IP local
+                if not ip_address:
+                    for line in lines:
+                        if 'IPv4' in line and ('192.168.' in line or '10.' in line or '172.' in line):
+                            if ':' in line:
+                                ip_part = line.split(':')[-1].strip()
+                                if ip_part and not ip_part.startswith('169.254.'):
+                                    ip_address = ip_part
+                                    break
+                                    
+            except Exception as e:
+                print(f'❌ Error al ejecutar ipconfig: {e}')
+        
+        # En Linux/macOS, usar ifconfig o ip para obtener la IP de Wi-Fi
+        elif platform.system() in ["Linux", "Darwin"]:
+            try:
+                # Intentar con 'ip' command primero (más moderno)
+                result = subprocess.run(['ip', 'addr', 'show'], capture_output=True, text=True)
+                if result.returncode == 0:
+                    lines = result.stdout.split('\n')
+                    current_interface = None
+                    
+                    for line in lines:
+                        line = line.strip()
+                        
+                        # Detectar interfaces Wi-Fi
+                        if 'wlan' in line or 'wifi' in line or 'wireless' in line:
+                            current_interface = 'wifi'
+                        elif 'eth' in line or 'en' in line:
+                            current_interface = 'ethernet'
+                        
+                        # Buscar IPs en interfaces Wi-Fi
+                        if current_interface == 'wifi' and 'inet ' in line:
+                            ip_part = line.split('inet ')[1].split('/')[0].strip()
+                            if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                if not ip_part.startswith('169.254.'):
+                                    ip_address = ip_part
+                                    break
+                
+                # Fallback a ifconfig
+                if not ip_address:
+                    result = subprocess.run(['ifconfig'], capture_output=True, text=True)
+                    if result.returncode == 0:
+                        lines = result.stdout.split('\n')
+                        current_interface = None
+                        
+                        for line in lines:
+                            line = line.strip()
+                            
+                            # Detectar interfaces Wi-Fi
+                            if 'wlan' in line or 'wifi' in line or 'wireless' in line:
+                                current_interface = 'wifi'
+                            elif 'eth' in line or 'en' in line:
+                                current_interface = 'ethernet'
+                            
+                            # Buscar IPs en interfaces Wi-Fi
+                            if current_interface == 'wifi' and 'inet ' in line:
+                                ip_part = line.split('inet ')[1].split(' ')[0].strip()
+                                if ip_part and ('192.168.' in ip_part or '10.' in ip_part or '172.' in ip_part):
+                                    if not ip_part.startswith('169.254.'):
+                                        ip_address = ip_part
+                                        break
+                                        
+            except Exception as e:
+                print(f'❌ Error al ejecutar comandos de red en Linux/macOS: {e}')
+        
+        # Fallback: usar socket
+        if not ip_address:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            
+            # Verificar que no sea localhost
+            if local_ip != '127.0.0.1':
+                ip_address = local_ip
+        
+        # Si todo falla, usar la IP del cliente
+        if not ip_address:
+            client_ip = request.remote_addr
+            if client_ip != '127.0.0.1':
+                ip_address = client_ip
+        
+        # Si no se pudo obtener IP, devolver error
+        if not ip_address:
+            return json.dumps({"error": "No se pudo detectar la IP local"}), 500
+        
+        # Crear la URL completa
+        url = f"http://{ip_address}:8080"
+        
+        # Generar el código QR
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        # Crear la imagen
+        img = qr.make_image(fill_color="black", back_color="white")
+        
+        # Convertir a base64
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='PNG')
+        img_str = base64.b64encode(img_buffer.getvalue()).decode()
+        
+        return json.dumps({
+            "qr": img_str,
+            "url": url,
+            "ip": ip_address
+        })
+        
+    except Exception as e:
+        print(f'❌ Error al generar código QR: {e}')
         return json.dumps({"error": str(e)}), 500
 
 if __name__ == '__main__':
