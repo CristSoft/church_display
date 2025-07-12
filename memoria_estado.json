@@ -1,5 +1,5 @@
 {
-  "modo": "biblia",
+  "modo": "inicio",
   "biblia": {
     "version": "es-rv60.json",
     "libro": "Judas",
@@ -7,8 +7,8 @@
     "versiculo": 0
   },
   "himnario": {
-    "numero": "054",
-    "titulo": "Tan bueno es Dios",
-    "estrofa": 1
+    "numero": "016",
+    "titulo": "A nuestro Padre Dios",
+    "estrofa": 0
   }
 }

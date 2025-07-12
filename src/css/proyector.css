@@ -32,9 +32,19 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   align-items: center; 
   text-align: center; 
   height: 100vh; 
-  background-color: rgba(0, 0, 0, 0.4); /* Sombra para legibilidad */ 
   text-shadow: 2px 2px 8px black; 
   position: relative;
+}
+
+/* Sombra para legibilidad solo cuando hay texto visible */
+#contenido.modo-versiculo,
+#contenido.modo-himno {
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Modo Inicio: sin sombra para mostrar la imagen completa */
+#contenido.modo-inicio {
+  background-color: transparent;
 }
 
 /* Contador de sección (arriba a la derecha) */

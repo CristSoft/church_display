@@ -111,6 +111,10 @@
 
     <!-- FOOT NAVBAR estilo web app -->
     <nav id="footNavbar" class="foot-navbar">
+      <button id="navInicio" class="nav-btn nav-inicio" title="Inicio">
+        <i class="fa-solid fa-home"></i>
+        <span class="nav-btn-text">Inicio</span>
+      </button>
       <button id="navHimnario" class="nav-btn nav-himnario" title="Himnario">
         <i class="fa-solid fa-music"></i>
         <span class="nav-btn-text">Himnario</span>
@@ -155,6 +159,16 @@
           <button id="clearBuscarHimno" class="clear-input-btn" type="button" title="Limpiar" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="listaHimnos"></div>
+    </div>
+
+    <!-- Contenedor para el modo Inicio -->
+    <div id="controlInicio" style="display:none;">
+        <div class="accordion-container">
+          <div class="accordion-header">Seleccionar Imagen de Fondo</div>
+          <div class="accordion-content">
+            <div id="listaImagenesFondo"></div>
+          </div>
+        </div>
     </div>
     
     <!-- Área de vista previa -->
@@ -389,9 +403,11 @@
     <script>
       document.addEventListener('DOMContentLoaded', function() {
         // --- LÓGICA FOOT NAVBAR ---
+        const navInicio = document.getElementById('navInicio');
         const navHimnario = document.getElementById('navHimnario');
         const navBiblia = document.getElementById('navBiblia');
         const navConfig = document.getElementById('navConfig');
+        const controlInicio = document.getElementById('controlInicio');
         const controlHimnario = document.getElementById('controlHimnario');
         const controlBiblia = document.getElementById('controlBiblia');
         const configModal = document.getElementById('configModal');
@@ -401,18 +417,21 @@
         const vistaPrevia = document.getElementById('vistaPrevia');
         const vistaProyector = document.getElementById('vistaProyector');
         
-        // Estado inicial: Biblia
-        let modoActual = 'biblia';
+        // Estado inicial: Inicio
+        let modoActual = 'inicio';
         window.modoActual = modoActual;
         
         function actualizarModo(modo) {
           // Quitar clase activa de todos
+          navInicio.classList.remove('active');
           navHimnario.classList.remove('active');
           navBiblia.classList.remove('active');
           // Poner clase activa solo al botón del modo actual
-          if (modo === 'himnario') {
+          if (modo === 'inicio') {
+            navInicio.classList.add('active');
+          } else if (modo === 'himnario') {
             navHimnario.classList.add('active');
-          } else {
+          } else if (modo === 'biblia') {
             navBiblia.classList.add('active');
           }
           // Usar la función global de main.js para cambiar el modo
@@ -420,11 +439,14 @@
             window.cambiarModoGlobal(modo);
           } else {
             // Fallback: lógica local
-            if (modo === 'himnario') {
+            controlInicio.style.display = 'none';
+            controlHimnario.style.display = 'none';
+            controlBiblia.style.display = 'none';
+            if (modo === 'inicio') {
+              controlInicio.style.display = '';
+            } else if (modo === 'himnario') {
               controlHimnario.style.display = '';
-              controlBiblia.style.display = 'none';
-            } else {
-              controlHimnario.style.display = 'none';
+            } else if (modo === 'biblia') {
               controlBiblia.style.display = '';
             }
           }
@@ -432,6 +454,9 @@
           window.modoActual = modo;
         }
         
+        navInicio.addEventListener('click', () => {
+          if (typeof window.cambiarModoGlobal === 'function') window.cambiarModoGlobal('inicio', true);
+        });
         navHimnario.addEventListener('click', () => {
           if (typeof window.cambiarModoGlobal === 'function') window.cambiarModoGlobal('himnario', true);
         });
@@ -443,6 +468,7 @@
         navConfig.addEventListener('click', () => {
           configModal.style.display = 'flex';
           // Nunca dejar activo el botón de config
+          navInicio.classList.remove('active');
           navHimnario.classList.remove('active');
           navBiblia.classList.remove('active');
         });
@@ -453,7 +479,7 @@
         });
         
         // Inicializar modo
-        actualizarModo('biblia');
+        actualizarModo('inicio');
       });
     </script>
 

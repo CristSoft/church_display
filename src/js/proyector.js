@@ -129,7 +129,100 @@ socket.on('update_text', (data) => {
 
 socket.on('change_mode', (data) => {
     console.log('📥 Recibido change_mode:', data);
+    
+    // --- NUEVO: Manejo de modo Inicio con imagen de fondo ---
+    if (data.mode === 'inicio' && data.imageSrc) {
+        console.log('[IMAGEN] Cambiando a modo Inicio con imagen:', data.imageSrc);
+        
+        // Ocultar video de fondo
+        if (videoBg) {
+            videoBg.style.display = 'none';
+        }
+        
+        // Crear o actualizar imagen de fondo
+        let imagenBg = document.getElementById('imagen-bg');
+        if (!imagenBg) {
+            imagenBg = document.createElement('div');
+            imagenBg.id = 'imagen-bg';
+            imagenBg.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                z-index: -1;
+            `;
+            document.body.insertBefore(imagenBg, document.body.firstChild);
+        }
+        
+        // Aplicar imagen de fondo
+        imagenBg.style.backgroundImage = `url('${data.imageSrc}')`;
+        imagenBg.style.display = 'block';
+        
+        // Configurar modo Inicio en el contenedor
+        const contenido = document.getElementById('contenido');
+        if (contenido) {
+            contenido.className = 'modo-inicio';
+        }
+        
+        // Limpiar contenido de texto
+        if (textoPrincipal) {
+            textoPrincipal.innerHTML = '';
+            textoPrincipal.style.display = 'none';
+        }
+        if (referencia) {
+            referencia.innerHTML = '';
+            referencia.style.display = 'none';
+        }
+        if (contadorSeccion) {
+            contadorSeccion.innerHTML = '';
+            contadorSeccion.style.display = 'none';
+        }
+        if (indicadorEstrofa) {
+            indicadorEstrofa.innerHTML = '';
+            indicadorEstrofa.style.display = 'none';
+        }
+        
+        console.log('[IMAGEN] ✅ Modo Inicio activado con imagen de fondo');
+        return;
+    }
+    
+    // --- MODO VIDEO (Biblia/Himnario) ---
     if (data.videoSrc) {
+        // Mostrar video de fondo
+        if (videoBg) {
+            videoBg.style.display = 'block';
+        }
+        
+        // Ocultar imagen de fondo si existe
+        const imagenBg = document.getElementById('imagen-bg');
+        if (imagenBg) {
+            imagenBg.style.display = 'none';
+        }
+        
+        // Restaurar clases del contenedor para modo video
+        const contenido = document.getElementById('contenido');
+        if (contenido) {
+            contenido.className = ''; // Se aplicará la clase específica cuando se muestre el contenido
+        }
+        
+        // Restaurar visibilidad de elementos de texto que fueron ocultados en modo Inicio
+        if (textoPrincipal) {
+            textoPrincipal.style.display = '';
+        }
+        if (referencia) {
+            referencia.style.display = '';
+        }
+        if (contadorSeccion) {
+            contadorSeccion.style.display = '';
+        }
+        if (indicadorEstrofa) {
+            indicadorEstrofa.style.display = '';
+        }
+        
         try {
             console.log('[VIDEO] Intentando cambiar video de fondo a:', data.videoSrc);
             console.log('[VIDEO] Estado actual del video:', {

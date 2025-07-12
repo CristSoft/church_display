@@ -499,6 +499,7 @@ async function inicializar() {
   // Obtener referencias a elementos del DOM
   elementos = {
     abrirProyector: document.getElementById('abrirProyector'),
+    controlInicio: document.getElementById('controlInicio'),
     controlBiblia: document.getElementById('controlBiblia'),
     controlHimnario: document.getElementById('controlHimnario'),
     versionBiblia: document.getElementById('versionBiblia'),
@@ -1457,25 +1458,47 @@ async function cambiarModoGlobal(modo, propagar = true) {
   console.log('🔄 Cambiando modo global a:', modo);
   window.modoActual = modo;
   // --- Actualizar visualmente los botones del navbar ---
+  const navInicio = document.getElementById('navInicio');
   const navHimnario = document.getElementById('navHimnario');
   const navBiblia = document.getElementById('navBiblia');
-  if (navHimnario && navBiblia) {
+  if (navInicio && navHimnario && navBiblia) {
+    navInicio.classList.remove('active');
     navHimnario.classList.remove('active');
     navBiblia.classList.remove('active');
-    if (modo === 'himnario') {
+    if (modo === 'inicio') {
+      navInicio.classList.add('active');
+    } else if (modo === 'himnario') {
       navHimnario.classList.add('active');
-    } else {
+    } else if (modo === 'biblia') {
       navBiblia.classList.add('active');
     }
   }
   // NO limpiar la selección del modo anterior
-  if (modo === 'himnario') {
+  if (modo === 'inicio') {
+    elementos.controlInicio.style.display = 'block';
+    elementos.controlHimnario.style.display = 'none';
+    elementos.controlBiblia.style.display = 'none';
+    // Cargar configuración para modo Inicio
+    const config = await obtenerConfiguracion();
+    const backgroundImage = config.background || 'fondo-completo-A.png';
+    enviarMensajeProyector('change_mode', { 
+      imageSrc: `/src/assets/bkg/${backgroundImage}`,
+      mode: 'inicio'
+    });
+    console.log('🏠 Modo Inicio activado - Imagen:', backgroundImage);
+    document.body.classList.add('modo-inicio');
+    document.body.classList.remove('modo-himnario', 'modo-biblia');
+    ocultarPlayFooter();
+    // Cargar lista de imágenes de fondo
+    cargarImagenesFondo();
+  } else if (modo === 'himnario') {
     elementos.controlHimnario.style.display = 'block';
     elementos.controlBiblia.style.display = 'none';
+    elementos.controlInicio.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/himno-bg.mp4' });
     console.log('🎵 Modo Himnario activado - Video: /src/assets/videos/himno-bg.mp4');
     document.body.classList.add('modo-himnario');
-    document.body.classList.remove('modo-biblia');
+    document.body.classList.remove('modo-biblia', 'modo-inicio');
     
     // Verificar si tenemos memoria y restaurar el estado
     if (window.memoriaUltima && window.memoriaUltima.himnario) {
@@ -1495,14 +1518,15 @@ async function cambiarModoGlobal(modo, propagar = true) {
       // Si no hay memoria local, solicitar al servidor
       solicitarMemoriaServidor();
     }
-  } else {
+  } else if (modo === 'biblia') {
     elementos.controlBiblia.style.display = 'block';
     elementos.controlHimnario.style.display = 'none';
+    elementos.controlInicio.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
     document.body.classList.add('modo-biblia');
-    document.body.classList.remove('modo-himnario');
+    document.body.classList.remove('modo-himnario', 'modo-inicio');
     
     // Cargar configuración desde config.json para modo Biblia
     const config = await obtenerConfiguracion();
@@ -2486,12 +2510,19 @@ function actualizarVistaProyector() {
   let texto = '';
   let referencia = '';
   let isBiblia = esModoBiblia();
+  let isInicio = window.modoActual === 'inicio';
   const miniProyectorTituloHimno = document.getElementById('miniProyectorTituloHimno');
   const miniProyectorContador = document.getElementById('miniProyectorContador');
   const miniProyectorContainer = document.getElementById('vistaProyector');
   if (miniProyectorContainer) {
-    miniProyectorContainer.classList.remove('modo-biblia', 'modo-himno');
-    miniProyectorContainer.classList.add(isBiblia ? 'modo-biblia' : 'modo-himno');
+    miniProyectorContainer.classList.remove('modo-biblia', 'modo-himno', 'modo-inicio');
+    if (isInicio) {
+      miniProyectorContainer.classList.add('modo-inicio');
+    } else if (isBiblia) {
+      miniProyectorContainer.classList.add('modo-biblia');
+    } else {
+      miniProyectorContainer.classList.add('modo-himno');
+    }
   }
   if (miniProyectorTituloHimno) miniProyectorTituloHimno.style.display = 'none';
   if (miniProyectorContador) miniProyectorContador.style.display = 'none';
@@ -2509,7 +2540,67 @@ function actualizarVistaProyector() {
   console.log('🔧 Configuración para mini proyector:', { fontsizeBiblia, soloReferencia, isBiblia, fontsizeHimnario, showIndicadorVerso, indicadorVersoPct, showNombreHimno, nombreHimnoPct, showSeccionActualTotal, seccionActualTotalPct });
   console.log('🔧 Variable config global:', config);
 
+  // --- NUEVO: Manejo del modo Inicio ---
+  if (isInicio) {
+    // Ocultar video de fondo en mini proyector
+    if (miniProyectorVideo) {
+      miniProyectorVideo.style.display = 'none';
+    }
+    
+    // Crear o actualizar imagen de fondo en mini proyector
+    let miniImagenBg = document.getElementById('mini-imagen-bg');
+    if (!miniImagenBg) {
+      miniImagenBg = document.createElement('div');
+      miniImagenBg.id = 'mini-imagen-bg';
+      miniImagenBg.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        z-index: 0;
+      `;
+      miniProyectorContainer.appendChild(miniImagenBg);
+    }
+    
+    // Aplicar imagen de fondo actual
+    const backgroundImage = config.background || 'fondo-completo-A.png';
+    miniImagenBg.style.backgroundImage = `url('/src/assets/bkg/${backgroundImage}')`;
+    miniImagenBg.style.display = 'block';
+    
+    // Limpiar contenido de texto
+    proyectorPreviewContent.innerHTML = '';
+    proyectorPreviewContent.style.display = 'none';
+    
+    // Ocultar elementos de referencia
+    const refDiv = document.getElementById('miniProyectorReferencia');
+    if (refDiv) refDiv.style.display = 'none';
+    
+    console.log('🏠 Modo Inicio configurado en mini proyector con imagen:', backgroundImage);
+    return;
+  }
+
   if (isBiblia) {
+    // Mostrar video de fondo
+    if (miniProyectorVideo) {
+      miniProyectorVideo.style.display = 'block';
+      if (miniProyectorVideo.src.indexOf('verso-bg.mp4') === -1) {
+        miniProyectorVideo.src = '/src/assets/videos/verso-bg.mp4';
+      }
+    }
+    
+    // Ocultar imagen de fondo si existe
+    const miniImagenBg = document.getElementById('mini-imagen-bg');
+    if (miniImagenBg) {
+      miniImagenBg.style.display = 'none';
+    }
+    
+    // Mostrar contenido de texto
+    proyectorPreviewContent.style.display = 'block';
+    
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
       const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
       referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
@@ -2517,11 +2608,6 @@ function actualizarVistaProyector() {
     } else {
       referencia = '';
       texto = '<span style="color:#ffd700;">Selecciona un versículo</span>';
-    }
-    if (miniProyectorVideo) {
-      if (miniProyectorVideo.src.indexOf('verso-bg.mp4') === -1) {
-        miniProyectorVideo.src = '/src/assets/videos/verso-bg.mp4';
-      }
     }
     // --- NUEVO: Mostrar referencia en el div externo ---
     const refDiv = document.getElementById('miniProyectorReferencia');
@@ -2551,6 +2637,23 @@ function actualizarVistaProyector() {
     }
     return;
   } else {
+    // Mostrar video de fondo
+    if (miniProyectorVideo) {
+      miniProyectorVideo.style.display = 'block';
+      if (miniProyectorVideo.src.indexOf('himno-bg.mp4') === -1) {
+        miniProyectorVideo.src = '/src/assets/videos/himno-bg.mp4';
+      }
+    }
+    
+    // Ocultar imagen de fondo si existe
+    const miniImagenBg = document.getElementById('mini-imagen-bg');
+    if (miniImagenBg) {
+      miniImagenBg.style.display = 'none';
+    }
+    
+    // Mostrar contenido de texto
+    proyectorPreviewContent.style.display = 'block';
+    
     // Ocultar referencia externa en modo himnario
     const refDiv = document.getElementById('miniProyectorReferencia');
     if (refDiv) refDiv.style.display = 'none';
@@ -2594,11 +2697,6 @@ function actualizarVistaProyector() {
     } else {
       texto = '<span style="color:#ffd700;">Selecciona un himno</span>';
     }
-    if (miniProyectorVideo) {
-      if (miniProyectorVideo.src.indexOf('himno-bg.mp4') === -1) {
-        miniProyectorVideo.src = '/src/assets/videos/himno-bg.mp4';
-      }
-    }
     
     // --- NUEVO: Aplicar tamaño de fuente del himnario al mini proyector ---
     // Detectar si estamos en el mini proyector del panel de control
@@ -2633,7 +2731,14 @@ function actualizarVistaProyector() {
  */
 function actualizarTopBarTitulo() {
   if (!topBarTitulo) return;
-  let modo = esModoBiblia() ? 'Biblia' : 'Himnario';
+  let modo = '';
+  if (window.modoActual === 'inicio') {
+    modo = 'Inicio';
+  } else if (esModoBiblia()) {
+    modo = 'Biblia';
+  } else {
+    modo = 'Himnario';
+  }
   if (vistaActual === 'proyector') {
     topBarTitulo.textContent = `${modo} (Proyector)`;
   } else {
@@ -2644,8 +2749,8 @@ function actualizarTopBarTitulo() {
 function actualizarBotonPlayMiniProyector() {
   const playMini = document.getElementById('playHimnoMiniProyector');
   if (!playMini) return;
-  // Refuerzo: SIEMPRE ocultar en modo Biblia
-  if (esModoBiblia()) {
+  // Refuerzo: SIEMPRE ocultar en modo Biblia e Inicio
+  if (esModoBiblia() || window.modoActual === 'inicio') {
     playMini.style.display = 'none';
     return;
   }
@@ -3801,4 +3906,126 @@ async function guardarYEnviarConfigBiblia(tipo, valor) {
       await enviarVersiculoAlProyector(versiculoActivoIndex);
     }
   }, 100); // Debounce de 100ms
+}
+
+// --- NUEVO: Funciones para el modo Inicio ---
+
+/**
+ * Carga la lista de imágenes de fondo disponibles
+ */
+async function cargarImagenesFondo() {
+  console.log('🖼️ Cargando imágenes de fondo...');
+  
+  try {
+    // Lista de imágenes disponibles en la carpeta bkg
+    const imagenesDisponibles = [
+      { nombre: 'Fondo A', archivo: 'fondo-completo-A.png' },
+      { nombre: 'Fondo B', archivo: 'fondo-completo-B.png' }
+    ];
+    
+    const listaImagenesFondo = document.getElementById('listaImagenesFondo');
+    if (!listaImagenesFondo) {
+      console.error('❌ Elemento listaImagenesFondo no encontrado');
+      return;
+    }
+    
+    // Limpiar lista anterior
+    listaImagenesFondo.innerHTML = '';
+    
+    // Cargar configuración actual
+    const config = await obtenerConfiguracion();
+    const imagenActual = config.background || 'fondo-completo-A.png';
+    
+    // Crear elementos para cada imagen
+    imagenesDisponibles.forEach(imagen => {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.style.cursor = 'pointer';
+      div.style.padding = '1em';
+      div.style.margin = '0.5em 0';
+      div.style.borderRadius = '8px';
+      div.style.border = '2px solid transparent';
+      div.style.transition = 'all 0.2s';
+      
+      // Marcar como seleccionada si es la actual
+      if (imagen.archivo === imagenActual) {
+        div.classList.add('selected');
+        div.style.borderColor = 'var(--color-destacado)';
+        div.style.background = '#333';
+      }
+      
+      div.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 1em;">
+          <img src="/src/assets/bkg/${imagen.archivo}" 
+               alt="${imagen.nombre}" 
+               style="width: 80px; height: 45px; object-fit: cover; border-radius: 4px;">
+          <div>
+            <div style="font-weight: bold; color: #f1f1f1;">${imagen.nombre}</div>
+            <div style="font-size: 0.9em; color: #aaa;">${imagen.archivo}</div>
+          </div>
+        </div>
+      `;
+      
+      // Evento de clic para seleccionar imagen
+      div.addEventListener('click', () => {
+        seleccionarImagenFondo(imagen.archivo);
+        
+        // Actualizar selección visual
+        document.querySelectorAll('#listaImagenesFondo .card').forEach(card => {
+          card.classList.remove('selected');
+          card.style.borderColor = 'transparent';
+          card.style.background = '#222';
+        });
+        div.classList.add('selected');
+        div.style.borderColor = 'var(--color-destacado)';
+        div.style.background = '#333';
+      });
+      
+      listaImagenesFondo.appendChild(div);
+    });
+    
+    console.log('✅ Lista de imágenes de fondo cargada');
+  } catch (error) {
+    console.error('❌ Error al cargar imágenes de fondo:', error);
+  }
+}
+
+/**
+ * Selecciona una imagen de fondo y la envía al proyector
+ */
+async function seleccionarImagenFondo(nombreArchivo) {
+  console.log('🖼️ Seleccionando imagen de fondo:', nombreArchivo);
+  
+  try {
+    // Actualizar configuración
+    config.background = nombreArchivo;
+    await guardarConfiguracionCompleta(config);
+    
+    // Enviar al proyector
+    enviarMensajeProyector('change_mode', { 
+      imageSrc: `/src/assets/bkg/${nombreArchivo}`,
+      mode: 'inicio'
+    });
+    
+    // Actualizar mini proyector
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    
+    // Actualizar vista proyector
+    actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'background',
+        valor: nombreArchivo,
+        clientId: CLIENT_ID
+      });
+    }
+    
+    console.log('✅ Imagen de fondo seleccionada y enviada al proyector');
+  } catch (error) {
+    console.error('❌ Error al seleccionar imagen de fondo:', error);
+  }
 }
