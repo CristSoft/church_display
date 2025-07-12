@@ -184,16 +184,23 @@ def on_set_memoria(data):
     global memoria_estado
     client_id = data.get('clientId')
     print(f'📥 Actualizando memoria del sistema: {data}')
+    print(f'📋 Memoria anterior: {memoria_estado}')
+    
     # Actualizar solo los campos recibidos (excepto clientId)
     for k, v in data.items():
         if k in ('clientId',):
             continue
         if k in memoria_estado and isinstance(v, dict):
             memoria_estado[k].update(v)
+            print(f'🔄 Actualizando campo {k}: {memoria_estado[k]}')
         else:
             if k != 'clientId':
                 memoria_estado[k] = v
+                print(f'➕ Agregando campo {k}: {v}')
+    
+    print(f'💾 Guardando memoria actualizada: {memoria_estado}')
     guardar_memoria(memoria_estado)
+    print(f'✅ Memoria guardada exitosamente')
     emit('memoria_actualizada', {'memoria': memoria_estado, 'clientId': client_id}, broadcast=True)
 
 @socketio.on('configuracion_actualizada')

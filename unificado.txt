@@ -3619,26 +3619,25 @@ function inicializarSocketIO() {
     // Evento para recibir cambios de configuración de otros dispositivos
     socket.on('configuracion_actualizada', async (data) => {
       console.log('📥 Configuración actualizada desde otro dispositivo:', data);
+      
       // Ignorar si el cambio es propio
       if (data.clientId === CLIENT_ID) {
         console.log('🔄 Ignorando cambio propio');
         return;
       }
-      // --- NUEVO: Solo actualizar si el valor realmente cambió ---
-      let cambio = false;
+      
+      // Actualizar configuración local según el tipo
       switch (data.tipo) {
         case 'fontsizeBiblia':
-          if (config.fontsizeBiblia !== data.valor) {
-            config.fontsizeBiblia = data.valor;
-            cambio = true;
-          }
-          // ... controles UI ...
+          config.fontsizeBiblia = data.valor;
+          // Actualizar controles del panel principal
           const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
           const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
           if (sliderFontsizeBiblia && fontsizeValueBiblia) {
             sliderFontsizeBiblia.value = data.valor;
             fontsizeValueBiblia.textContent = data.valor + 'vw';
           }
+          // Actualizar controles del mini proyector
           const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
           const miniFontsizeValueBiblia = document.getElementById('miniFontsizeValueBiblia');
           if (miniSliderFontsizeBiblia && miniFontsizeValueBiblia) {
@@ -3647,31 +3646,31 @@ function inicializarSocketIO() {
             miniFontsizeValueBiblia.textContent = porcentaje + '%';
           }
           break;
+          
         case 'soloReferencia':
-          if (config.soloReferencia !== data.valor) {
-            config.soloReferencia = data.valor;
-            cambio = true;
-          }
+          config.soloReferencia = data.valor;
+          // Actualizar controles del panel principal
           const switchSoloReferencia = document.getElementById('switchSoloReferencia');
           if (switchSoloReferencia) {
             switchSoloReferencia.checked = data.valor;
           }
+          // Actualizar controles del mini proyector
           const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
           if (miniSwitchSoloReferencia) {
             miniSwitchSoloReferencia.checked = data.valor;
           }
           break;
+          
         case 'fontsizeHimnario':
-          if (config.fontsizeHimnario !== data.valor) {
-            config.fontsizeHimnario = data.valor;
-            cambio = true;
-          }
+          config.fontsizeHimnario = data.valor;
+          // Actualizar controles del panel principal
           const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
           const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
           if (sliderFontsizeHimnario && fontsizeValueHimnario) {
             sliderFontsizeHimnario.value = data.valor;
             fontsizeValueHimnario.textContent = data.valor + 'vw';
           }
+          // Actualizar controles del mini proyector de himnario
           const miniSliderFontsizeHimnario = document.getElementById('miniSliderFontsizeHimnario');
           const miniFontsizeValueHimnario = document.getElementById('miniFontsizeValueHimnario');
           if (miniSliderFontsizeHimnario && miniFontsizeValueHimnario) {
@@ -3680,80 +3679,57 @@ function inicializarSocketIO() {
             miniFontsizeValueHimnario.textContent = porcentaje + '%';
           }
           break;
+        // --- NUEVO: Sincronizar controles de himnario ---
         case 'showIndicadorVerso':
-          if (config.showIndicadorVerso !== data.valor) {
-            config.showIndicadorVerso = data.valor;
-            cambio = true;
-          }
-          const checkIndicadorSync = document.getElementById('miniCheckIndicadorVerso');
-          if (checkIndicadorSync) checkIndicadorSync.checked = !!data.valor;
+          config.showIndicadorVerso = data.valor;
+          const checkIndicador = document.getElementById('miniCheckIndicadorVerso');
+          if (checkIndicador) checkIndicador.checked = !!data.valor;
           break;
-          
         case 'indicadorVersoPct':
-          if (config.indicadorVersoPct !== data.valor) {
-            config.indicadorVersoPct = data.valor;
-            cambio = true;
-          }
-          const sliderIndicadorSync = document.getElementById('miniSliderIndicadorVerso');
-          const valueIndicadorSync = document.getElementById('miniIndicadorVersoValue');
-          if (sliderIndicadorSync && valueIndicadorSync) {
-            sliderIndicadorSync.value = data.valor;
-            valueIndicadorSync.textContent = data.valor + '%';
+          config.indicadorVersoPct = data.valor;
+          const sliderIndicador = document.getElementById('miniSliderIndicadorVerso');
+          const valueIndicador = document.getElementById('miniIndicadorVersoValue');
+          if (sliderIndicador && valueIndicador) {
+            sliderIndicador.value = data.valor;
+            valueIndicador.textContent = data.valor + '%';
           }
           break;
-          
         case 'showNombreHimno':
-          if (config.showNombreHimno !== data.valor) {
-            config.showNombreHimno = data.valor;
-            cambio = true;
-          }
-          const checkNombreSync = document.getElementById('miniCheckNombreHimno');
-          if (checkNombreSync) checkNombreSync.checked = !!data.valor;
+          config.showNombreHimno = data.valor;
+          const checkNombre = document.getElementById('miniCheckNombreHimno');
+          if (checkNombre) checkNombre.checked = !!data.valor;
           break;
-          
         case 'nombreHimnoPct':
-          if (config.nombreHimnoPct !== data.valor) {
-            config.nombreHimnoPct = data.valor;
-            cambio = true;
-          }
-          const sliderNombreSync = document.getElementById('miniSliderNombreHimno');
-          const valueNombreSync = document.getElementById('miniNombreHimnoValue');
-          if (sliderNombreSync && valueNombreSync) {
-            sliderNombreSync.value = data.valor;
-            valueNombreSync.textContent = data.valor + '%';
+          config.nombreHimnoPct = data.valor;
+          const sliderNombre = document.getElementById('miniSliderNombreHimno');
+          const valueNombre = document.getElementById('miniNombreHimnoValue');
+          if (sliderNombre && valueNombre) {
+            sliderNombre.value = data.valor;
+            valueNombre.textContent = data.valor + '%';
           }
           break;
-          
         case 'showSeccionActualTotal':
-          if (config.showSeccionActualTotal !== data.valor) {
-            config.showSeccionActualTotal = data.valor;
-            cambio = true;
-          }
-          const checkSeccionSync = document.getElementById('miniCheckSeccionActualTotal');
-          if (checkSeccionSync) checkSeccionSync.checked = !!data.valor;
+          config.showSeccionActualTotal = data.valor;
+          const checkSeccion = document.getElementById('miniCheckSeccionActualTotal');
+          if (checkSeccion) checkSeccion.checked = !!data.valor;
           break;
-          
         case 'seccionActualTotalPct':
-          if (config.seccionActualTotalPct !== data.valor) {
-            config.seccionActualTotalPct = data.valor;
-            cambio = true;
-          }
-          const sliderSeccionSync = document.getElementById('miniSliderSeccionActualTotal');
-          const valueSeccionSync = document.getElementById('miniSeccionActualTotalValue');
-          if (sliderSeccionSync && valueSeccionSync) {
-            sliderSeccionSync.value = data.valor;
-            valueSeccionSync.textContent = data.valor + '%';
+          config.seccionActualTotalPct = data.valor;
+          const sliderSeccion = document.getElementById('miniSliderSeccionActualTotal');
+          const valueSeccion = document.getElementById('miniSeccionActualTotalValue');
+          if (sliderSeccion && valueSeccion) {
+            sliderSeccion.value = data.valor;
+            valueSeccion.textContent = data.valor + '%';
           }
           break;
       }
-      if (!cambio) {
-        console.log('🔄 El valor recibido es igual al actual. No se guarda ni se actualiza.');
-        return;
-      }
-      // Guardar configuración SOLO si hubo cambio
+      
+      // Guardar configuración
       await guardarConfiguracionCompleta(config);
+      
       // Actualizar vista del proyector
       actualizarVistaProyector();
+      
       // Enviar configuración al proyector
       const esBiblia = esModoBiblia();
       const configEnviar = {
@@ -3767,7 +3743,8 @@ function inicializarSocketIO() {
         seccionActualTotalPct: !esBiblia ? config.seccionActualTotalPct : undefined
       };
       enviarMensajeProyector('config', configEnviar);
-      console.log('✅ Configuración sincronizada desde otro dispositivo (solo si hubo cambio)');
+      
+      console.log('✅ Configuración sincronizada desde otro dispositivo');
     });
     
     // Evento para cuando el proyector recibe un click
@@ -4071,20 +4048,20 @@ async function inicializar() {
   const sliderFontHimnarioContainer = document.getElementById('sliderFontHimnarioContainer');
 
   // Cargar configuración guardada
-  let configCargada = await obtenerConfiguracion();
-  // --- NUEVO: Fusionar con la variable global config para no perder campos ---
-  window.config = { ...window.config, ...configCargada };
-  console.log('📋 Configuración cargada para modo Biblia (global):', window.config);
+  let config = await obtenerConfiguracion();
+  // --- NUEVO: Asignar a la variable global config ---
+  window.config = config;
+  console.log('📋 Configuración cargada para modo Biblia (global):', config);
   
   // Convertir el valor vw guardado a porcentaje para el slider
-  const porcentajeInicial = vwAPorcentaje(window.config.fontsizeBiblia || 5);
-  sliderFontsizeBiblia.value = window.config.fontsizeBiblia || 5;
-  fontsizeValueBiblia.textContent = (window.config.fontsizeBiblia || 5) + 'vw';
-  switchSoloReferencia.checked = !!window.config.soloReferencia;
-  sliderFontsizeHimnario.value = window.config.fontsizeHimnario || 5;
-  fontsizeValueHimnario.textContent = (window.config.fontsizeHimnario || 5) + 'vw';
-  switchAutoFullscreen.checked = window.config.autoFullscreen !== false; // true por defecto
-  autoFullscreenLandscape = window.config.autoFullscreen !== false;
+  const porcentajeInicial = vwAPorcentaje(config.fontsizeBiblia || 5);
+  sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+  fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+  switchSoloReferencia.checked = !!config.soloReferencia;
+  sliderFontsizeHimnario.value = config.fontsizeHimnario || 5;
+  fontsizeValueHimnario.textContent = (config.fontsizeHimnario || 5) + 'vw';
+  switchAutoFullscreen.checked = config.autoFullscreen !== false; // true por defecto
+  autoFullscreenLandscape = config.autoFullscreen !== false;
 
   // Mostrar/ocultar sliders según modo
   function actualizarOpcionesModo() {
@@ -4110,8 +4087,8 @@ async function inicializar() {
   // Slider de fuente Biblia
   sliderFontsizeBiblia.addEventListener('input', async () => {
     fontsizeValueBiblia.textContent = sliderFontsizeBiblia.value + 'vw';
-    window.config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
-    console.log('🔧 Configuración actualizada (slider biblia):', window.config.fontsizeBiblia);
+    config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
+    console.log('🔧 Configuración actualizada (slider biblia):', config.fontsizeBiblia);
     await guardarYEnviarConfig();
     // Sincronizar con mini proyector
     if (typeof window.actualizarMiniProyector === 'function') {
@@ -4124,12 +4101,12 @@ async function inicializar() {
     if (window.socket) {
       console.log('📤 Emitiendo configuracion_actualizada:', {
         tipo: 'fontsizeBiblia',
-        valor: window.config.fontsizeBiblia,
+        valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'fontsizeBiblia',
-        valor: window.config.fontsizeBiblia,
+        valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
       console.log('✅ Evento configuracion_actualizada emitido exitosamente');
@@ -4140,8 +4117,8 @@ async function inicializar() {
 
   // Switch solo referencia
   switchSoloReferencia.addEventListener('change', async () => {
-    window.config.soloReferencia = switchSoloReferencia.checked;
-    console.log('🔧 Configuración actualizada (solo referencia):', window.config.soloReferencia);
+    config.soloReferencia = switchSoloReferencia.checked;
+    console.log('🔧 Configuración actualizada (solo referencia):', config.soloReferencia);
     await guardarYEnviarConfig();
     // Sincronizar con mini proyector
     if (typeof window.actualizarMiniProyector === 'function') {
@@ -4154,12 +4131,12 @@ async function inicializar() {
     if (window.socket) {
       console.log('📤 Emitiendo configuracion_actualizada:', {
         tipo: 'soloReferencia',
-        valor: window.config.soloReferencia,
+        valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'soloReferencia',
-        valor: window.config.soloReferencia,
+        valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
       console.log('✅ Evento configuracion_actualizada emitido exitosamente');
@@ -4171,19 +4148,19 @@ async function inicializar() {
   // Slider de fuente Himnario
   sliderFontsizeHimnario.addEventListener('input', async () => {
     fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
-    window.config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
+    config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
     await guardarYEnviarConfig();
     
     // Emitir evento de socket para sincronizar con otros dispositivos
     if (window.socket) {
       console.log('📤 Emitiendo configuracion_actualizada:', {
         tipo: 'fontsizeHimnario',
-        valor: window.config.fontsizeHimnario,
+        valor: config.fontsizeHimnario,
         clientId: CLIENT_ID
       });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'fontsizeHimnario',
-        valor: window.config.fontsizeHimnario,
+        valor: config.fontsizeHimnario,
         clientId: CLIENT_ID
       });
       console.log('✅ Evento configuracion_actualizada emitido exitosamente');
@@ -4194,7 +4171,7 @@ async function inicializar() {
   
   // Switch auto fullscreen
   switchAutoFullscreen.addEventListener('change', () => {
-    window.config.autoFullscreen = switchAutoFullscreen.checked;
+    config.autoFullscreen = switchAutoFullscreen.checked;
     autoFullscreenLandscape = switchAutoFullscreen.checked;
     if (!autoFullscreenLandscape) {
       document.body.classList.remove('auto-fullscreen-landscape');
@@ -4205,66 +4182,28 @@ async function inicializar() {
   
 
   async function guardarYEnviarConfig() {
-    await guardarConfiguracionCompleta(window.config);
+    await guardarConfiguracionCompleta(config);
+    
     // Enviar config al proyector según modo
     const esBiblia = esModoBiblia();
-    let configEnviar;
-    if (esBiblia) {
-      configEnviar = {
-        fontsize: window.config.fontsizeBiblia,
-        soloReferencia: window.config.soloReferencia
-      };
-    } else {
-      configEnviar = {
-        fontsize: window.config.fontsizeHimnario,
-        showIndicadorVerso: window.config.showIndicadorVerso,
-        indicadorVersoPct: window.config.indicadorVersoPct,
-        showNombreHimno: window.config.showNombreHimno,
-        nombreHimnoPct: window.config.nombreHimnoPct,
-        showSeccionActualTotal: window.config.showSeccionActualTotal,
-        seccionActualTotalPct: window.config.seccionActualTotalPct
-      };
-    }
+    const configEnviar = {
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
+    };
     console.log('🔧 guardarYEnviarConfig llamada:', {
-      config: window.config,
+      config,
       esBiblia,
       configEnviar
     });
     enviarMensajeProyector('config', configEnviar);
-    
-    // Actualizar mini proyector local
-    if (typeof window.actualizarMiniProyector === 'function') {
-      await window.actualizarMiniProyector();
-    }
-    
-    // Actualizar vista proyector local
-    actualizarVistaProyector();
-    
-    // Si es modo himnario y hay himno y estrofa activa, reenviar la estrofa activa
-    if (!esBiblia && himnoActivo && typeof estrofaActivaIndex === 'number' && estrofaActivaIndex >= 0) {
-      enviarEstrofaAlProyector(estrofaActivaIndex);
-    }
   }
   // Enviar config inicial al abrir proyector
   if (proyectorWindow && !proyectorWindow.closed) {
     const esBiblia = esModoBiblia();
-    let configEnviar;
-    if (esBiblia) {
-      configEnviar = {
-        fontsize: window.config.fontsizeBiblia,
-        soloReferencia: window.config.soloReferencia
-      };
-    } else {
-      configEnviar = {
-        fontsize: window.config.fontsizeHimnario,
-        showIndicadorVerso: window.config.showIndicadorVerso,
-        indicadorVersoPct: window.config.indicadorVersoPct,
-        showNombreHimno: window.config.showNombreHimno,
-        nombreHimnoPct: window.config.nombreHimnoPct,
-        showSeccionActualTotal: window.config.showSeccionActualTotal,
-        seccionActualTotalPct: window.config.seccionActualTotalPct
-      };
-    }
+    const configEnviar = {
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
+    };
     enviarMensajeProyector('config', configEnviar);
   }
   // Enviar config cada vez que se abre el proyector
@@ -4273,23 +4212,10 @@ async function inicializar() {
     originalAbrirProyector();
     setTimeout(() => {
       const esBiblia = esModoBiblia();
-      let configEnviar;
-      if (esBiblia) {
-        configEnviar = {
-          fontsize: window.config.fontsizeBiblia,
-          soloReferencia: window.config.soloReferencia
-        };
-      } else {
-        configEnviar = {
-          fontsize: window.config.fontsizeHimnario,
-          showIndicadorVerso: window.config.showIndicadorVerso,
-          indicadorVersoPct: window.config.indicadorVersoPct,
-          showNombreHimno: window.config.showNombreHimno,
-          nombreHimnoPct: window.config.nombreHimnoPct,
-          showSeccionActualTotal: window.config.showSeccionActualTotal,
-          seccionActualTotalPct: window.config.seccionActualTotalPct
-        };
-      }
+      const configEnviar = {
+        fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+        soloReferencia: esBiblia ? config.soloReferencia : null
+      };
       enviarMensajeProyector('config', configEnviar);
     }, 500);
   };
@@ -4365,15 +4291,15 @@ async function configurarControlesMiniProyector() {
   const switchSoloReferencia = document.getElementById('switchSoloReferencia');
   
   // --- NUEVO: Usar la variable config global en lugar de una local ---
-  console.log('🔧 Configuración inicial para controles mini proyector:', window.config);
+  console.log('🔧 Configuración inicial para controles mini proyector:', config);
   
   // Convertir el valor vw guardado a porcentaje para el slider
-  const porcentajeInicial = vwAPorcentaje(window.config.fontsizeBiblia || 5);
+  const porcentajeInicial = vwAPorcentaje(config.fontsizeBiblia || 5);
   
   // Inicializar valores
   miniSliderFontsizeBiblia.value = porcentajeInicial;
   miniFontsizeValueBiblia.textContent = porcentajeInicial + '%';
-  miniSwitchSoloReferencia.checked = !!window.config.soloReferencia;
+  miniSwitchSoloReferencia.checked = !!config.soloReferencia;
   
   // Event listeners
   miniSliderFontsizeBiblia.addEventListener('input', async () => {
@@ -4381,11 +4307,11 @@ async function configurarControlesMiniProyector() {
     const vw = porcentajeAVw(porcentaje);
     
     miniFontsizeValueBiblia.textContent = porcentaje + '%';
-    window.config.fontsizeBiblia = vw;
+    config.fontsizeBiblia = vw;
     console.log('🔧 Configuración actualizada desde mini proyector (slider):', {
       porcentaje: porcentaje,
       vw: vw,
-      configLocal: window.config.fontsizeBiblia
+      configLocal: config.fontsizeBiblia
     });
     
     // Sincronizar con controles del panel principal
@@ -4395,13 +4321,13 @@ async function configurarControlesMiniProyector() {
     }
     
     // Guardar y enviar configuración
-    await guardarConfiguracionCompleta(window.config);
+    await guardarConfiguracionCompleta(config);
     
     // Enviar config al proyector según modo
     const esBiblia = esModoBiblia();
     const configEnviar = {
-      fontsize: esBiblia ? window.config.fontsizeBiblia : window.config.fontsizeHimnario,
-      soloReferencia: esBiblia ? window.config.soloReferencia : null
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
     };
     console.log('🔧 Configuración actualizada desde mini proyector:', {
       porcentaje: porcentaje,
@@ -4416,12 +4342,12 @@ async function configurarControlesMiniProyector() {
     if (window.socket) {
       console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
         tipo: 'fontsizeBiblia',
-        valor: window.config.fontsizeBiblia,
+        valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'fontsizeBiblia',
-        valor: window.config.fontsizeBiblia,
+        valor: config.fontsizeBiblia,
         clientId: CLIENT_ID
       });
       console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
@@ -4431,28 +4357,28 @@ async function configurarControlesMiniProyector() {
   });
   
   miniSwitchSoloReferencia.addEventListener('change', async () => {
-    window.config.soloReferencia = miniSwitchSoloReferencia.checked;
+    config.soloReferencia = miniSwitchSoloReferencia.checked;
     console.log('🔧 Configuración actualizada desde mini proyector (switch):', {
-      soloReferencia: window.config.soloReferencia,
-      configLocal: window.config.soloReferencia
+      soloReferencia: config.soloReferencia,
+      configLocal: config.soloReferencia
     });
     
     // Sincronizar con controles del panel principal
     if (switchSoloReferencia) {
-      switchSoloReferencia.checked = window.config.soloReferencia;
+      switchSoloReferencia.checked = config.soloReferencia;
     }
     
     // Guardar y enviar configuración
-    await guardarConfiguracionCompleta(window.config);
+    await guardarConfiguracionCompleta(config);
     
     // Enviar config al proyector según modo
     const esBiblia = esModoBiblia();
     const configEnviar = {
-      fontsize: esBiblia ? window.config.fontsizeBiblia : window.config.fontsizeHimnario,
-      soloReferencia: esBiblia ? window.config.soloReferencia : null
+      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+      soloReferencia: esBiblia ? config.soloReferencia : null
     };
     console.log('🔧 Configuración actualizada desde mini proyector:', {
-      soloReferencia: window.config.soloReferencia,
+      soloReferencia: config.soloReferencia,
       configEnviar: configEnviar
     });
     enviarMensajeProyector('config', configEnviar);
@@ -4469,12 +4395,12 @@ async function configurarControlesMiniProyector() {
     if (window.socket) {
       console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
         tipo: 'soloReferencia',
-        valor: window.config.soloReferencia,
+        valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
       window.socket.emit('configuracion_actualizada', {
         tipo: 'soloReferencia',
-        valor: window.config.soloReferencia,
+        valor: config.soloReferencia,
         clientId: CLIENT_ID
       });
       console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
@@ -4529,7 +4455,7 @@ async function configurarControlesMiniProyector() {
   
   // Función para actualizar mini proyector en tiempo real
   async function actualizarMiniProyector() {
-    const porcentaje = vwAPorcentaje(window.config.fontsizeBiblia || 5);
+    const porcentaje = vwAPorcentaje(config.fontsizeBiblia || 5);
     
     if (miniSliderFontsizeBiblia) {
       miniSliderFontsizeBiblia.value = porcentaje;
@@ -4537,7 +4463,7 @@ async function configurarControlesMiniProyector() {
     }
     
     if (miniSwitchSoloReferencia) {
-      miniSwitchSoloReferencia.checked = !!window.config.soloReferencia;
+      miniSwitchSoloReferencia.checked = !!config.soloReferencia;
     }
   }
   
@@ -4789,27 +4715,110 @@ async function cambiarModo() {
   limpiarVistaPrevia();
   limpiarProyector();
   limpiarCamposBusqueda();
-  
   if (esBiblia) {
     elementos.controlBiblia.style.display = 'block';
     elementos.controlHimnario.style.display = 'none';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/verso-bg.mp4' });
     ocultarPlayFooter();
     actualizarBotonPlayMiniProyector();
+    // Cargar configuración desde config.json para modo Biblia
+    const config = await obtenerConfiguracion();
+    // --- NUEVO: Asignar a la variable global config ---
+    window.config = config;
+    console.log('📋 Configuración cargada para modo Biblia (global):', config);
+    // Actualizar controles del panel principal
+    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+    const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+      fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
+    }
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = !!config.soloReferencia;
+    }
   } else {
     elementos.controlBiblia.style.display = 'none';
     elementos.controlHimnario.style.display = 'block';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/himno-bg.mp4' });
+    // --- NUEVO: Cargar configuración desde config.json para modo Himnario ---
+    const config = await obtenerConfiguracion();
+    window.config = config;
+    console.log('📋 Configuración cargada para modo Himnario (global):', config);
+    // Actualizar controles del panel principal de himnario
+    // Tamaño texto principal
+    const sliderFontsize = document.getElementById('miniSliderFontsizeHimnario');
+    const valueFontsize = document.getElementById('miniFontsizeValueHimnario');
+    if (sliderFontsize && valueFontsize) {
+      const pct = vwAPorcentaje(config.fontsizeHimnario || 5);
+      sliderFontsize.value = pct;
+      valueFontsize.textContent = pct + '%';
+    }
+    // Indicador de verso
+    const sliderIndicador = document.getElementById('miniSliderIndicadorVerso');
+    const valueIndicador = document.getElementById('miniIndicadorVersoValue');
+    const checkIndicador = document.getElementById('miniCheckIndicadorVerso');
+    if (sliderIndicador && valueIndicador) {
+      const pct = vwAPorcentaje(config.indicadorVersoPct || 56);
+      sliderIndicador.value = pct;
+      valueIndicador.textContent = pct + '%';
+    }
+    if (checkIndicador) {
+      checkIndicador.checked = !!config.showIndicadorVerso;
+    }
+    // Nombre del himno
+    const sliderNombre = document.getElementById('miniSliderNombreHimno');
+    const valueNombre = document.getElementById('miniNombreHimnoValue');
+    const checkNombre = document.getElementById('miniCheckNombreHimno');
+    if (sliderNombre && valueNombre) {
+      const pct = vwAPorcentaje(config.nombreHimnoPct || 52);
+      sliderNombre.value = pct;
+      valueNombre.textContent = pct + '%';
+    }
+    if (checkNombre) {
+      checkNombre.checked = !!config.showNombreHimno;
+    }
+    // Sección actual/total
+    const sliderSeccion = document.getElementById('miniSliderSeccionActualTotal');
+    const valueSeccion = document.getElementById('miniSeccionActualTotalValue');
+    const checkSeccion = document.getElementById('miniCheckSeccionActualTotal');
+    if (sliderSeccion && valueSeccion) {
+      const pct = vwAPorcentaje(config.seccionActualTotalPct || 57);
+      sliderSeccion.value = pct;
+      valueSeccion.textContent = pct + '%';
+    }
+    if (checkSeccion) {
+      checkSeccion.checked = !!config.showSeccionActualTotal;
+    }
   }
-
   // Actualizar opciones del panel de configuración según el modo
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-
-  // La lógica de enviar configuración ya está en guardarYEnviarConfig y se llama
-  // desde los event listeners, por lo que no es necesario aquí.
-
+  // Enviar configuración actualizada según el modo
+  const config = await obtenerConfiguracion();
+  const configEnviar = {
+    fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+    soloReferencia: esBiblia ? config.soloReferencia : null,
+    showIndicadorVerso: !esBiblia ? config.showIndicadorVerso : undefined,
+    indicadorVersoPct: !esBiblia ? config.indicadorVersoPct : undefined,
+    showNombreHimno: !esBiblia ? config.showNombreHimno : undefined,
+    nombreHimnoPct: !esBiblia ? config.nombreHimnoPct : undefined,
+    showSeccionActualTotal: !esBiblia ? config.showSeccionActualTotal : undefined,
+    seccionActualTotalPct: !esBiblia ? config.seccionActualTotalPct : undefined
+  };
+  enviarMensajeProyector('config', configEnviar);
+  // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+  if (esBiblia && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+    console.log('🔄 Reenviando versículo con nueva configuración al cambiar modo...');
+    setTimeout(async () => {
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }, 100);
+  }
+  // Actualizar mini proyector si está disponible
+  if (typeof window.actualizarMiniProyector === 'function') {
+    await window.actualizarMiniProyector();
+  }
   actualizarTopBarTitulo();
   actualizarVistaProyector();
   console.log('✅ Modo cambiado exitosamente');
@@ -4821,13 +4830,6 @@ async function cambiarModo() {
  */
 async function cambiarModoGlobal(modo, propagar = true) {
   console.log('🔄 Cambiando modo global a:', modo);
-
-  // ---> RECARGAR CONFIGURACIÓN DESDE config.json <---
-  const configCargada = await obtenerConfiguracion();
-  window.config = { ...window.config, ...configCargada };
-  console.log(`📋 Configuración recargada para modo ${modo}:`, window.config);
-  // ---> FIN DE RECARGA <---
-
   window.modoActual = modo;
   // --- Actualizar visualmente los botones del navbar ---
   const navHimnario = document.getElementById('navHimnario');
@@ -4861,16 +4863,22 @@ async function cambiarModoGlobal(modo, propagar = true) {
     document.body.classList.add('modo-biblia');
     document.body.classList.remove('modo-himnario');
     
+    // Cargar configuración desde config.json para modo Biblia
+    const config = await obtenerConfiguracion();
+    console.log('📋 Configuración cargada para modo Biblia (global):', config);
+    
     // Actualizar controles del panel principal
     const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
     const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
     const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    
     if (sliderFontsizeBiblia) {
-      sliderFontsizeBiblia.value = window.config.fontsizeBiblia || 5;
-      fontsizeValueBiblia.textContent = (window.config.fontsizeBiblia || 5) + 'vw';
+      sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
+      fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
     }
+    
     if (switchSoloReferencia) {
-      switchSoloReferencia.checked = !!window.config.soloReferencia;
+      switchSoloReferencia.checked = !!config.soloReferencia;
     }
     
     if (window.memoriaUltima && window.memoriaUltima.biblia) {
@@ -4880,23 +4888,11 @@ async function cambiarModoGlobal(modo, propagar = true) {
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-  let configEnviar;
-  if (modo === 'biblia') {
-    configEnviar = {
-      fontsize: window.config.fontsizeBiblia,
-      soloReferencia: window.config.soloReferencia
-    };
-  } else {
-    configEnviar = {
-      fontsize: window.config.fontsizeHimnario,
-      showIndicadorVerso: window.config.showIndicadorVerso,
-      indicadorVersoPct: window.config.indicadorVersoPct,
-      showNombreHimno: window.config.showNombreHimno,
-      nombreHimnoPct: window.config.nombreHimnoPct,
-      showSeccionActualTotal: window.config.showSeccionActualTotal,
-      seccionActualTotalPct: window.config.seccionActualTotalPct
-    };
-  }
+  const config = await obtenerConfiguracion();
+  const configEnviar = {
+    fontsize: modo === 'biblia' ? config.fontsizeBiblia : config.fontsizeHimnario,
+    soloReferencia: modo === 'biblia' ? config.soloReferencia : null
+  };
   enviarMensajeProyector('config', configEnviar);
   
   // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
@@ -5732,17 +5728,17 @@ function actualizarVistaProyector() {
   if (miniProyectorContador) miniProyectorContador.style.display = 'none';
 
   // --- NUEVO: Usar la variable config global ---
-  let fontsizeBiblia = window.config.fontsizeBiblia || 5;
-  let soloReferencia = window.config.soloReferencia || false;
-  let fontsizeHimnario = window.config.fontsizeHimnario || 5;
-  let showIndicadorVerso = window.config.showIndicadorVerso;
-  let indicadorVersoPct = window.config.indicadorVersoPct;
-  let showNombreHimno = window.config.showNombreHimno;
-  let nombreHimnoPct = window.config.nombreHimnoPct;
-  let showSeccionActualTotal = window.config.showSeccionActualTotal;
-  let seccionActualTotalPct = window.config.seccionActualTotalPct;
+  let fontsizeBiblia = config.fontsizeBiblia || 5;
+  let soloReferencia = config.soloReferencia || false;
+  let fontsizeHimnario = config.fontsizeHimnario || 5;
+  let showIndicadorVerso = config.showIndicadorVerso;
+  let indicadorVersoPct = config.indicadorVersoPct;
+  let showNombreHimno = config.showNombreHimno;
+  let nombreHimnoPct = config.nombreHimnoPct;
+  let showSeccionActualTotal = config.showSeccionActualTotal;
+  let seccionActualTotalPct = config.seccionActualTotalPct;
   console.log('🔧 Configuración para mini proyector:', { fontsizeBiblia, soloReferencia, isBiblia, fontsizeHimnario, showIndicadorVerso, indicadorVersoPct, showNombreHimno, nombreHimnoPct, showSeccionActualTotal, seccionActualTotalPct });
-  console.log('🔧 Variable config global:', window.config);
+  console.log('🔧 Variable config global:', config);
 
   if (isBiblia) {
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
@@ -6305,24 +6301,14 @@ function inicializarAccordionsHimnario() {
   }
   if (sliderFontsize && valueFontsize) {
     // Inicializar valor desde config
-    const pct = vwAPorcentaje(window.config.fontsizeHimnario || 5);
+    const pct = vwAPorcentaje(config.fontsizeHimnario || 5);
     sliderFontsize.value = pct;
     valueFontsize.textContent = pct + '%';
     sliderFontsize.addEventListener('input', async () => {
       valueFontsize.textContent = sliderFontsize.value + '%';
       const vw = porcentajeAVw(parseInt(sliderFontsize.value));
-      window.config.fontsizeHimnario = vw;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'fontsizeHimnario',
-          valor: vw,
-          clientId: CLIENT_ID
-        });
-      }
+      config.fontsizeHimnario = vw;
+      await guardarYEnviarConfigHimnario('fontsizeHimnario', vw);
     });
   }
 
@@ -6349,41 +6335,21 @@ function inicializarAccordionsHimnario() {
     });
     checkIndicador.addEventListener('change', async () => {
       actualizarEstadoIndicador();
-      window.config.showIndicadorVerso = checkIndicador.checked;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'showIndicadorVerso',
-          valor: checkIndicador.checked,
-          clientId: CLIENT_ID
-        });
-      }
+      config.showIndicadorVerso = checkIndicador.checked;
+      await guardarYEnviarConfigHimnario('showIndicadorVerso', checkIndicador.checked);
     });
     actualizarEstadoIndicador();
   }
   if (sliderIndicador && valueIndicador) {
     // Inicializar valor desde config
-    const pct = vwAPorcentaje(window.config.indicadorVersoPct || 56);
+    const pct = vwAPorcentaje(config.indicadorVersoPct || 56);
     sliderIndicador.value = pct;
     valueIndicador.textContent = pct + '%';
     sliderIndicador.addEventListener('input', async () => {
       valueIndicador.textContent = sliderIndicador.value + '%';
       const pctValue = parseInt(sliderIndicador.value);
-      window.config.indicadorVersoPct = pctValue;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'indicadorVersoPct',
-          valor: pctValue,
-          clientId: CLIENT_ID
-        });
-      }
+      config.indicadorVersoPct = pctValue;
+      await guardarYEnviarConfigHimnario('indicadorVersoPct', pctValue);
     });
   }
 
@@ -6410,41 +6376,21 @@ function inicializarAccordionsHimnario() {
     });
     checkNombre.addEventListener('change', async () => {
       actualizarEstadoNombre();
-      window.config.showNombreHimno = checkNombre.checked;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'showNombreHimno',
-          valor: checkNombre.checked,
-          clientId: CLIENT_ID
-        });
-      }
+      config.showNombreHimno = checkNombre.checked;
+      await guardarYEnviarConfigHimnario('showNombreHimno', checkNombre.checked);
     });
     actualizarEstadoNombre();
   }
   if (sliderNombre && valueNombre) {
     // Inicializar valor desde config
-    const pct = vwAPorcentaje(window.config.nombreHimnoPct || 52);
+    const pct = vwAPorcentaje(config.nombreHimnoPct || 52);
     sliderNombre.value = pct;
     valueNombre.textContent = pct + '%';
     sliderNombre.addEventListener('input', async () => {
       valueNombre.textContent = sliderNombre.value + '%';
       const pctValue = parseInt(sliderNombre.value);
-      window.config.nombreHimnoPct = pctValue;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'nombreHimnoPct',
-          valor: pctValue,
-          clientId: CLIENT_ID
-        });
-      }
+      config.nombreHimnoPct = pctValue;
+      await guardarYEnviarConfigHimnario('nombreHimnoPct', pctValue);
     });
   }
 
@@ -6471,47 +6417,53 @@ function inicializarAccordionsHimnario() {
     });
     checkSeccion.addEventListener('change', async () => {
       actualizarEstadoSeccion();
-      window.config.showSeccionActualTotal = checkSeccion.checked;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'showSeccionActualTotal',
-          valor: checkSeccion.checked,
-          clientId: CLIENT_ID
-        });
-      }
+      config.showSeccionActualTotal = checkSeccion.checked;
+      await guardarYEnviarConfigHimnario('showSeccionActualTotal', checkSeccion.checked);
     });
     actualizarEstadoSeccion();
   }
   if (sliderSeccion && valueSeccion) {
     // Inicializar valor desde config
-    const pct = vwAPorcentaje(window.config.seccionActualTotalPct || 57);
+    const pct = vwAPorcentaje(config.seccionActualTotalPct || 57);
     sliderSeccion.value = pct;
     valueSeccion.textContent = pct + '%';
     sliderSeccion.addEventListener('input', async () => {
       valueSeccion.textContent = sliderSeccion.value + '%';
       const pctValue = parseInt(sliderSeccion.value);
-      window.config.seccionActualTotalPct = pctValue;
-      
-      await guardarYEnviarConfig();
-      
-      // Emitir evento de socket para sincronizar con otros dispositivos
-      if (window.socket) {
-        window.socket.emit('configuracion_actualizada', {
-          tipo: 'seccionActualTotalPct',
-          valor: pctValue,
-          clientId: CLIENT_ID
-        });
-      }
+      config.seccionActualTotalPct = pctValue;
+      await guardarYEnviarConfigHimnario('seccionActualTotalPct', pctValue);
     });
   }
 }
 
-// --- Función unificada para guardar y sincronizar configuración ---
-// Esta función maneja tanto Biblia como Himnario de manera consistente
+// --- Guardar y sincronizar configuración de himnario ---
+async function guardarYEnviarConfigHimnario(tipo, valor) {
+  await guardarConfiguracionCompleta(config);
+  // Emitir evento de socket para sincronizar con otros dispositivos
+  if (window.socket) {
+    window.socket.emit('configuracion_actualizada', {
+      tipo,
+      valor,
+      clientId: CLIENT_ID
+    });
+  }
+  // Actualizar mini proyector local
+  if (typeof window.actualizarMiniProyector === 'function') {
+    await window.actualizarMiniProyector();
+  }
+  // Actualizar vista proyector local
+  actualizarVistaProyector();
+  // Enviar config al proyector general
+  enviarMensajeProyector('config', {
+    fontsize: config.fontsizeHimnario,
+    showIndicadorVerso: config.showIndicadorVerso,
+    indicadorVersoPct: config.indicadorVersoPct,
+    showNombreHimno: config.showNombreHimno,
+    nombreHimnoPct: config.nombreHimnoPct,
+    showSeccionActualTotal: config.showSeccionActualTotal,
+    seccionActualTotalPct: config.seccionActualTotalPct
+  });
+}
 
 
 
@@ -6771,15 +6723,6 @@ socket.on('config', (data) => {
     }
     // --- NUEVO: Unificar acceso a config ---
     const config = data.config || data;
-    // Guardar valores globales para usarlos en mostrarIndicadoresHimno
-    window.configProyectorHimnario = window.configProyectorHimnario || {};
-    if (typeof config.fontsize !== 'undefined') window.configProyectorHimnario.fontsize = config.fontsize;
-    if (typeof config.showIndicadorVerso !== 'undefined') window.configProyectorHimnario.showIndicadorVerso = config.showIndicadorVerso;
-    if (typeof config.indicadorVersoPct !== 'undefined') window.configProyectorHimnario.indicadorVersoPct = config.indicadorVersoPct;
-    if (typeof config.showNombreHimno !== 'undefined') window.configProyectorHimnario.showNombreHimno = config.showNombreHimno;
-    if (typeof config.nombreHimnoPct !== 'undefined') window.configProyectorHimnario.nombreHimnoPct = config.nombreHimnoPct;
-    if (typeof config.showSeccionActualTotal !== 'undefined') window.configProyectorHimnario.showSeccionActualTotal = config.showSeccionActualTotal;
-    if (typeof config.seccionActualTotalPct !== 'undefined') window.configProyectorHimnario.seccionActualTotalPct = config.seccionActualTotalPct;
     // --- MODO HIMNARIO ---
     if (typeof config.showIndicadorVerso !== 'undefined' || typeof config.showNombreHimno !== 'undefined' || typeof config.showSeccionActualTotal !== 'undefined') {
         // Tamaño texto principal
@@ -6806,20 +6749,36 @@ socket.on('config', (data) => {
             `;
             document.getElementById('contenido').appendChild(tituloHimnoElement);
         }
-        // Solo actualizar estilos, NO el contenido
-        tituloHimnoElement.style.fontSize = (config.nombreHimnoPct || 2.3) + 'vw';
-        indicadorEstrofa.style.fontSize = (config.indicadorVersoPct || 2.5) + 'vw';
-        contadorSeccion.style.fontSize = (config.seccionActualTotalPct || 2.5) + 'vw';
-        // Visibilidad según config (pero no modificar el texto)
-        tituloHimnoElement.style.display = config.showNombreHimno ? 'block' : 'none';
-        indicadorEstrofa.style.display = config.showIndicadorVerso ? 'block' : 'none';
-        contadorSeccion.style.display = config.showSeccionActualTotal ? 'block' : 'none';
-        // Si no hay himno activo, ocultar visualmente
+        if (config.showNombreHimno) {
+            tituloHimnoElement.style.display = 'block';
+            if (window.ultimoHimnoData) {
+                tituloHimnoElement.textContent = `${window.ultimoHimnoData.numero} - ${window.ultimoHimnoData.titulo}`;
+            }
+            tituloHimnoElement.style.fontSize = (config.nombreHimnoPct || 2.3) + 'vw';
+        } else {
+            tituloHimnoElement.style.display = 'none';
+        }
+        // Indicador de versos
+        if (config.showIndicadorVerso) {
+            indicadorEstrofa.style.display = 'block';
+            indicadorEstrofa.style.fontSize = (config.indicadorVersoPct || 2.5) + 'vw';
+        } else {
+            indicadorEstrofa.style.display = 'none';
+        }
+        // Sección actual/total
+        if (config.showSeccionActualTotal) {
+            contadorSeccion.style.display = 'block';
+            contadorSeccion.style.fontSize = (config.seccionActualTotalPct || 2.5) + 'vw';
+        } else {
+            contadorSeccion.style.display = 'none';
+        }
+        // Refuerzo: si no hay himno activo, ocultar nombre e indicadores
         if (!window.ultimoHimnoData) {
             tituloHimnoElement.style.display = 'none';
             indicadorEstrofa.style.display = 'none';
             contadorSeccion.style.display = 'none';
         }
+        // Aplicar tamaño de fuente a referencia (si se usa)
         referencia.style.fontSize = (fontSize * 0.7) + 'vw';
         return;
     }
@@ -6853,7 +6812,6 @@ socket.on('detenerAudio', (data) => {
  */
 function mostrarIndicadoresHimno(himnoData) {
     console.log('[DEBUG] mostrarIndicadoresHimno - himnoData:', himnoData);
-    const cfg = window.configProyectorHimnario || {};
     // Refuerzo: ocultar siempre el indicador en el título o en la sección 0
     if (himnoData.esTitulo || himnoData.estrofaIndex === 0 || himnoData.seccionActual === 0) {
         textoPrincipal.classList.add('titulo-himno');
@@ -6872,9 +6830,8 @@ function mostrarIndicadoresHimno(himnoData) {
     // Mostrar contador de sección
     if (himnoData.seccionActual !== undefined && himnoData.totalSecciones !== undefined) {
         contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
-        contadorSeccion.style.display = cfg.showSeccionActualTotal ? 'block' : 'none';
+        contadorSeccion.style.display = '';
         contadorSeccion.classList.add('visible');
-        contadorSeccion.style.fontSize = (cfg.seccionActualTotalPct || 2.5) + 'vw';
     } else {
         contadorSeccion.style.display = 'none';
     }
@@ -6897,11 +6854,10 @@ function mostrarIndicadoresHimno(himnoData) {
         }
     }
     console.log('[DEBUG] versoText calculado:', versoText);
-    if (versoText && cfg.showIndicadorVerso) {
+    if (versoText) {
         indicadorEstrofa.textContent = versoText;
-        indicadorEstrofa.style.display = 'block';
+        indicadorEstrofa.style.display = '';
         indicadorEstrofa.classList.add('visible');
-        indicadorEstrofa.style.fontSize = (cfg.indicadorVersoPct || 2.5) + 'vw';
         console.log('[DEBUG] Mostrando indicadorEstrofa:', versoText);
     } else {
         indicadorEstrofa.style.display = 'none';

@@ -2,13 +2,13 @@
   "modo": "himnario",
   "biblia": {
     "version": "es-rv60.json",
-    "libro": "Salmos",
-    "capitulo": 22,
-    "versiculo": 3
+    "libro": "Judas",
+    "capitulo": 0,
+    "versiculo": 0
   },
   "himnario": {
-    "numero": "004",
-    "titulo": "Alabanzas sin cesar",
-    "estrofa": 2
+    "numero": "054",
+    "titulo": "Tan bueno es Dios",
+    "estrofa": 1
   }
 }

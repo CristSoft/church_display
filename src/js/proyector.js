@@ -21,6 +21,12 @@ let audioElement = null;
 // 2. Eventos de conexión
 socket.on('connect', () => {
     console.log('✅ Proyector conectado al servidor SocketIO - ID:', socket.id);
+    // Enviar relación de aspecto
+    enviarRelacionAspecto();
+    
+    // Solicitar configuración inicial
+    console.log('[DEBUG] Solicitando configuración inicial...');
+    socket.emit('get_config');
 });
 
 socket.on('disconnect', () => {
@@ -35,6 +41,11 @@ socket.onAny((eventName, ...args) => {
 // 3. Escuchar mensajes del panel de control
 socket.on('update_text', (data) => {
     console.log('📥 Recibido update_text:', data);
+    
+    // Guardar el último himno data para que la configuración pueda acceder a él
+    if (data.himnoData) {
+        window.ultimoHimnoData = data.himnoData;
+    }
     
     // Aplicar transición suave
     textoPrincipal.classList.add('fade-out');
@@ -58,6 +69,12 @@ socket.on('update_text', (data) => {
             indicadorEstrofa.style.display = 'none';
             // Aplicar clase de versículo bíblico para usar la misma fuente
             textoPrincipal.classList.add('versiculo-biblia');
+            
+            // Ocultar título del himno en modo bíblico
+            const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+            if (tituloHimnoElement) {
+                tituloHimnoElement.style.display = 'none';
+            }
         } else {
             if (data.himnoData) {
                 // Modo himno
@@ -74,7 +91,7 @@ socket.on('update_text', (data) => {
                 contadorSeccion.classList.remove('visible');
                 indicadorEstrofa.style.display = 'none';
                 indicadorEstrofa.classList.remove('visible');
-                // Manejar indicadores de himno
+                // Manejar indicadores de himno (incluye título del himno)
                 mostrarIndicadoresHimno(data.himnoData);
             } else {
                 // Modo versículo normal
@@ -96,40 +113,11 @@ socket.on('update_text', (data) => {
                 contadorSeccion.style.display = 'none';
                 indicadorEstrofa.style.display = 'none';
                 
-
-            }
-        }
-        
-        // Mostrar título del himno en esquina superior izquierda si es himno
-        if (data.himnoData && !data.himnoData.esTitulo) {
-            // Crear o actualizar elemento para título del himno
-            let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
-            if (!tituloHimnoElement) {
-                tituloHimnoElement = document.createElement('div');
-                tituloHimnoElement.id = 'titulo-himno-proyector';
-                tituloHimnoElement.style.cssText = `
-                    position: absolute;
-                    top: 20px;
-                    left: 20px;
-                    font-size: 2.3vw;
-                    font-weight: bold;
-                    color: #fff;
-                    text-shadow: 0 2px 8px #000;
-                    z-index: 10;
-                    max-width: 40%;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                `;
-                document.getElementById('contenido').appendChild(tituloHimnoElement);
-            }
-            tituloHimnoElement.textContent = `${data.himnoData.numero} - ${data.himnoData.titulo}`;
-            tituloHimnoElement.style.display = 'block';
-        } else {
-            // Ocultar título del himno si no es himno o es título
-            const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
-            if (tituloHimnoElement) {
-                tituloHimnoElement.style.display = 'none';
+                // Ocultar título del himno en modo versículo
+                const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+                if (tituloHimnoElement) {
+                    tituloHimnoElement.style.display = 'none';
+                }
             }
         }
         
@@ -242,6 +230,7 @@ socket.on('config', (data) => {
     console.log('🔍 Tipo de data:', typeof data);
     console.log('🔍 Data.config existe:', !!data.config);
     console.log('🔍 Data completa:', JSON.stringify(data));
+    
     // Verificar que los elementos existen antes de procesar
     if (!textoPrincipal) {
         console.error('❌ Elemento textoPrincipal no encontrado');
@@ -251,14 +240,30 @@ socket.on('config', (data) => {
         console.error('❌ Elemento referencia no encontrado');
         return;
     }
+    
     // --- NUEVO: Unificar acceso a config ---
     const config = data.config || data;
+    
+    // Guardar configuración globalmente para que mostrarIndicadoresHimno pueda acceder a ella
+    window.configActual = {
+        showIndicadorVerso: config.showIndicadorVerso || false,
+        showNombreHimno: config.showNombreHimno || false,
+        showSeccionActualTotal: config.showSeccionActualTotal || false,
+        indicadorVersoPct: config.indicadorVersoPct || 2.5,
+        nombreHimnoPct: config.nombreHimnoPct || 2.3,
+        seccionActualTotalPct: config.seccionActualTotalPct || 2.5
+    };
+    
+    console.log('[DEBUG] Configuración guardada en window.configActual:', window.configActual);
+    
     // --- MODO HIMNARIO ---
     if (typeof config.showIndicadorVerso !== 'undefined' || typeof config.showNombreHimno !== 'undefined' || typeof config.showSeccionActualTotal !== 'undefined') {
         // Tamaño texto principal
-        const fontSize = config.fontsize || 5;
-        textoPrincipal.style.fontSize = fontSize + 'vw';
-        // Nombre del himno (esquina superior izquierda)
+        if (config.fontsize) {
+            textoPrincipal.style.fontSize = config.fontsize + 'vw';
+        }
+        
+        // Crear elemento de título del himno si no existe
         let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
         if (!tituloHimnoElement) {
             tituloHimnoElement = document.createElement('div');
@@ -279,39 +284,29 @@ socket.on('config', (data) => {
             `;
             document.getElementById('contenido').appendChild(tituloHimnoElement);
         }
-        if (config.showNombreHimno) {
-            tituloHimnoElement.style.display = 'block';
-            if (window.ultimoHimnoData) {
-                tituloHimnoElement.textContent = `${window.ultimoHimnoData.numero} - ${window.ultimoHimnoData.titulo}`;
-            }
-            tituloHimnoElement.style.fontSize = (config.nombreHimnoPct || 2.3) + 'vw';
-        } else {
-            tituloHimnoElement.style.display = 'none';
+        
+        // Aplicar tamaños de fuente
+        if (config.nombreHimnoPct !== undefined) {
+            tituloHimnoElement.style.fontSize = config.nombreHimnoPct + 'vw';
         }
-        // Indicador de versos
-        if (config.showIndicadorVerso) {
-            indicadorEstrofa.style.display = 'block';
-            indicadorEstrofa.style.fontSize = (config.indicadorVersoPct || 2.5) + 'vw';
-        } else {
-            indicadorEstrofa.style.display = 'none';
+        
+        if (config.indicadorVersoPct !== undefined) {
+            indicadorEstrofa.style.fontSize = config.indicadorVersoPct + 'vw';
         }
-        // Sección actual/total
-        if (config.showSeccionActualTotal) {
-            contadorSeccion.style.display = 'block';
-            contadorSeccion.style.fontSize = (config.seccionActualTotalPct || 2.5) + 'vw';
-        } else {
-            contadorSeccion.style.display = 'none';
+        
+        if (config.seccionActualTotalPct !== undefined) {
+            contadorSeccion.style.fontSize = config.seccionActualTotalPct + 'vw';
         }
-        // Refuerzo: si no hay himno activo, ocultar nombre e indicadores
-        if (!window.ultimoHimnoData) {
-            tituloHimnoElement.style.display = 'none';
-            indicadorEstrofa.style.display = 'none';
-            contadorSeccion.style.display = 'none';
+        
+        // Aplicar configuración de visibilidad SOLO si hay un himno activo
+        if (window.ultimoHimnoData) {
+            console.log('[DEBUG] Reaplicando configuración a indicadores existentes');
+            mostrarIndicadoresHimno(window.ultimoHimnoData);
         }
-        // Aplicar tamaño de fuente a referencia (si se usa)
-        referencia.style.fontSize = (fontSize * 0.7) + 'vw';
+        
         return;
     }
+    
     // --- FIN MODO HIMNARIO ---
     // --- LÓGICA EXISTENTE PARA MODO BÍBLICO ---
     if (config.fontsize) {
@@ -342,30 +337,64 @@ socket.on('detenerAudio', (data) => {
  */
 function mostrarIndicadoresHimno(himnoData) {
     console.log('[DEBUG] mostrarIndicadoresHimno - himnoData:', himnoData);
+    
+    // Obtener la configuración actual
+    const configActual = window.configActual || {
+        showIndicadorVerso: false,
+        showSeccionActualTotal: false,
+        showNombreHimno: false
+    };
+    
+    console.log('[DEBUG] Configuración actual:', configActual);
+    
+    // Manejar título del himno (esquina superior izquierda)
+    let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+    if (tituloHimnoElement) {
+        if (configActual.showNombreHimno && himnoData && !himnoData.esTitulo) {
+            tituloHimnoElement.textContent = `${himnoData.numero} - ${himnoData.titulo}`;
+            tituloHimnoElement.style.display = 'block';
+            console.log('[DEBUG] Título del himno mostrado (config habilitada)');
+        } else {
+            tituloHimnoElement.style.display = 'none';
+            console.log('[DEBUG] Título del himno oculto (config deshabilitada o es título)');
+        }
+    }
+    
     // Refuerzo: ocultar siempre el indicador en el título o en la sección 0
     if (himnoData.esTitulo || himnoData.estrofaIndex === 0 || himnoData.seccionActual === 0) {
         textoPrincipal.classList.add('titulo-himno');
         // Mostrar el mismo texto que en la lista (con '|')
         const numeroSinCeros = String(parseInt(himnoData.numero, 10));
         textoPrincipal.innerHTML = `${numeroSinCeros} | ${himnoData.titulo}`;
-        // Ocultar indicadores SIEMPRE
+        // Ocultar indicadores SIEMPRE en el título
         contadorSeccion.style.display = 'none';
         contadorSeccion.classList.remove('visible');
         indicadorEstrofa.style.display = 'none';
         indicadorEstrofa.classList.remove('visible');
         return; // Salir de la función para evitar mostrar el indicador
     }
-    // Es una estrofa - mostrar indicadores solo si estrofaIndex >= 1
+    
+    // Es una estrofa - mostrar indicadores solo si estrofaIndex >= 1 Y la configuración lo permite
     textoPrincipal.classList.remove('titulo-himno');
-    // Mostrar contador de sección
+    
+    // Mostrar contador de sección SOLO si está habilitado en la configuración
     if (himnoData.seccionActual !== undefined && himnoData.totalSecciones !== undefined) {
         contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
-        contadorSeccion.style.display = '';
-        contadorSeccion.classList.add('visible');
+        if (configActual.showSeccionActualTotal) {
+            contadorSeccion.style.display = '';
+            contadorSeccion.classList.add('visible');
+            console.log('[DEBUG] Mostrando contadorSeccion (config habilitada)');
+        } else {
+            contadorSeccion.style.display = 'none';
+            contadorSeccion.classList.remove('visible');
+            console.log('[DEBUG] Ocultando contadorSeccion (config deshabilitada)');
+        }
     } else {
         contadorSeccion.style.display = 'none';
+        contadorSeccion.classList.remove('visible');
     }
-    // Indicador de estrofa/verse/coro solo si estrofaIndex >= 1
+    
+    // Indicador de estrofa/verse/coro solo si estrofaIndex >= 1 Y la configuración lo permite
     let versoText = '';
     const totalVerses = himnoData.verses ? parseInt(himnoData.verses, 10) : undefined;
     if (himnoData.estrofaIndex >= 1) {
@@ -383,16 +412,19 @@ function mostrarIndicadoresHimno(himnoData) {
             versoText = '';
         }
     }
+    
     console.log('[DEBUG] versoText calculado:', versoText);
-    if (versoText) {
+    console.log('[DEBUG] showIndicadorVerso config:', configActual.showIndicadorVerso);
+    
+    if (versoText && configActual.showIndicadorVerso) {
         indicadorEstrofa.textContent = versoText;
         indicadorEstrofa.style.display = '';
         indicadorEstrofa.classList.add('visible');
-        console.log('[DEBUG] Mostrando indicadorEstrofa:', versoText);
+        console.log('[DEBUG] Mostrando indicadorEstrofa (config habilitada):', versoText);
     } else {
         indicadorEstrofa.style.display = 'none';
         indicadorEstrofa.classList.remove('visible');
-        console.log('[DEBUG] Ocultando indicadorEstrofa');
+        console.log('[DEBUG] Ocultando indicadorEstrofa (config deshabilitada o sin texto)');
     }
 }
 
@@ -634,6 +666,68 @@ function enviarRelacionAspecto() {
     socket.emit('aspect_ratio', { width, height, aspect });
     console.log('📤 Enviando relación de aspecto:', { width, height, aspect });
 }
+
+// Función para debugging de configuración
+window.debugConfigProyector = function() {
+    console.log('[DEBUG] === DEBUG CONFIGURACIÓN PROYECTOR ===');
+    console.log('[DEBUG] Configuración actual:', window.configActual);
+    console.log('[DEBUG] Último himno data:', window.ultimoHimnoData);
+    
+    // Verificar elementos del DOM
+    const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+    console.log('[DEBUG] Elementos del DOM:', {
+        tituloHimnoElement: !!tituloHimnoElement,
+        tituloHimnoDisplay: tituloHimnoElement ? tituloHimnoElement.style.display : 'N/A',
+        indicadorEstrofa: !!indicadorEstrofa,
+        indicadorEstrofaDisplay: indicadorEstrofa ? indicadorEstrofa.style.display : 'N/A',
+        contadorSeccion: !!contadorSeccion,
+        contadorSeccionDisplay: contadorSeccion ? contadorSeccion.style.display : 'N/A'
+    });
+    
+    return {
+        configActual: window.configActual,
+        ultimoHimnoData: window.ultimoHimnoData,
+        elementos: {
+            tituloHimnoElement: !!tituloHimnoElement,
+            indicadorEstrofa: !!indicadorEstrofa,
+            contadorSeccion: !!contadorSeccion
+        }
+    };
+};
+
+// Función para forzar aplicación de configuración
+window.forzarConfigProyector = function() {
+    console.log('[DEBUG] === FORZANDO CONFIGURACIÓN PROYECTOR ===');
+    
+    if (!window.configActual) {
+        console.log('[DEBUG] No hay configuración disponible');
+        return;
+    }
+    
+    // Aplicar configuración al título del himno
+    const tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+    if (tituloHimnoElement) {
+        if (window.configActual.showNombreHimno && window.ultimoHimnoData) {
+            tituloHimnoElement.style.display = 'block';
+            tituloHimnoElement.textContent = `${window.ultimoHimnoData.numero} - ${window.ultimoHimnoData.titulo}`;
+            console.log('[DEBUG] Título del himno mostrado');
+        } else {
+            tituloHimnoElement.style.display = 'none';
+            console.log('[DEBUG] Título del himno oculto');
+        }
+    }
+    
+    // Reaplicar configuración a los indicadores
+    if (window.ultimoHimnoData) {
+        console.log('[DEBUG] Reaplicando configuración a indicadores');
+        mostrarIndicadoresHimno(window.ultimoHimnoData);
+    }
+    
+    return {
+        configAplicada: window.configActual,
+        himnoActivo: !!window.ultimoHimnoData
+    };
+};
 
 // Enviar al cargar
 window.addEventListener('DOMContentLoaded', enviarRelacionAspecto);

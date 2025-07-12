@@ -1,12 +1,12 @@
 {
   "fontsizeBiblia": 6.5,
-  "fontsizeHimnario": 3.6666666666666665,
+  "fontsizeHimnario": 5.636363636363637,
   "soloReferencia": false,
   "autoFullscreen": true,
   "showIndicadorVerso": true,
-  "indicadorVersoPct": 4,
-  "showNombreHimno": true,
+  "indicadorVersoPct": 2.5,
+  "showNombreHimno": false,
+  "nombreHimnoPct": 2.3,
   "showSeccionActualTotal": true,
-  "nombreHimnoPct": 2,
-  "seccionActualTotalPct": 2
+  "seccionActualTotalPct": 2.5
 }
