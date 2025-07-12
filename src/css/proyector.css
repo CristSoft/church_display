@@ -86,6 +86,11 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
   font-size: var(--override-ref-font-size) !important;
 }
 
+/* Regla específica para fontSize aplicado por JavaScript en modo himnario */
+#texto-principal[style*="font-size"] {
+  font-size: var(--js-font-size, inherit) !important;
+}
+
 #texto-principal.fade-out {
   opacity: 0;
 }

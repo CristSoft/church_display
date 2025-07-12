@@ -244,6 +244,10 @@ socket.on('config', (data) => {
     // --- NUEVO: Unificar acceso a config ---
     const config = data.config || data;
     
+    console.log('[DEBUG] Configuración recibida en proyector:', config);
+    console.log('[DEBUG] config.fontsize:', config.fontsize);
+    console.log('[DEBUG] config.fontsizeHimnario:', config.fontsizeHimnario);
+    
     // Guardar configuración globalmente para que mostrarIndicadoresHimno pueda acceder a ella
     window.configActual = {
         showIndicadorVerso: config.showIndicadorVerso || false,
@@ -256,11 +260,31 @@ socket.on('config', (data) => {
     
     console.log('[DEBUG] Configuración guardada en window.configActual:', window.configActual);
     
+    // --- DETECCIÓN DE MODO MÁS EXPLÍCITA ---
+    const esModoHimnario = typeof config.showIndicadorVerso !== 'undefined' || 
+                          typeof config.showNombreHimno !== 'undefined' || 
+                          typeof config.showSeccionActualTotal !== 'undefined';
+    
+    const esModoBiblia = !esModoHimnario && (config.fontsize || config.soloReferencia !== undefined);
+    
+    console.log('[DEBUG] Detección de modo:', { esModoHimnario, esModoBiblia, config });
+    
     // --- MODO HIMNARIO ---
-    if (typeof config.showIndicadorVerso !== 'undefined' || typeof config.showNombreHimno !== 'undefined' || typeof config.showSeccionActualTotal !== 'undefined') {
+    if (esModoHimnario) {
+        console.log('[DEBUG] Aplicando configuración de modo HIMNARIO');
+        console.log('[DEBUG] config.fontsize recibido:', config.fontsize);
+        console.log('[DEBUG] config.fontsizeHimnario recibido:', config.fontsizeHimnario);
+        console.log('[DEBUG] Elemento textoPrincipal:', textoPrincipal);
+        console.log('[DEBUG] FontSize actual antes de aplicar:', textoPrincipal.style.fontSize);
+        
         // Tamaño texto principal
         if (config.fontsize) {
+            console.log('[DEBUG] Aplicando fontsize al texto principal:', config.fontsize + 'vw');
+            textoPrincipal.style.setProperty('--js-font-size', config.fontsize + 'vw');
             textoPrincipal.style.fontSize = config.fontsize + 'vw';
+            console.log('[DEBUG] FontSize después de aplicar:', textoPrincipal.style.fontSize);
+        } else {
+            console.log('[DEBUG] No se recibió fontsize en configuración de himnario');
         }
         
         // Crear elemento de título del himno si no existe
@@ -309,15 +333,35 @@ socket.on('config', (data) => {
     
     // --- FIN MODO HIMNARIO ---
     // --- LÓGICA EXISTENTE PARA MODO BÍBLICO ---
-    if (config.fontsize) {
-        const fontSize = config.fontsize;
-        textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
-        textoPrincipal.classList.add('override-font-size');
-        const refFontSize = (fontSize * 0.7);
-        referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
-        referencia.classList.add('override-font-size');
-        textoPrincipal.style.fontSize = fontSize + 'vw';
-        referencia.style.fontSize = refFontSize + 'vw';
+    if (esModoBiblia) {
+        console.log('[DEBUG] Aplicando configuración de modo BÍBLICO');
+        console.log('[DEBUG] config.fontsize recibido:', config.fontsize);
+        console.log('[DEBUG] config.fontsizeBiblia recibido:', config.fontsizeBiblia);
+        console.log('[DEBUG] Elemento textoPrincipal:', textoPrincipal);
+        console.log('[DEBUG] FontSize actual antes de aplicar:', textoPrincipal.style.fontSize);
+        
+        if (config.fontsize) {
+            const fontSize = config.fontsize;
+            console.log('[DEBUG] Aplicando fontsize al texto principal (modo bíblico):', fontSize + 'vw');
+            
+            // Usar CSS custom properties para mayor compatibilidad
+            textoPrincipal.style.setProperty('--js-font-size', fontSize + 'vw');
+            textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
+            textoPrincipal.classList.add('override-font-size');
+            
+            const refFontSize = (fontSize * 0.7);
+            referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
+            referencia.classList.add('override-font-size');
+            
+            // Aplicar también directamente para compatibilidad
+            textoPrincipal.style.fontSize = fontSize + 'vw';
+            referencia.style.fontSize = refFontSize + 'vw';
+            
+            console.log('[DEBUG] FontSize después de aplicar:', textoPrincipal.style.fontSize);
+            console.log('[DEBUG] Referencia fontSize después de aplicar:', referencia.style.fontSize);
+        } else {
+            console.log('[DEBUG] No se recibió fontsize en configuración de biblia');
+        }
     }
 });
 

@@ -2476,6 +2476,9 @@ let actualizarVistaProyectorTimeout = null;
 
 function actualizarVistaProyector() {
   console.log('🔄 actualizarVistaProyector ejecutada');
+  console.log('🔍 Configuración actual:', config);
+  console.log('🔍 fontsizeHimnario:', config.fontsizeHimnario);
+  
   if (!proyectorPreviewContent) {
     console.error('❌ proyectorPreviewContent no encontrado');
     return;
