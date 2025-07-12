@@ -3573,7 +3573,7 @@ function inicializarAccordionsHimnario() {
   if (headerIndicador && contentIndicador && checkIndicador) {
     // Inicializar checkbox desde config
     checkIndicador.checked = !!config.showIndicadorVerso;
-    
+    actualizarEstadoIndicador();
     headerIndicador.addEventListener('click', () => {
       if (checkIndicador.checked) {
         contentIndicador.style.display = (contentIndicador.style.display === 'none' || !contentIndicador.style.display) ? 'block' : 'none';
@@ -3584,7 +3584,6 @@ function inicializarAccordionsHimnario() {
       config.showIndicadorVerso = checkIndicador.checked;
       await guardarYEnviarConfigHimnario('showIndicadorVerso', checkIndicador.checked);
     });
-    actualizarEstadoIndicador();
   }
   if (sliderIndicador && valueIndicador) {
     // Inicializar valor desde config
@@ -3616,9 +3615,8 @@ function inicializarAccordionsHimnario() {
     }
   }
   if (headerNombre && contentNombre && checkNombre) {
-    // Inicializar checkbox desde config
     checkNombre.checked = !!config.showNombreHimno;
-    
+    actualizarEstadoNombre();
     headerNombre.addEventListener('click', () => {
       if (checkNombre.checked) {
         contentNombre.style.display = (contentNombre.style.display === 'none' || !contentNombre.style.display) ? 'block' : 'none';
@@ -3629,7 +3627,6 @@ function inicializarAccordionsHimnario() {
       config.showNombreHimno = checkNombre.checked;
       await guardarYEnviarConfigHimnario('showNombreHimno', checkNombre.checked);
     });
-    actualizarEstadoNombre();
   }
   if (sliderNombre && valueNombre) {
     // Inicializar valor desde config
@@ -3661,9 +3658,8 @@ function inicializarAccordionsHimnario() {
     }
   }
   if (headerSeccion && contentSeccion && checkSeccion) {
-    // Inicializar checkbox desde config
     checkSeccion.checked = !!config.showSeccionActualTotal;
-    
+    actualizarEstadoSeccion();
     headerSeccion.addEventListener('click', () => {
       if (checkSeccion.checked) {
         contentSeccion.style.display = (contentSeccion.style.display === 'none' || !contentSeccion.style.display) ? 'block' : 'none';
@@ -3674,7 +3670,6 @@ function inicializarAccordionsHimnario() {
       config.showSeccionActualTotal = checkSeccion.checked;
       await guardarYEnviarConfigHimnario('showSeccionActualTotal', checkSeccion.checked);
     });
-    actualizarEstadoSeccion();
   }
   if (sliderSeccion && valueSeccion) {
     // Inicializar valor desde config
