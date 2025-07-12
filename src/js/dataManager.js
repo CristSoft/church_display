@@ -876,13 +876,21 @@ async function guardarConfiguracion(config) {
 async function obtenerConfiguracion() {
   // Solo cargar desde config.json
   const configJson = await cargarConfiguracion();
-  // Si no se pudo cargar, usar valores por defecto
-  const config = {
-    fontsizeBiblia: configJson.fontsizeBiblia || 5,
-    fontsizeHimnario: configJson.fontsizeHimnario || 5,
-    soloReferencia: configJson.soloReferencia !== undefined ? configJson.soloReferencia : false,
-    autoFullscreen: configJson.autoFullscreen !== undefined ? configJson.autoFullscreen : true
-  };
+  // Copiar todos los campos presentes en configJson
+  const config = { ...configJson };
+  // Asegurar valores por defecto solo si faltan
+  if (typeof config.fontsizeBiblia === 'undefined') config.fontsizeBiblia = 5;
+  if (typeof config.fontsizeHimnario === 'undefined') config.fontsizeHimnario = 5;
+  if (typeof config.soloReferencia === 'undefined') config.soloReferencia = false;
+  if (typeof config.autoFullscreen === 'undefined') config.autoFullscreen = true;
+  // --- Asegura que los campos de himnario existan ---
+  if (typeof config.showIndicadorVerso === 'undefined') config.showIndicadorVerso = true;
+  if (typeof config.indicadorVersoPct === 'undefined') config.indicadorVersoPct = 4;
+  if (typeof config.showNombreHimno === 'undefined') config.showNombreHimno = true;
+  if (typeof config.nombreHimnoPct === 'undefined') config.nombreHimnoPct = 4;
+  if (typeof config.showSeccionActualTotal === 'undefined') config.showSeccionActualTotal = true;
+  if (typeof config.seccionActualTotalPct === 'undefined') config.seccionActualTotalPct = 4;
+  // --- FIN ---
   console.log('📋 Configuración obtenida del servidor:', config);
   return config;
 }

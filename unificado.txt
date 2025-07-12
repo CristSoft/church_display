@@ -9,6 +9,11 @@
   src: url('/src/assets/fonts/Handlee-Regular.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'DroidSerif-BoldItalic';
+  src: url('/src/assets/fonts/DroidSerif.ttf') format('truetype');
+}
+
 body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; color: white; }
 #video-bg {
   position: fixed;
@@ -111,7 +116,7 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 }
 
 #texto-principal.versiculo-biblia {
-  font-family: 'Qwigley', cursive;
+  font-family: 'DroidSerif-BoldItalic', serif;
   font-weight: bold;
 }
 
@@ -143,12 +148,14 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 /* Modo Versículo: Contenedor del texto principal */
 #contenido.modo-versiculo #texto-principal {
   position: relative;
-  top: 90px; /* Comienza debajo de la referencia */
-  max-height: calc(100vh - 90px); /* Altura máxima disponible */
+  /* top: 90px;  Eliminado para subir el texto */
+  padding-top: 0.5em; /* Ajusta este valor si es necesario */
+  max-height: calc(100vh - 90px);
   display: flex;
   align-items: center;
   justify-content: center;  
-  padding: 0 2em;
+  padding-left: 2em;
+  padding-right: 2em;
   margin: 0;
   width: 100%;
   box-sizing: border-box;
@@ -175,15 +182,6 @@ body, html { margin: 0; padding: 0; overflow: hidden; font-family: sans-serif; c
 /* Modo Himno: Letra del himno en negrita */
 #contenido.modo-himno #texto-principal {
   font-weight: bold;
-}
-
-/* --- DEPURACIÓN: Forzar visibilidad del indicador de estrofa --- */
-#indicador-estrofa {
-  display: block !important;
-  opacity: 1 !important;
-  color: #fff !important;
-  z-index: 9999 !important;
-  position: relative !important;
 }
 
 
@@ -689,12 +687,17 @@ body:not(.con-boton-proyector) #controlHimnario {
   text-align: center;
   color: #fff;
   text-shadow: 0 2px 8px #000, 0 0 2px var(--color-destacado);
-  font-family: 'RobotoSlab-Bold', serif !important;
+  font-family: 'DroidSerif', serif;
   padding: 2em 1em;
-  font-size: 3.5vw !important;
+  font-size: 2.5vw; /* Tamaño base */
   line-height: 1.2;
   user-select: none;
   pointer-events: none;
+}
+
+/* --- NUEVO: Clase para texto dinámico usando CSS custom properties --- */
+.mini-proyector-content .texto-dinamico {
+  font-size: inherit; /* Heredar del padre */
 }
 
 .mini-proyector-content .referencia {
@@ -731,8 +734,8 @@ body:not(.con-boton-proyector) #controlHimnario {
 
 .mini-proyector.modo-biblia .mini-proyector-content {
   position: relative;
-  top: 30px;
-  max-height: calc(100% - 30px);
+  top: 5px; /* Reducido de 30px a 10px para subir el texto */
+  max-height: calc(100% - 10px); /* Ajustado para mantener proporción */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -740,6 +743,7 @@ body:not(.con-boton-proyector) #controlHimnario {
   margin: 0;
   width: 100%;
   box-sizing: border-box;
+  padding-top: 0.1em; /* Ajuste para subir el texto, igual que en el proyector principal */
 }
 
 /* Modo Himno en mini proyector - Los indicadores ahora se manejan con elementos separados en el HTML */
@@ -809,7 +813,7 @@ body {
 /* --- Estilos migrados desde index.html --- */
 #topBar {
   position: fixed;
-  top: 0;
+  top: 0; /* Por defecto en la parte superior */
   left: 0;
   width: 100vw;
   height: 56px;
@@ -821,12 +825,176 @@ body {
   z-index: 4000;
   padding: 0 1.2em;
   box-shadow: 0 2px 12px #000a;
+  transition: top 0.3s ease; /* Transición suave */
+}
+
+/* Cuando el label de IP está visible, mover el topBar hacia abajo */
+body.con-ip-label #topBar {
+  top: 32px; /* Altura del label de IP */
 }
 
 #topBarTitulo {
   font-size: 1.5em;
   font-weight: bold;
 }
+
+/* Label para mostrar IP en PC */
+.ip-label {
+  position: fixed;
+  top: 0; /* Por encima del topBar */
+  left: 0;
+  width: 100vw;
+  /* background: #17a2b8; */
+  background: var(--color-gris-base);
+  color: #17a2b8;;
+  padding: 0.5em 1em;
+  padding-top: 0;
+  padding-bottom: 1em;
+  text-align: center;
+  vertical-align: top;
+  font-size: 0.9em;
+  z-index: 3000; /* Por encima del topBar */
+  box-shadow: 0 2px 8px #0004;
+  display: none; /* Oculto por defecto */
+}
+
+.ip-label i {
+  margin-right: 0.5em;
+  color: #fff;
+}
+
+.ip-label.visible {
+  display: block;
+}
+
+/* Botón QR en el label de IP */
+.btn-qr {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.2em;
+  cursor: pointer;
+  margin-left: 0.5em;
+  padding: 0.2em;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.btn-qr:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Modal del código QR */
+.qr-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.8);
+  z-index: 3000;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-modal-content {
+  background: #fff;
+  padding: 2em;
+  border-radius: 12px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.btn-cerrar-qr {
+  position: absolute;
+  top: 0.5em;
+  right: 1em;
+  background: none;
+  border: none;
+  font-size: 2em;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+}
+
+.btn-cerrar-qr:hover {
+  color: #000;
+}
+
+.qr-titulo {
+  margin: 0 0 1.5em 0;
+  color: #333;
+  font-size: 1.5em;
+  font-weight: bold;
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
+}
+
+.qr-image {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 1em;
+  background: #f9f9f9;
+}
+
+.qr-loading {
+  color: #666;
+  font-size: 1.1em;
+}
+
+.qr-loading i {
+  margin-right: 0.5em;
+  color: #17a2b8;
+}
+
+.qr-error {
+  color: #dc3545;
+  font-size: 1.1em;
+}
+
+.qr-error i {
+  margin-right: 0.5em;
+}
+
+.qr-url {
+  font-family: monospace;
+  background: #f8f9fa;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  color: #495057;
+  font-size: 1em;
+  word-break: break-all;
+  margin: 0;
+}
+
+.qr-instructions {
+  color: #666;
+  font-size: 0.9em;
+  margin: 0;
+  text-align: center;
+  max-width: 300px;
+}
+
+/* Ajustar padding del body cuando el label de IP está visible */
+body.con-ip-label {
+  padding-top: 88px; /* 32px del label de IP + 56px del topBar */
+}
+
 .btn-cambiar-vista {
   background: none;
   border: none;
@@ -1197,6 +1365,11 @@ body.modo-biblia #playHimnoMiniProyector {
     font-size: 13px;
   }
 
+  /* Ocultar label de IP en pantallas muy pequeñas */
+  .ip-label {
+    display: none !important;
+  }
+
   /* Grillas más compactas */
   #grillaCapitulos,
   #grillaVersiculos {
@@ -1273,6 +1446,11 @@ body.modo-biblia #playHimnoMiniProyector {
   body {
     padding: 1em 0.5em;
     font-size: 14px;
+  }
+
+  /* Ocultar label de IP en móviles */
+  .ip-label {
+    display: none !important;
   }
 
   /* Botones más grandes para touch */
@@ -1531,6 +1709,238 @@ body.modo-biblia #playHimnoMiniProyector {
   display: inline;
 }
 
+/* --- Controles de configuración debajo del mini proyector --- */
+.mini-proyector-controls {
+  margin-top: 1em;
+  padding: 1em;
+  background: var(--color-gris-base);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0002;
+  display: none; /* Oculto por defecto */
+}
+
+.mini-proyector-controls.visible {
+  display: block;
+}
+
+.mini-proyector-controls .control-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1em;
+  gap: 1em;
+}
+
+.mini-proyector-controls .control-group:last-child {
+  margin-bottom: 0;
+}
+
+.mini-proyector-controls .control-label {
+  font-size: 0.9em;
+  color: #aaa;
+  font-weight: bold;
+  min-width: 120px;
+}
+
+.mini-proyector-controls .slider-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  flex: 1;
+}
+
+.mini-proyector-controls input[type="range"] {
+  flex: 1;
+  min-width: 100px;
+}
+
+.mini-proyector-controls .slider-value {
+  color: var(--color-destacado);
+  font-weight: bold;
+  font-size: 0.9em;
+  min-width: 40px;
+  text-align: right;
+}
+
+.mini-proyector-controls .switch-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+}
+
+.mini-proyector-controls .switch-container .slider {
+  cursor: pointer;
+}
+
+.mini-proyector-controls .switch-label {
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+/* Responsive para controles del mini proyector */
+@media (max-width: 768px) {
+  .mini-proyector-controls .control-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5em;
+  }
+  
+  .mini-proyector-controls .control-label {
+    min-width: auto;
+  }
+  
+  .mini-proyector-controls .slider-container {
+    width: 100%;
+  }
+}
+
+.btn-play-round-mini-inside {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.3) !important;
+  color: rgba(0,0,0,0.3) !important;
+  box-shadow: 0 2px 8px #0003;
+  z-index: 20;
+  border: none;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7em;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.btn-play-round-mini-inside i {
+  color: rgba(0,0,0,0.3) !important;
+  font-size: 0.8em !important;
+  line-height: 1;
+  vertical-align: middle;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.btn-play-round-mini-inside i.fa-play {
+  font-size: 0.8em !important;
+}
+.btn-play-round-mini-inside i.fa-stop {
+  font-size: 1.1em !important;
+}
+
+.btn-play-round-mini-inside.playing {
+  background: rgba(224, 52, 52, 0.5) !important;
+  color: #ffffff !important;
+}
+.btn-play-round-mini-inside.playing i {
+  color: rgba(255,255,255,0.5) !important;
+}
+
+@media (min-width: 601px) {
+  .btn-play-round-mini-inside i {
+    font-size: 1em !important;
+    padding-top: 3px;
+    height: auto;
+  }
+  .btn-play-round-mini-inside i.fa-play {
+    font-size: 0.9em !important;
+    padding-top: 3px;
+    padding-left: 6px;
+  }
+  .btn-play-round-mini-inside i.fa-stop {
+    font-size: 1.2em !important;
+    padding-top: 4px;
+    padding-left: 2px;
+  }
+}
+
+@media (max-width: 600px) {
+  .btn-play-round-mini-inside {
+    width: 54px;
+    height: 54px;
+    font-size: 1.3em;
+    bottom: 12px;
+  }
+}
+
+.btn-play-round-mini-inside,
+.btn-play-round-mini-inside:hover,
+.btn-play-round-mini-inside:focus,
+.btn-play-round-mini-inside:active {
+  transform: translateX(-50%) !important;
+  transition: background 0.2s, color 0.2s !important;
+  cursor: default !important;
+}
+
+/* --- Accordions para controles del Himnario --- */
+.accordion-card {
+  background: #23272b;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px #0002;
+  margin-bottom: 0.7em;
+  border: 1.5px solid #222;
+  transition: background 0.2s, color 0.2s;
+}
+.accordion-card .accordion-header {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 1.2em 1em 1.2em;
+  font-size: 1.05em;
+  font-weight: bold;
+  color: #f1f1f1;
+  user-select: none;
+  transition: background 0.2s, color 0.2s;
+}
+.accordion-card .accordion-header input[type="checkbox"] {
+  margin-right: 1em;
+  accent-color: var(--color-destacado);
+  transform: scale(1.2);
+}
+.accordion-card .accordion-content {
+  padding: 1em 1.2em 1em 1.2em;
+  background: #181c20;
+  border-top: 1px solid #222;
+  display: block;
+  animation: accordion-fadein 0.2s;
+}
+@keyframes accordion-fadein {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.accordion-card.disabled {
+  background: #181c20 !important;
+  color: #888 !important;
+  opacity: 1;
+}
+.accordion-card.disabled .accordion-header {
+  color: #888 !important;
+}
+.accordion-card.disabled .accordion-header input[type="checkbox"] {
+  pointer-events: auto !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+.accordion-card.disabled .accordion-header .control-label,
+.accordion-card.disabled .accordion-content {
+  pointer-events: none;
+  opacity: 0.6;
+}
+.accordion-card .control-label {
+  font-weight: normal;
+  color: inherit;
+  font-size: 1em;
+}
+.accordion-card input[type="range"] {
+  width: 100%;
+  margin-top: 0.5em;
+  margin-bottom: 0.2em;
+}
+
 
 
 // church_display/src\index.html
@@ -1557,6 +1967,15 @@ body.modo-biblia #playHimnoMiniProyector {
       <button id="btnCambiarVista" class="btn-cambiar-vista">
         <i class="fa-solid fa-list"></i>
         <span class="btn-cambiar-vista-text">Lista</span>
+      </button>
+    </div>
+    
+    <!-- Label para mostrar IP en PC -->
+    <div id="ipLabel" class="ip-label">
+      <i class="fa-solid fa-wifi"></i>
+      <span id="ipText">Conectándose...</span>
+      <button id="btnQR" class="btn-qr" title="Mostrar código QR">
+        <i class="fa-solid fa-qrcode"></i>
       </button>
     </div>
     
@@ -1590,20 +2009,26 @@ body.modo-biblia #playHimnoMiniProyector {
       <div class="config-modal-content">
         <button id="cerrarConfig" class="btn-cerrar-config">&times;</button>
         <h2 class="config-titulo">Configuración</h2>
+        
+        <!-- Configuración para Biblia -->
         <div id="sliderFontBibliaContainer" class="slider-font-biblia-container">
-          <label for="sliderFontsizeBiblia">Tamaño de fuente versículos (Biblia):</label><br>
-          <input type="range" id="sliderFontsizeBiblia" min="1.5" max="8" step="0.1" value="5">
+          <label for="sliderFontsizeBiblia">Tamaño de fuente Biblia:</label><br>
+          <input type="range" id="sliderFontsizeBiblia" min="2" max="10" step="0.1" value="5">
           <span id="fontsizeValueBiblia">5vw</span>
         </div>
+        
+        <div id="opcionSoloReferencia" class="opcion-solo-referencia">
+          <label for="switchSoloReferencia">Solo referencia (Biblia):</label>
+          <input type="checkbox" id="switchSoloReferencia">
+        </div>
+        
+        <!-- Configuración para Himnario -->
         <div id="sliderFontHimnarioContainer" class="slider-font-himnario-container">
           <label for="sliderFontsizeHimnario">Tamaño de fuente himnos (Himnario):</label><br>
           <input type="range" id="sliderFontsizeHimnario" min="2" max="10" step="0.1" value="5">
           <span id="fontsizeValueHimnario">5vw</span>
         </div>
-        <div id="opcionSoloReferencia" class="opcion-solo-referencia">
-          <label for="switchSoloReferencia">Solo mostrar referencia bíblica (modo Biblia):</label>
-          <input type="checkbox" id="switchSoloReferencia">
-        </div>
+        
         <div id="opcionAutoFullscreen" class="opcion-auto-fullscreen">
           <label for="switchAutoFullscreen">Auto pantalla completa en landscape (móvil):</label>
           <input type="checkbox" id="switchAutoFullscreen" checked>
@@ -1611,6 +2036,20 @@ body.modo-biblia #playHimnoMiniProyector {
 
       </div>
     </div>
+    
+    <!-- Modal del código QR -->
+    <div id="qrModal" class="qr-modal">
+      <div class="qr-modal-content">
+        <button id="cerrarQR" class="btn-cerrar-qr">&times;</button>
+        <h2 class="qr-titulo">Código QR para Acceso Remoto</h2>
+        <div class="qr-container">
+          <div id="qrImage" class="qr-image"></div>
+          <p id="qrUrl" class="qr-url"></p>
+          <p class="qr-instructions">Escanea este código QR con tu celular para acceder al panel de control</p>
+        </div>
+      </div>
+    </div>
+    
     <hr>
     <!-- Switch para Biblia/Himnario -->
     <!-- <div class="switch-container">
@@ -1679,6 +2118,7 @@ body.modo-biblia #playHimnoMiniProyector {
           <i class="fa-solid fa-chevron-right mini-proyector-arrow" style="margin-right:12px;"></i>
         </div>
         <video id="miniProyectorVideo" class="mini-proyector-video" autoplay loop muted playsinline style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:0;"></video>
+        <div id="miniProyectorReferencia" class="mini-proyector-referencia" style="display:none;position:absolute;top:0;left:50%;transform:translateX(-50%);font-size:2vw;font-weight:bold;background:rgba(0,0,0,0.8);color:#fff;padding:0.5em 2.5em 0.5em 2.5em;border-radius:0 0 1.5em 1.5em;box-shadow:0 2px 16px 0 rgba(0,0,0,0.18);min-width:120px;max-width:90%;white-space:nowrap;z-index:10;letter-spacing:0.03em;font-family:'RobotoSlab-Bold',serif;text-align:center;"></div>
         
         <!-- Título del himno en esquina superior izquierda -->
         <div id="miniProyectorTituloHimno" class="mini-proyector-titulo-himno" style="position:absolute;top:10px;left:10px;font-size:1.2vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;z-index:10;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none;"></div>
@@ -1690,10 +2130,72 @@ body.modo-biblia #playHimnoMiniProyector {
         <button id="btnFullscreenMini" class="btn-fullscreen-mini" title="Pantalla completa">
           <i class="fa-solid fa-expand"></i>
         </button>
+        <button id="playHimnoMiniProyector" class="btn-play-round-mini btn-play-round-mini-inside" style="display:none;">
+          <i class="fa-solid fa-play"></i>
+        </button>
       </div>
-      <button id="playHimnoMiniProyector" class="btn-play-round-mini" style="display:none;margin: 1.2em auto 0 auto;">
-        <i class="fa-solid fa-play"></i>
-      </button>
+      <!-- Controles de configuración debajo del mini proyector -->
+      <div id="miniProyectorControls" class="mini-proyector-controls">
+        <!-- Controles de Biblia -->
+        <div id="miniProyectorControlesBiblia">
+          <div class="control-group" id="miniProyectorControlBiblia">
+            <label class="control-label">Tamaño de texto:</label>
+            <div class="slider-container">
+              <input type="range" id="miniSliderFontsizeBiblia" min="1" max="100" step="1" value="54">
+              <span id="miniFontsizeValueBiblia" class="slider-value">54%</span>
+            </div>
+          </div>
+          <div class="control-group" id="miniProyectorControlSoloReferencia">
+            <label class="control-label">Solo referencia:</label>
+            <div class="switch-container">
+              <input type="checkbox" id="miniSwitchSoloReferencia" class="switch-input">
+              <span class="slider"></span>
+            </div>
+          </div>
+        </div>
+        <!-- Controles de Himnario -->
+        <div id="miniProyectorControlesHimnario">
+          <!-- Tamaño texto principal -->
+          <div class="accordion-card" id="cardFontsizeHimnario">
+            <div class="accordion-header">
+              <span class="control-label">Tamaño de texto principal: <span id="miniFontsizeValueHimnario">52%</span></span>
+            </div>
+            <div class="accordion-content" id="contentFontsizeHimnario" style="display:none;">
+              <input type="range" id="miniSliderFontsizeHimnario" min="1" max="100" step="1" value="52">
+            </div>
+          </div>
+          <!-- Indicador de verso -->
+          <div class="accordion-card" id="cardIndicadorVerso">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckIndicadorVerso">
+              <span class="control-label">Indicador de verso: <span id="miniIndicadorVersoValue">56%</span></span>
+            </div>
+            <div class="accordion-content" id="contentIndicadorVerso" style="display:none;">
+              <input type="range" id="miniSliderIndicadorVerso" min="1" max="100" step="1" value="56">
+            </div>
+          </div>
+          <!-- Título del himno -->
+          <div class="accordion-card" id="cardNombreHimno">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckNombreHimno">
+              <span class="control-label">Título del himno: <span id="miniNombreHimnoValue">52%</span></span>
+            </div>
+            <div class="accordion-content" id="contentNombreHimno" style="display:none;">
+              <input type="range" id="miniSliderNombreHimno" min="1" max="100" step="1" value="52">
+            </div>
+          </div>
+          <!-- Secciones -->
+          <div class="accordion-card" id="cardSeccionActualTotal">
+            <div class="accordion-header">
+              <input type="checkbox" id="miniCheckSeccionActualTotal">
+              <span class="control-label">Secciones: <span id="miniSeccionActualTotalValue">57%</span></span>
+            </div>
+            <div class="accordion-content" id="contentSeccionActualTotal" style="display:none;">
+              <input type="range" id="miniSliderSeccionActualTotal" min="1" max="100" step="1" value="57">
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Reproductor de audio para himnos -->
@@ -1904,8 +2406,171 @@ body.modo-biblia #playHimnoMiniProyector {
         actualizarModo('biblia');
       });
     </script>
+
+    <!-- Script para mostrar IP en PC -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Función para detectar si es dispositivo móvil
+        function esDispositivoMovil() {
+          return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        }
+        
+        // Solo mostrar en PC
+        if (!esDispositivoMovil()) {
+          const ipLabel = document.getElementById('ipLabel');
+          const ipText = document.getElementById('ipText');
+          const body = document.body;
+          
+          // Mostrar el label
+          ipLabel.classList.add('visible');
+          body.classList.add('con-ip-label');
+          
+          // Función para obtener la IP
+          async function obtenerIP() {
+            try {
+              // Intentar obtener la IP del servidor
+              const response = await fetch('/get_ip');
+              if (response.ok) {
+                const data = await response.json();
+                if (data.ip && data.ip !== 'IP_LOCAL') {
+                  ipText.textContent = `Para usar el control remoto desde el móvil, escribí esta dirección en el navegador de tu celu: ${data.ip}:8080`;
+                  return;
+                }
+              }
+            } catch (error) {
+              console.log('No se pudo obtener la IP del servidor:', error);
+            }
+            
+            // Si no se pudo obtener la IP, mostrar mensaje genérico
+            ipText.textContent = 'Conectese a esta dirección Wi-Fi desde su móvil: [IP_WIFI]:8080';
+            
+            // Intentar obtener la IP del navegador como fallback
+            try {
+              const response = await fetch('https://api.ipify.org?format=json');
+              const data = await response.json();
+              if (data.ip) {
+                ipText.textContent = `Conectese a esta dirección Wi-Fi desde su móvil: ${data.ip}:8080`;
+              }
+            } catch (error) {
+              console.log('No se pudo obtener la IP externa:', error);
+            }
+          }
+          
+          // Obtener la IP
+          obtenerIP();
+          
+          // Reintentar cada 30 segundos por si la red cambia
+          setInterval(obtenerIP, 30000);
+          
+          // Configurar botón QR
+          const btnQR = document.getElementById('btnQR');
+          const qrModal = document.getElementById('qrModal');
+          const cerrarQR = document.getElementById('cerrarQR');
+          const qrImage = document.getElementById('qrImage');
+          const qrUrl = document.getElementById('qrUrl');
+          
+          if (btnQR) {
+            btnQR.addEventListener('click', async () => {
+              try {
+                // Mostrar loading
+                qrImage.innerHTML = '<div class="qr-loading"><i class="fa-solid fa-spinner fa-spin"></i> Generando QR...</div>';
+                qrModal.style.display = 'flex';
+                
+                // Obtener el código QR del servidor
+                const response = await fetch('/qr_ip');
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.qr && data.url) {
+                    // Mostrar la imagen QR
+                    qrImage.innerHTML = `<img src="data:image/png;base64,${data.qr}" alt="Código QR" style="max-width: 100%; height: auto;">`;
+                    qrUrl.textContent = data.url;
+                  } else {
+                    qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error al generar QR</div>';
+                    qrUrl.textContent = 'No se pudo generar el código QR';
+                  }
+                } else {
+                  qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error del servidor</div>';
+                  qrUrl.textContent = 'Error al conectar con el servidor';
+                }
+              } catch (error) {
+                console.error('Error al generar QR:', error);
+                qrImage.innerHTML = '<div class="qr-error"><i class="fa-solid fa-exclamation-triangle"></i> Error de conexión</div>';
+                qrUrl.textContent = 'Error de conexión';
+              }
+            });
+          }
+          
+          // Cerrar modal QR
+          if (cerrarQR) {
+            cerrarQR.addEventListener('click', () => {
+              qrModal.style.display = 'none';
+            });
+          }
+          
+          // Cerrar modal QR al hacer clic fuera
+          if (qrModal) {
+            qrModal.addEventListener('click', (e) => {
+              if (e.target === qrModal) {
+                qrModal.style.display = 'none';
+              }
+            });
+          }
+        }
+      });
+    </script>
+    <!-- Script de prueba para verificar sincronización -->
+    <script>
+      // Función para probar la sincronización
+      function probarSincronizacion() {
+        console.log('🧪 Probando sincronización...');
+        console.log('🔌 Socket disponible:', typeof window.socket !== 'undefined');
+        console.log('🔌 Socket conectado:', window.socket ? window.socket.connected : 'N/A');
+        console.log('📋 Configuración actual:', window.config);
+        
+        if (window.socket && window.socket.connected) {
+          // Probar emisión de evento
+          window.socket.emit('configuracion_actualizada', {
+            tipo: 'fontsizeBiblia',
+            valor: 6.5,
+            clientId: 'TEST_' + Date.now()
+          });
+          console.log('✅ Evento de prueba emitido');
+        } else {
+          console.error('❌ Socket no disponible para prueba');
+        }
+      }
+      
+      // Función para probar la configuración local
+      function probarConfiguracionLocal() {
+        console.log('🧪 Probando configuración local...');
+        console.log('📋 Configuración actual:', window.config);
+        
+        if (window.config) {
+          // Cambiar el tamaño de fuente
+          window.config.fontsizeBiblia = 4.5;
+          console.log('🔧 Configuración modificada:', window.config);
+          
+          // Llamar a actualizarVistaProyector
+          if (typeof window.actualizarVistaProyector === 'function') {
+            console.log('🔄 Llamando a actualizarVistaProyector...');
+            window.actualizarVistaProyector();
+          } else {
+            console.error('❌ actualizarVistaProyector no disponible');
+          }
+        } else {
+          console.error('❌ Configuración no disponible');
+        }
+      }
+      
+      // Ejecutar prueba después de 5 segundos
+      setTimeout(probarSincronizacion, 5000);
+      
+      // Ejecutar prueba de configuración local después de 7 segundos
+      setTimeout(probarConfiguracionLocal, 7000);
+    </script>
 </body>
 </html>
+
 
 
 
@@ -2690,7 +3355,7 @@ async function parseHymn(hymnFileName) {
     };
     const tituloLimpio = tituloOriginal.replace(/^Himno\s*#?\d*\s*/, '').trim();
     himno.estrofas.push({
-      verso: 'titulo',
+      verse: 'titulo',
       texto: `${numero} | ${tituloLimpio}`,
       sectionKey: 'titulo'
     });
@@ -2701,7 +3366,7 @@ async function parseHymn(hymnFileName) {
         if (section && section.text && Array.isArray(section.text)) {
           const textoCompleto = section.text.join('\n');
           himno.estrofas.push({
-            verso: section.verse || sectionKey,
+            verse: section.verse || sectionKey,
             texto: textoCompleto,
             sectionKey: sectionKey
           });
@@ -2712,13 +3377,115 @@ async function parseHymn(hymnFileName) {
       numero: himno.numero,
       titulo: himno.titulo,
       estrofas: himno.estrofas.length,
-      estructura: himno.estrofas.map((e, i) => `${i}: ${e.verso}`),
+      estructura: himno.estrofas.map((e, i) => `${i}: ${e.verse}`),
       verses: himno.verses
     });
     return himno;
   } catch (err) {
     console.error('Error al cargar el himno:', err);
     return null;
+  }
+}
+
+/**
+ * Carga la configuración desde config.json
+ * @returns {Promise<Object>} Objeto con la configuración
+ */
+async function cargarConfiguracion() {
+  try {
+    const response = await fetch('/config.json');
+    if (response.ok) {
+      const config = await response.json();
+      console.log('📋 Configuración cargada desde config.json:', config);
+      return config;
+    } else {
+      console.log('⚠️ No se pudo cargar config.json, usando configuración por defecto');
+      return {
+        fontsizeBiblia: 5,
+        fontsizeHimnario: 5,
+        soloReferencia: false,
+        autoFullscreen: true
+      };
+    }
+  } catch (error) {
+    console.error('❌ Error al cargar configuración:', error);
+    return {
+      fontsizeBiblia: 5,
+      fontsizeHimnario: 5,
+      soloReferencia: false,
+      autoFullscreen: true
+    };
+  }
+}
+
+/**
+ * Guarda la configuración en config.json
+ * @param {Object} config - Objeto con la configuración a guardar
+ * @returns {Promise<boolean>} true si se guardó correctamente
+ */
+async function guardarConfiguracion(config) {
+  try {
+    const response = await fetch('/config.json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(config, null, 2)
+    });
+    
+    if (response.ok) {
+      console.log('✅ Configuración guardada en config.json:', config);
+      return true;
+    } else {
+      console.error('❌ Error al guardar configuración:', response.status, response.statusText);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error al guardar configuración:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtiene la configuración SOLO desde config.json
+ * @returns {Promise<Object>} Objeto con la configuración
+ */
+async function obtenerConfiguracion() {
+  // Solo cargar desde config.json
+  const configJson = await cargarConfiguracion();
+  // Copiar todos los campos presentes en configJson
+  const config = { ...configJson };
+  // Asegurar valores por defecto solo si faltan
+  if (typeof config.fontsizeBiblia === 'undefined') config.fontsizeBiblia = 5;
+  if (typeof config.fontsizeHimnario === 'undefined') config.fontsizeHimnario = 5;
+  if (typeof config.soloReferencia === 'undefined') config.soloReferencia = false;
+  if (typeof config.autoFullscreen === 'undefined') config.autoFullscreen = true;
+  // --- Asegura que los campos de himnario existan ---
+  if (typeof config.showIndicadorVerso === 'undefined') config.showIndicadorVerso = true;
+  if (typeof config.indicadorVersoPct === 'undefined') config.indicadorVersoPct = 4;
+  if (typeof config.showNombreHimno === 'undefined') config.showNombreHimno = true;
+  if (typeof config.nombreHimnoPct === 'undefined') config.nombreHimnoPct = 4;
+  if (typeof config.showSeccionActualTotal === 'undefined') config.showSeccionActualTotal = true;
+  if (typeof config.seccionActualTotalPct === 'undefined') config.seccionActualTotalPct = 4;
+  // --- FIN ---
+  console.log('📋 Configuración obtenida del servidor:', config);
+  return config;
+}
+
+/**
+ * Guarda la configuración SOLO en config.json
+ * @param {Object} config - Objeto con la configuración a guardar
+ * @returns {Promise<boolean>} true si se guardó correctamente
+ */
+async function guardarConfiguracionCompleta(config) {
+  try {
+    // Guardar en config.json
+    const guardadoJson = await guardarConfiguracion(config);
+    console.log('💾 Configuración guardada en el servidor:', config);
+    return guardadoJson;
+  } catch (error) {
+    console.error('❌ Error al guardar configuración completa:', error);
+    return false;
   }
 }
 
@@ -2759,6 +3526,14 @@ let himnoSugeridoIndex = -1;
 // Variables para pantalla completa
 let modoPantallaCompleta = false;
 let autoFullscreenLandscape = true; // Habilitado por defecto
+
+// --- NUEVO: Variable global para configuración ---
+let config = {
+  fontsizeBiblia: 5,
+  fontsizeHimnario: 5,
+  soloReferencia: false,
+  autoFullscreen: true
+};
 
 // Referencias a elementos del DOM
 let elementos = {};
@@ -2840,6 +3615,161 @@ function inicializarSocketIO() {
       himnoSonando = false;
       actualizarBotonPlayHimno();
     });
+    
+    // Evento para recibir cambios de configuración de otros dispositivos
+    socket.on('configuracion_actualizada', async (data) => {
+      console.log('📥 Configuración actualizada desde otro dispositivo:', data);
+      // Ignorar si el cambio es propio
+      if (data.clientId === CLIENT_ID) {
+        console.log('🔄 Ignorando cambio propio');
+        return;
+      }
+      // --- NUEVO: Solo actualizar si el valor realmente cambió ---
+      let cambio = false;
+      switch (data.tipo) {
+        case 'fontsizeBiblia':
+          if (config.fontsizeBiblia !== data.valor) {
+            config.fontsizeBiblia = data.valor;
+            cambio = true;
+          }
+          // ... controles UI ...
+          const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+          const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+          if (sliderFontsizeBiblia && fontsizeValueBiblia) {
+            sliderFontsizeBiblia.value = data.valor;
+            fontsizeValueBiblia.textContent = data.valor + 'vw';
+          }
+          const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
+          const miniFontsizeValueBiblia = document.getElementById('miniFontsizeValueBiblia');
+          if (miniSliderFontsizeBiblia && miniFontsizeValueBiblia) {
+            const porcentaje = vwAPorcentaje(data.valor);
+            miniSliderFontsizeBiblia.value = porcentaje;
+            miniFontsizeValueBiblia.textContent = porcentaje + '%';
+          }
+          break;
+        case 'soloReferencia':
+          if (config.soloReferencia !== data.valor) {
+            config.soloReferencia = data.valor;
+            cambio = true;
+          }
+          const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+          if (switchSoloReferencia) {
+            switchSoloReferencia.checked = data.valor;
+          }
+          const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
+          if (miniSwitchSoloReferencia) {
+            miniSwitchSoloReferencia.checked = data.valor;
+          }
+          break;
+        case 'fontsizeHimnario':
+          if (config.fontsizeHimnario !== data.valor) {
+            config.fontsizeHimnario = data.valor;
+            cambio = true;
+          }
+          const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
+          const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
+          if (sliderFontsizeHimnario && fontsizeValueHimnario) {
+            sliderFontsizeHimnario.value = data.valor;
+            fontsizeValueHimnario.textContent = data.valor + 'vw';
+          }
+          const miniSliderFontsizeHimnario = document.getElementById('miniSliderFontsizeHimnario');
+          const miniFontsizeValueHimnario = document.getElementById('miniFontsizeValueHimnario');
+          if (miniSliderFontsizeHimnario && miniFontsizeValueHimnario) {
+            const porcentaje = vwAPorcentaje(data.valor);
+            miniSliderFontsizeHimnario.value = porcentaje;
+            miniFontsizeValueHimnario.textContent = porcentaje + '%';
+          }
+          break;
+        case 'showIndicadorVerso':
+          if (config.showIndicadorVerso !== data.valor) {
+            config.showIndicadorVerso = data.valor;
+            cambio = true;
+          }
+          const checkIndicadorSync = document.getElementById('miniCheckIndicadorVerso');
+          if (checkIndicadorSync) checkIndicadorSync.checked = !!data.valor;
+          break;
+          
+        case 'indicadorVersoPct':
+          if (config.indicadorVersoPct !== data.valor) {
+            config.indicadorVersoPct = data.valor;
+            cambio = true;
+          }
+          const sliderIndicadorSync = document.getElementById('miniSliderIndicadorVerso');
+          const valueIndicadorSync = document.getElementById('miniIndicadorVersoValue');
+          if (sliderIndicadorSync && valueIndicadorSync) {
+            sliderIndicadorSync.value = data.valor;
+            valueIndicadorSync.textContent = data.valor + '%';
+          }
+          break;
+          
+        case 'showNombreHimno':
+          if (config.showNombreHimno !== data.valor) {
+            config.showNombreHimno = data.valor;
+            cambio = true;
+          }
+          const checkNombreSync = document.getElementById('miniCheckNombreHimno');
+          if (checkNombreSync) checkNombreSync.checked = !!data.valor;
+          break;
+          
+        case 'nombreHimnoPct':
+          if (config.nombreHimnoPct !== data.valor) {
+            config.nombreHimnoPct = data.valor;
+            cambio = true;
+          }
+          const sliderNombreSync = document.getElementById('miniSliderNombreHimno');
+          const valueNombreSync = document.getElementById('miniNombreHimnoValue');
+          if (sliderNombreSync && valueNombreSync) {
+            sliderNombreSync.value = data.valor;
+            valueNombreSync.textContent = data.valor + '%';
+          }
+          break;
+          
+        case 'showSeccionActualTotal':
+          if (config.showSeccionActualTotal !== data.valor) {
+            config.showSeccionActualTotal = data.valor;
+            cambio = true;
+          }
+          const checkSeccionSync = document.getElementById('miniCheckSeccionActualTotal');
+          if (checkSeccionSync) checkSeccionSync.checked = !!data.valor;
+          break;
+          
+        case 'seccionActualTotalPct':
+          if (config.seccionActualTotalPct !== data.valor) {
+            config.seccionActualTotalPct = data.valor;
+            cambio = true;
+          }
+          const sliderSeccionSync = document.getElementById('miniSliderSeccionActualTotal');
+          const valueSeccionSync = document.getElementById('miniSeccionActualTotalValue');
+          if (sliderSeccionSync && valueSeccionSync) {
+            sliderSeccionSync.value = data.valor;
+            valueSeccionSync.textContent = data.valor + '%';
+          }
+          break;
+      }
+      if (!cambio) {
+        console.log('🔄 El valor recibido es igual al actual. No se guarda ni se actualiza.');
+        return;
+      }
+      // Guardar configuración SOLO si hubo cambio
+      await guardarConfiguracionCompleta(config);
+      // Actualizar vista del proyector
+      actualizarVistaProyector();
+      // Enviar configuración al proyector
+      const esBiblia = esModoBiblia();
+      const configEnviar = {
+        fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
+        soloReferencia: esBiblia ? config.soloReferencia : null,
+        showIndicadorVerso: !esBiblia ? config.showIndicadorVerso : undefined,
+        indicadorVersoPct: !esBiblia ? config.indicadorVersoPct : undefined,
+        showNombreHimno: !esBiblia ? config.showNombreHimno : undefined,
+        nombreHimnoPct: !esBiblia ? config.nombreHimnoPct : undefined,
+        showSeccionActualTotal: !esBiblia ? config.showSeccionActualTotal : undefined,
+        seccionActualTotalPct: !esBiblia ? config.seccionActualTotalPct : undefined
+      };
+      enviarMensajeProyector('config', configEnviar);
+      console.log('✅ Configuración sincronizada desde otro dispositivo (solo si hubo cambio)');
+    });
+    
     // Evento para cuando el proyector recibe un click
     socket.on('proyectorClick', () => {
       console.log('Evento proyectorClick recibido en el panel de control');
@@ -2946,7 +3876,7 @@ function enviarMensajeProyector(tipo, data) {
 /**
  * Envía un versículo al proyector
  */
-function enviarVersiculoAlProyector(versiculoIndex) {
+async function enviarVersiculoAlProyector(versiculoIndex) {
   if (!bibliaActual || !libroActivo || capituloActivo === null || versiculoIndex < 0) {
     console.warn('⚠️ No hay versículo válido para enviar');
     return;
@@ -2955,8 +3885,8 @@ function enviarVersiculoAlProyector(versiculoIndex) {
   const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoIndex];
   const referencia = `${libroActivo} ${capituloActivo + 1}:${versiculo.verse}`;
   
-  // Obtener configuración
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
+  // Obtener configuración actualizada
+  const config = await obtenerConfiguracion();
   if (config.soloReferencia) {
     enviarMensajeProyector('update_text', {
       texto: referencia,
@@ -3004,12 +3934,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
     const textoEstrofa = estrofa.texto;
     const ref = `${numeroSinCeros} - ${tituloLimpio}`;
     // Determinar el valor correcto de 'verse'
-    let verseValue = undefined;
-    if (typeof estrofa.verse !== 'undefined') {
-      verseValue = estrofa.verse;
-    } else if (typeof estrofa.verso !== 'undefined') {
-      verseValue = estrofa.verso;
-    }
+    const verseValue = estrofa.verse;
     enviarMensajeProyector('update_text', {
       texto: textoEstrofa,
       ref: ref,
@@ -3030,7 +3955,7 @@ function enviarEstrofaAlProyector(estrofaIndex) {
     index: estrofaIndex,
     esTitulo: esTitulo,
     texto: esTitulo ? `${numeroSinCeros} - ${tituloLimpio}` : estrofa.texto,
-    verso: esTitulo ? 'Título' : estrofa.verso
+    verse: esTitulo ? 'Título' : estrofa.verse
   });
 }
 
@@ -3137,31 +4062,36 @@ async function inicializar() {
   const cerrarConfig = document.getElementById('cerrarConfig');
   const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
   const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
   const sliderFontsizeHimnario = document.getElementById('sliderFontsizeHimnario');
   const fontsizeValueHimnario = document.getElementById('fontsizeValueHimnario');
-  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
-  const opcionSoloReferencia = document.getElementById('opcionSoloReferencia');
   const switchAutoFullscreen = document.getElementById('switchAutoFullscreen');
   const opcionAutoFullscreen = document.getElementById('opcionAutoFullscreen');
   const sliderFontBibliaContainer = document.getElementById('sliderFontBibliaContainer');
   const sliderFontHimnarioContainer = document.getElementById('sliderFontHimnarioContainer');
 
   // Cargar configuración guardada
-  let config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false, autoFullscreen: true };
-  sliderFontsizeBiblia.value = config.fontsizeBiblia || 5;
-  fontsizeValueBiblia.textContent = (config.fontsizeBiblia || 5) + 'vw';
-  sliderFontsizeHimnario.value = config.fontsizeHimnario || 5;
-  fontsizeValueHimnario.textContent = (config.fontsizeHimnario || 5) + 'vw';
-  switchSoloReferencia.checked = !!config.soloReferencia;
-  switchAutoFullscreen.checked = config.autoFullscreen !== false; // true por defecto
-  autoFullscreenLandscape = config.autoFullscreen !== false;
+  let configCargada = await obtenerConfiguracion();
+  // --- NUEVO: Fusionar con la variable global config para no perder campos ---
+  window.config = { ...window.config, ...configCargada };
+  console.log('📋 Configuración cargada para modo Biblia (global):', window.config);
+  
+  // Convertir el valor vw guardado a porcentaje para el slider
+  const porcentajeInicial = vwAPorcentaje(window.config.fontsizeBiblia || 5);
+  sliderFontsizeBiblia.value = window.config.fontsizeBiblia || 5;
+  fontsizeValueBiblia.textContent = (window.config.fontsizeBiblia || 5) + 'vw';
+  switchSoloReferencia.checked = !!window.config.soloReferencia;
+  sliderFontsizeHimnario.value = window.config.fontsizeHimnario || 5;
+  fontsizeValueHimnario.textContent = (window.config.fontsizeHimnario || 5) + 'vw';
+  switchAutoFullscreen.checked = window.config.autoFullscreen !== false; // true por defecto
+  autoFullscreenLandscape = window.config.autoFullscreen !== false;
 
   // Mostrar/ocultar sliders según modo
   function actualizarOpcionesModo() {
     const esBiblia = esModoBiblia();
-    opcionSoloReferencia.style.display = esBiblia ? '' : 'none';
     sliderFontBibliaContainer.style.display = esBiblia ? '' : 'none';
     sliderFontHimnarioContainer.style.display = esBiblia ? 'none' : '';
+    opcionSoloReferencia.style.display = esBiblia ? '' : 'none';
   }
   
   // Hacer la función global para poder llamarla desde otras funciones
@@ -3178,30 +4108,94 @@ async function inicializar() {
   });
 
   // Slider de fuente Biblia
-  sliderFontsizeBiblia.addEventListener('input', () => {
+  sliderFontsizeBiblia.addEventListener('input', async () => {
     fontsizeValueBiblia.textContent = sliderFontsizeBiblia.value + 'vw';
-    config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
-    guardarYEnviarConfig();
+    window.config.fontsizeBiblia = parseFloat(sliderFontsizeBiblia.value);
+    console.log('🔧 Configuración actualizada (slider biblia):', window.config.fontsizeBiblia);
+    await guardarYEnviarConfig();
+    // Sincronizar con mini proyector
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    console.log('🔄 Llamando a actualizarVistaProyector...');
+    actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'fontsizeBiblia',
+        valor: window.config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeBiblia',
+        valor: window.config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
+    }
+  });
+
+  // Switch solo referencia
+  switchSoloReferencia.addEventListener('change', async () => {
+    window.config.soloReferencia = switchSoloReferencia.checked;
+    console.log('🔧 Configuración actualizada (solo referencia):', window.config.soloReferencia);
+    await guardarYEnviarConfig();
+    // Sincronizar con mini proyector
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    console.log('🔄 Llamando a actualizarVistaProyector...');
+    actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'soloReferencia',
+        valor: window.config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'soloReferencia',
+        valor: window.config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
+    }
   });
 
   // Slider de fuente Himnario
-  sliderFontsizeHimnario.addEventListener('input', () => {
+  sliderFontsizeHimnario.addEventListener('input', async () => {
     fontsizeValueHimnario.textContent = sliderFontsizeHimnario.value + 'vw';
-    config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
-    guardarYEnviarConfig();
-  });
-  // Switch solo referencia
-  switchSoloReferencia.addEventListener('change', () => {
-    config.soloReferencia = switchSoloReferencia.checked;
-    guardarYEnviarConfig();
+    window.config.fontsizeHimnario = parseFloat(sliderFontsizeHimnario.value);
+    await guardarYEnviarConfig();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada:', {
+        tipo: 'fontsizeHimnario',
+        valor: window.config.fontsizeHimnario,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeHimnario',
+        valor: window.config.fontsizeHimnario,
+        clientId: CLIENT_ID
+      });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada');
+    }
   });
   
   // Switch auto fullscreen
   switchAutoFullscreen.addEventListener('change', () => {
-    config.autoFullscreen = switchAutoFullscreen.checked;
+    window.config.autoFullscreen = switchAutoFullscreen.checked;
     autoFullscreenLandscape = switchAutoFullscreen.checked;
-    localStorage.setItem('proyectorConfig', JSON.stringify(config));
-    
     if (!autoFullscreenLandscape) {
       document.body.classList.remove('auto-fullscreen-landscape');
     } else {
@@ -3210,28 +4204,67 @@ async function inicializar() {
   });
   
 
-  function guardarYEnviarConfig() {
-    localStorage.setItem('proyectorConfig', JSON.stringify(config));
+  async function guardarYEnviarConfig() {
+    await guardarConfiguracionCompleta(window.config);
     // Enviar config al proyector según modo
     const esBiblia = esModoBiblia();
-    const configEnviar = {
-      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
-      soloReferencia: esBiblia ? config.soloReferencia : null
-    };
+    let configEnviar;
+    if (esBiblia) {
+      configEnviar = {
+        fontsize: window.config.fontsizeBiblia,
+        soloReferencia: window.config.soloReferencia
+      };
+    } else {
+      configEnviar = {
+        fontsize: window.config.fontsizeHimnario,
+        showIndicadorVerso: window.config.showIndicadorVerso,
+        indicadorVersoPct: window.config.indicadorVersoPct,
+        showNombreHimno: window.config.showNombreHimno,
+        nombreHimnoPct: window.config.nombreHimnoPct,
+        showSeccionActualTotal: window.config.showSeccionActualTotal,
+        seccionActualTotalPct: window.config.seccionActualTotalPct
+      };
+    }
     console.log('🔧 guardarYEnviarConfig llamada:', {
-      config,
+      config: window.config,
       esBiblia,
       configEnviar
     });
     enviarMensajeProyector('config', configEnviar);
+    
+    // Actualizar mini proyector local
+    if (typeof window.actualizarMiniProyector === 'function') {
+      await window.actualizarMiniProyector();
+    }
+    
+    // Actualizar vista proyector local
+    actualizarVistaProyector();
+    
+    // Si es modo himnario y hay himno y estrofa activa, reenviar la estrofa activa
+    if (!esBiblia && himnoActivo && typeof estrofaActivaIndex === 'number' && estrofaActivaIndex >= 0) {
+      enviarEstrofaAlProyector(estrofaActivaIndex);
+    }
   }
   // Enviar config inicial al abrir proyector
   if (proyectorWindow && !proyectorWindow.closed) {
     const esBiblia = esModoBiblia();
-    const configEnviar = {
-      fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
-      soloReferencia: esBiblia ? config.soloReferencia : null
-    };
+    let configEnviar;
+    if (esBiblia) {
+      configEnviar = {
+        fontsize: window.config.fontsizeBiblia,
+        soloReferencia: window.config.soloReferencia
+      };
+    } else {
+      configEnviar = {
+        fontsize: window.config.fontsizeHimnario,
+        showIndicadorVerso: window.config.showIndicadorVerso,
+        indicadorVersoPct: window.config.indicadorVersoPct,
+        showNombreHimno: window.config.showNombreHimno,
+        nombreHimnoPct: window.config.nombreHimnoPct,
+        showSeccionActualTotal: window.config.showSeccionActualTotal,
+        seccionActualTotalPct: window.config.seccionActualTotalPct
+      };
+    }
     enviarMensajeProyector('config', configEnviar);
   }
   // Enviar config cada vez que se abre el proyector
@@ -3240,22 +4273,40 @@ async function inicializar() {
     originalAbrirProyector();
     setTimeout(() => {
       const esBiblia = esModoBiblia();
-      const configEnviar = {
-        fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
-        soloReferencia: esBiblia ? config.soloReferencia : null
-      };
+      let configEnviar;
+      if (esBiblia) {
+        configEnviar = {
+          fontsize: window.config.fontsizeBiblia,
+          soloReferencia: window.config.soloReferencia
+        };
+      } else {
+        configEnviar = {
+          fontsize: window.config.fontsizeHimnario,
+          showIndicadorVerso: window.config.showIndicadorVerso,
+          indicadorVersoPct: window.config.indicadorVersoPct,
+          showNombreHimno: window.config.showNombreHimno,
+          nombreHimnoPct: window.config.nombreHimnoPct,
+          showSeccionActualTotal: window.config.showSeccionActualTotal,
+          seccionActualTotalPct: window.config.seccionActualTotalPct
+        };
+      }
       enviarMensajeProyector('config', configEnviar);
     }, 500);
   };
 
   // Configurar eventos
   configurarEventos();
+  
+  // Configurar controles del mini proyector
+  await configurarControlesMiniProyector();
+  // Inicializar accordions del himnario
+  inicializarAccordionsHimnario();
 
   // Cargar datos iniciales
   await cargarDatosIniciales();
   
   // Establecer modo inicial
-  cambiarModo();
+  await cambiarModo();
 
   // Inicializar modo de audio
   inicializarAudioMode();
@@ -3269,6 +4320,232 @@ async function inicializar() {
     socket: window.socket,
     conectado: window.socket ? window.socket.connected : 'N/A'
   });
+  
+  // --- NUEVO: Llamada explícita para actualizar la vista inicial ---
+  console.log('🔄 Llamada inicial a actualizarVistaProyector...');
+  actualizarVistaProyector();
+}
+
+/**
+ * Convierte porcentaje a vw
+ * @param {number} porcentaje - Valor de 1 a 100
+ * @returns {number} - Valor en vw de 1.5 a 8
+ */
+function porcentajeAVw(porcentaje) {
+  const minVw = 1.5;
+  const maxVw = 8;
+  const rangoVw = maxVw - minVw;
+  return minVw + (rangoVw * (porcentaje - 1) / 99);
+}
+
+/**
+ * Convierte vw a porcentaje
+ * @param {number} vw - Valor en vw de 1.5 a 8
+ * @returns {number} - Valor de 1 a 100
+ */
+function vwAPorcentaje(vw) {
+  const minVw = 1.5;
+  const maxVw = 8;
+  const rangoVw = maxVw - minVw;
+  return Math.round(1 + (99 * (vw - minVw) / rangoVw));
+}
+
+/**
+ * Configura los controles del mini proyector
+ */
+async function configurarControlesMiniProyector() {
+  const miniSliderFontsizeBiblia = document.getElementById('miniSliderFontsizeBiblia');
+  const miniFontsizeValueBiblia = document.getElementById('miniFontsizeValueBiblia');
+  const miniSwitchSoloReferencia = document.getElementById('miniSwitchSoloReferencia');
+  const miniProyectorControls = document.getElementById('miniProyectorControls');
+  
+  // Referencias a los controles del panel principal
+  const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+  const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+  const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+  
+  // --- NUEVO: Usar la variable config global en lugar de una local ---
+  console.log('🔧 Configuración inicial para controles mini proyector:', window.config);
+  
+  // Convertir el valor vw guardado a porcentaje para el slider
+  const porcentajeInicial = vwAPorcentaje(window.config.fontsizeBiblia || 5);
+  
+  // Inicializar valores
+  miniSliderFontsizeBiblia.value = porcentajeInicial;
+  miniFontsizeValueBiblia.textContent = porcentajeInicial + '%';
+  miniSwitchSoloReferencia.checked = !!window.config.soloReferencia;
+  
+  // Event listeners
+  miniSliderFontsizeBiblia.addEventListener('input', async () => {
+    const porcentaje = parseInt(miniSliderFontsizeBiblia.value);
+    const vw = porcentajeAVw(porcentaje);
+    
+    miniFontsizeValueBiblia.textContent = porcentaje + '%';
+    window.config.fontsizeBiblia = vw;
+    console.log('🔧 Configuración actualizada desde mini proyector (slider):', {
+      porcentaje: porcentaje,
+      vw: vw,
+      configLocal: window.config.fontsizeBiblia
+    });
+    
+    // Sincronizar con controles del panel principal
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = vw;
+      fontsizeValueBiblia.textContent = vw + 'vw';
+    }
+    
+    // Guardar y enviar configuración
+    await guardarConfiguracionCompleta(window.config);
+    
+    // Enviar config al proyector según modo
+    const esBiblia = esModoBiblia();
+    const configEnviar = {
+      fontsize: esBiblia ? window.config.fontsizeBiblia : window.config.fontsizeHimnario,
+      soloReferencia: esBiblia ? window.config.soloReferencia : null
+    };
+    console.log('🔧 Configuración actualizada desde mini proyector:', {
+      porcentaje: porcentaje,
+      vw: vw,
+      configEnviar: configEnviar
+    });
+    enviarMensajeProyector('config', configEnviar);
+    console.log('🔄 Llamando a actualizarVistaProyector desde mini proyector...');
+    actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
+        tipo: 'fontsizeBiblia',
+        valor: window.config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'fontsizeBiblia',
+        valor: window.config.fontsizeBiblia,
+        clientId: CLIENT_ID
+      });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada (mini proyector)');
+    }
+  });
+  
+  miniSwitchSoloReferencia.addEventListener('change', async () => {
+    window.config.soloReferencia = miniSwitchSoloReferencia.checked;
+    console.log('🔧 Configuración actualizada desde mini proyector (switch):', {
+      soloReferencia: window.config.soloReferencia,
+      configLocal: window.config.soloReferencia
+    });
+    
+    // Sincronizar con controles del panel principal
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = window.config.soloReferencia;
+    }
+    
+    // Guardar y enviar configuración
+    await guardarConfiguracionCompleta(window.config);
+    
+    // Enviar config al proyector según modo
+    const esBiblia = esModoBiblia();
+    const configEnviar = {
+      fontsize: esBiblia ? window.config.fontsizeBiblia : window.config.fontsizeHimnario,
+      soloReferencia: esBiblia ? window.config.soloReferencia : null
+    };
+    console.log('🔧 Configuración actualizada desde mini proyector:', {
+      soloReferencia: window.config.soloReferencia,
+      configEnviar: configEnviar
+    });
+    enviarMensajeProyector('config', configEnviar);
+    
+    // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+    if (esBiblia && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+      console.log('🔄 Reenviando versículo con nueva configuración...');
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }
+    console.log('🔄 Llamando a actualizarVistaProyector desde mini proyector (switch)...');
+    actualizarVistaProyector();
+    
+    // Emitir evento de socket para sincronizar con otros dispositivos
+    if (window.socket) {
+      console.log('📤 Emitiendo configuracion_actualizada (mini proyector):', {
+        tipo: 'soloReferencia',
+        valor: window.config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      window.socket.emit('configuracion_actualizada', {
+        tipo: 'soloReferencia',
+        valor: window.config.soloReferencia,
+        clientId: CLIENT_ID
+      });
+      console.log('✅ Evento configuracion_actualizada emitido exitosamente (mini proyector)');
+    } else {
+      console.error('❌ Socket no disponible para emitir configuracion_actualizada (mini proyector)');
+    }
+  });
+  
+  // Hacer el switch clickeable
+  const switchContainer = miniSwitchSoloReferencia.parentElement;
+  switchContainer.addEventListener('click', (e) => {
+    // Evitar doble trigger si se hace clic directamente en el input
+    if (e.target === miniSwitchSoloReferencia) return;
+    
+    console.log('🔘 Switch clickeado, estado anterior:', miniSwitchSoloReferencia.checked);
+    
+    // Toggle del switch
+    miniSwitchSoloReferencia.checked = !miniSwitchSoloReferencia.checked;
+    
+    console.log('🔘 Switch clickeado, estado nuevo:', miniSwitchSoloReferencia.checked);
+    
+    // Trigger del evento change
+    const event = new Event('change', { bubbles: true });
+    miniSwitchSoloReferencia.dispatchEvent(event);
+  });
+  
+  // Mostrar controles solo en modo biblia y vista proyector
+  function actualizarVisibilidadControles() {
+    const esBiblia = esModoBiblia();
+    const esVistaProyector = vistaActual === 'proyector';
+    const miniProyectorControls = document.getElementById('miniProyectorControls');
+    const controlesBiblia = document.getElementById('miniProyectorControlesBiblia');
+    const controlesHimnario = document.getElementById('miniProyectorControlesHimnario');
+
+    if (esBiblia && esVistaProyector) {
+      if (controlesBiblia) controlesBiblia.style.display = '';
+      if (controlesHimnario) controlesHimnario.style.display = 'none';
+      if (miniProyectorControls) miniProyectorControls.classList.add('visible');
+    } else if (!esBiblia && esVistaProyector) {
+      if (controlesBiblia) controlesBiblia.style.display = 'none';
+      if (controlesHimnario) controlesHimnario.style.display = '';
+      if (miniProyectorControls) miniProyectorControls.classList.add('visible');
+    } else {
+      if (controlesBiblia) controlesBiblia.style.display = 'none';
+      if (controlesHimnario) controlesHimnario.style.display = 'none';
+      if (miniProyectorControls) miniProyectorControls.classList.remove('visible');
+    }
+  }
+  
+  // Hacer la función global para poder llamarla desde otras funciones
+  window.actualizarVisibilidadControles = actualizarVisibilidadControles;
+  
+  // Función para actualizar mini proyector en tiempo real
+  async function actualizarMiniProyector() {
+    const porcentaje = vwAPorcentaje(window.config.fontsizeBiblia || 5);
+    
+    if (miniSliderFontsizeBiblia) {
+      miniSliderFontsizeBiblia.value = porcentaje;
+      miniFontsizeValueBiblia.textContent = porcentaje + '%';
+    }
+    
+    if (miniSwitchSoloReferencia) {
+      miniSwitchSoloReferencia.checked = !!window.config.soloReferencia;
+    }
+  }
+  
+  // Hacer la función global
+  window.actualizarMiniProyector = actualizarMiniProyector;
+  
+  // Actualizar visibilidad inicial
+  actualizarVisibilidadControles();
 }
 
 /**
@@ -3506,9 +4783,8 @@ function mostrarInstruccionesMovil() {
 /**
  * Cambia entre modo Biblia e Himnario
  */
-function cambiarModo() {
+async function cambiarModo() {
   const esBiblia = esModoBiblia();
-  
   // Limpiar todo ANTES de cambiar el modo
   limpiarVistaPrevia();
   limpiarProyector();
@@ -3525,29 +4801,33 @@ function cambiarModo() {
     elementos.controlHimnario.style.display = 'block';
     enviarMensajeProyector('change_mode', { videoSrc: '/src/assets/videos/himno-bg.mp4' });
   }
-  
+
   // Actualizar opciones del panel de configuración según el modo
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-  
-  // Enviar configuración actualizada según el modo
-  const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
-  const configEnviar = {
-    fontsize: esBiblia ? config.fontsizeBiblia : config.fontsizeHimnario,
-    soloReferencia: esBiblia ? config.soloReferencia : null
-  };
-  enviarMensajeProyector('config', configEnviar);
+
+  // La lógica de enviar configuración ya está en guardarYEnviarConfig y se llama
+  // desde los event listeners, por lo que no es necesario aquí.
+
   actualizarTopBarTitulo();
   actualizarVistaProyector();
+  console.log('✅ Modo cambiado exitosamente');
 }
 
 /**
  * Función global para cambiar modo desde el foot navbar
  * Esta función se puede llamar desde index.html
  */
-function cambiarModoGlobal(modo, propagar = true) {
+async function cambiarModoGlobal(modo, propagar = true) {
   console.log('🔄 Cambiando modo global a:', modo);
+
+  // ---> RECARGAR CONFIGURACIÓN DESDE config.json <---
+  const configCargada = await obtenerConfiguracion();
+  window.config = { ...window.config, ...configCargada };
+  console.log(`📋 Configuración recargada para modo ${modo}:`, window.config);
+  // ---> FIN DE RECARGA <---
+
   window.modoActual = modo;
   // --- Actualizar visualmente los botones del navbar ---
   const navHimnario = document.getElementById('navHimnario');
@@ -3580,6 +4860,19 @@ function cambiarModoGlobal(modo, propagar = true) {
     console.log('📖 Modo Biblia activado - Video: /src/assets/videos/verso-bg.mp4');
     document.body.classList.add('modo-biblia');
     document.body.classList.remove('modo-himnario');
+    
+    // Actualizar controles del panel principal
+    const sliderFontsizeBiblia = document.getElementById('sliderFontsizeBiblia');
+    const fontsizeValueBiblia = document.getElementById('fontsizeValueBiblia');
+    const switchSoloReferencia = document.getElementById('switchSoloReferencia');
+    if (sliderFontsizeBiblia) {
+      sliderFontsizeBiblia.value = window.config.fontsizeBiblia || 5;
+      fontsizeValueBiblia.textContent = (window.config.fontsizeBiblia || 5) + 'vw';
+    }
+    if (switchSoloReferencia) {
+      switchSoloReferencia.checked = !!window.config.soloReferencia;
+    }
+    
     if (window.memoriaUltima && window.memoriaUltima.biblia) {
       seleccionarEstadoBiblia(window.memoriaUltima.biblia);
     }
@@ -3587,15 +4880,44 @@ function cambiarModoGlobal(modo, propagar = true) {
   if (typeof window.actualizarOpcionesModo === 'function') {
     window.actualizarOpcionesModo();
   }
-  const config = JSON.parse(localStorage.getItem('proyectorConfig')) || { fontsizeBiblia: 5, fontsizeHimnario: 5, soloReferencia: false };
-  const configEnviar = {
-    fontsize: modo === 'biblia' ? config.fontsizeBiblia : config.fontsizeHimnario,
-    soloReferencia: modo === 'biblia' ? config.soloReferencia : null
-  };
+  let configEnviar;
+  if (modo === 'biblia') {
+    configEnviar = {
+      fontsize: window.config.fontsizeBiblia,
+      soloReferencia: window.config.soloReferencia
+    };
+  } else {
+    configEnviar = {
+      fontsize: window.config.fontsizeHimnario,
+      showIndicadorVerso: window.config.showIndicadorVerso,
+      indicadorVersoPct: window.config.indicadorVersoPct,
+      showNombreHimno: window.config.showNombreHimno,
+      nombreHimnoPct: window.config.nombreHimnoPct,
+      showSeccionActualTotal: window.config.showSeccionActualTotal,
+      seccionActualTotalPct: window.config.seccionActualTotalPct
+    };
+  }
   enviarMensajeProyector('config', configEnviar);
+  
+  // Si es modo biblia y hay un versículo activo, reenviarlo con la nueva configuración
+  if (modo === 'biblia' && bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
+    console.log('🔄 Reenviando versículo con nueva configuración al cambiar modo global...');
+    setTimeout(async () => {
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
+    }, 100);
+  }
+  
+  // Actualizar mini proyector si está disponible
+  if (typeof window.actualizarMiniProyector === 'function') {
+    await window.actualizarMiniProyector();
+  }
+  
   actualizarTopBarTitulo();
   actualizarVistaProyector();
   actualizarBotonPlayMiniProyector();
+  if (typeof window.actualizarVisibilidadControles === 'function') {
+    window.actualizarVisibilidadControles();
+  }
   console.log('✅ Cambio de modo completado');
   if (propagar) {
     actualizarMemoriaServidor({ modo });
@@ -3851,7 +5173,7 @@ function renderizarGrillaVersiculos() {
 /**
  * Selecciona un versículo
  */
-function seleccionarVersiculo(event) {
+async function seleccionarVersiculo(event) {
   if (event.target.dataset.versiculo) {
     const versiculoIndex = parseInt(event.target.dataset.versiculo);
     versiculoActivoIndex = versiculoIndex;
@@ -3861,7 +5183,7 @@ function seleccionarVersiculo(event) {
     event.target.classList.add('selected');
     resaltarCard(versiculoIndex);
     actualizarReferenciaBibliaEnVistaPrevia();
-    enviarVersiculoAlProyector(versiculoIndex);
+    await enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
     mostrarGrillasBiblia(false);
     // Actualizar memoria
@@ -3965,7 +5287,7 @@ function cargarHimnoEnVistaPrevia() {
     if (index === 0) {
       card.innerHTML = `<strong>${himnoActivo.numero} | ${tituloLimpio}</strong>`;
     } else {
-      const versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
+      const versoText = estrofa.verse === 'coro' ? 'Coro' : `Verso ${estrofa.verse}`;
       card.innerHTML = `<strong>${versoText}</strong><br>${estrofa.texto}`;
     }
     elementos.vistaPrevia.appendChild(card);
@@ -3979,7 +5301,7 @@ function cargarHimnoEnVistaPrevia() {
 /**
  * Maneja el clic en una card de estrofa/versículo
  */
-function manejarClicCard(event) {
+async function manejarClicCard(event) {
   const card = event.target.closest('.card'); // Corrección
   if (!card) return; // Añadir esta guarda
   const esBiblia = esModoBiblia();
@@ -3989,7 +5311,7 @@ function manejarClicCard(event) {
     versiculoActivoIndex = versiculoIndex;
     resaltarCard(versiculoIndex);
     actualizarReferenciaBibliaEnVistaPrevia();
-    enviarVersiculoAlProyector(versiculoIndex);
+    await enviarVersiculoAlProyector(versiculoIndex);
     actualizarVistaProyector();
     // Actualizar memoria
     actualizarMemoriaServidor({
@@ -4379,6 +5701,9 @@ function alternarVistaPrevisualizacion() {
   }
   actualizarTopBarTitulo();
   actualizarBotonPlayMiniProyector();
+  if (typeof window.actualizarVisibilidadControles === 'function') {
+    window.actualizarVisibilidadControles();
+  }
   if (esModoBiblia()) ocultarPlayFooter();
   // Refuerzo: actualizar el botón de play del himno
   actualizarBotonPlayHimno();
@@ -4388,7 +5713,11 @@ function alternarVistaPrevisualizacion() {
  * Actualiza el contenido de la vista tipo proyector
  */
 function actualizarVistaProyector() {
-  if (!proyectorPreviewContent) return;
+  console.log('🔄 actualizarVistaProyector llamada');
+  if (!proyectorPreviewContent) {
+    console.error('❌ proyectorPreviewContent no encontrado');
+    return;
+  }
   let texto = '';
   let referencia = '';
   let isBiblia = esModoBiblia();
@@ -4401,6 +5730,20 @@ function actualizarVistaProyector() {
   }
   if (miniProyectorTituloHimno) miniProyectorTituloHimno.style.display = 'none';
   if (miniProyectorContador) miniProyectorContador.style.display = 'none';
+
+  // --- NUEVO: Usar la variable config global ---
+  let fontsizeBiblia = window.config.fontsizeBiblia || 5;
+  let soloReferencia = window.config.soloReferencia || false;
+  let fontsizeHimnario = window.config.fontsizeHimnario || 5;
+  let showIndicadorVerso = window.config.showIndicadorVerso;
+  let indicadorVersoPct = window.config.indicadorVersoPct;
+  let showNombreHimno = window.config.showNombreHimno;
+  let nombreHimnoPct = window.config.nombreHimnoPct;
+  let showSeccionActualTotal = window.config.showSeccionActualTotal;
+  let seccionActualTotalPct = window.config.seccionActualTotalPct;
+  console.log('🔧 Configuración para mini proyector:', { fontsizeBiblia, soloReferencia, isBiblia, fontsizeHimnario, showIndicadorVerso, indicadorVersoPct, showNombreHimno, nombreHimnoPct, showSeccionActualTotal, seccionActualTotalPct });
+  console.log('🔧 Variable config global:', window.config);
+
   if (isBiblia) {
     if (bibliaActual && libroActivo && capituloActivo !== null && versiculoActivoIndex >= 0) {
       const versiculo = bibliaActual[libroActivo][capituloActivo][versiculoActivoIndex];
@@ -4415,7 +5758,37 @@ function actualizarVistaProyector() {
         miniProyectorVideo.src = '/src/assets/videos/verso-bg.mp4';
       }
     }
+    // --- NUEVO: Mostrar referencia en el div externo ---
+    const refDiv = document.getElementById('miniProyectorReferencia');
+    if (refDiv) {
+      refDiv.style.display = referencia ? '' : 'none';
+      refDiv.textContent = referencia;
+    }
+    // --- NUEVO: Aplicar tamaño de fuente y soloReferencia usando CSS custom properties ---
+    // Detectar si estamos en el mini proyector del panel de control
+    let esMiniProyectorPanel = false;
+    if (miniProyectorContainer && miniProyectorContainer.contains(proyectorPreviewContent)) {
+      esMiniProyectorPanel = true;
+    }
+    if (esMiniProyectorPanel) {
+      // Calcular el tamaño de fuente en píxeles relativo al ancho del mini proyector
+      const ancho = miniProyectorContainer.offsetWidth;
+      const fontSizePx = ancho * (fontsizeBiblia / 100);
+      proyectorPreviewContent.style.fontSize = `${fontSizePx}px`;
+    } else {
+      proyectorPreviewContent.style.fontSize = `${fontsizeBiblia}vw`;
+    }
+    console.log('🔤 Aplicando tamaño de fuente al mini proyector:', esMiniProyectorPanel ? `${proyectorPreviewContent.style.fontSize} (px)` : `${fontsizeBiblia}vw`);
+    if (soloReferencia) {
+      proyectorPreviewContent.innerHTML = `<span class=\"texto-dinamico\" style=\"color:#fff;\">${referencia}</span>`;
+    } else {
+      proyectorPreviewContent.innerHTML = `<span class=\"texto-dinamico\">${texto}</span>`;
+    }
+    return;
   } else {
+    // Ocultar referencia externa en modo himnario
+    const refDiv = document.getElementById('miniProyectorReferencia');
+    if (refDiv) refDiv.style.display = 'none';
     if (himnoActivo && estrofaActivaIndex >= 0) {
       const estrofa = himnoActivo.estrofas[estrofaActivaIndex];
       const totalVerses = himnoActivo.verses ? parseInt(himnoActivo.verses, 10) : undefined;
@@ -4423,7 +5796,8 @@ function actualizarVistaProyector() {
         if (miniProyectorTituloHimno) {
           const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
           miniProyectorTituloHimno.textContent = `${numeroSinCeros} - ${himnoActivo.titulo}`;
-          miniProyectorTituloHimno.style.display = 'block';
+          miniProyectorTituloHimno.style.display = showNombreHimno ? 'block' : 'none';
+          miniProyectorTituloHimno.style.fontSize = (nombreHimnoPct || 2.3) + 'vw';
         }
         const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
         texto = `${numeroSinCeros} | ${himnoActivo.titulo}`;
@@ -4431,21 +5805,23 @@ function actualizarVistaProyector() {
         if (miniProyectorTituloHimno) {
           const numeroSinCeros = String(parseInt(himnoActivo.numero, 10));
           miniProyectorTituloHimno.textContent = `${numeroSinCeros} - ${himnoActivo.titulo}`;
-          miniProyectorTituloHimno.style.display = 'block';
+          miniProyectorTituloHimno.style.display = showNombreHimno ? 'block' : 'none';
+          miniProyectorTituloHimno.style.fontSize = (nombreHimnoPct || 2.3) + 'vw';
         }
         if (miniProyectorContador) {
           miniProyectorContador.textContent = `${estrofaActivaIndex}/${himnoActivo.estrofas.length - 1}`;
-          miniProyectorContador.style.display = 'block';
+          miniProyectorContador.style.display = showSeccionActualTotal ? 'block' : 'none';
+          miniProyectorContador.style.fontSize = (seccionActualTotalPct || 2.5) + 'vw';
         }
         let versoText = '';
         if (typeof estrofa.verse !== 'undefined' && totalVerses) {
-          versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verse} de ${totalVerses}`;
+          versoText = estrofa.verse === 'coro' ? 'Coro' : `Verso ${estrofa.verse} de ${totalVerses}`;
         } else {
-          versoText = estrofa.verso === 'coro' ? 'Coro' : `Verso ${estrofa.verso}`;
+          versoText = estrofa.verse === 'coro' ? 'Coro' : `Verso ${estrofa.verse}`;
         }
         texto = estrofa.texto.replace(/\n/g, '<br>');
         proyectorPreviewContent.innerHTML = `
-          <div class="indicador-estrofa" style="font-size:2.5vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;margin-bottom:1em;">${versoText + " de " + totalVerses}</div>
+          <div class="indicador-estrofa" style="${showIndicadorVerso ? '' : 'display:none;'} font-size:${(indicadorVersoPct || 2.5)}vw;font-weight:bold;color:#fff;text-shadow:0 2px 8px #000;margin-bottom:1em;">${versoText}</div>
           <span>${texto}</span>
         `;
         return;
@@ -4606,6 +5982,7 @@ window.addEventListener('resize', ajustarRelacionAspectoMiniProyector);
 window.cambiarModoGlobal = cambiarModoGlobal;
 window.alternarPantallaCompleta = alternarPantallaCompleta;
 window.toggleAutoFullscreenLandscape = toggleAutoFullscreenLandscape;
+window.actualizarVistaProyector = actualizarVistaProyector;
 
 // --- INICIO: Identificador único de cliente para sincronización de memoria ---
 function obtenerClientId() {
@@ -4819,7 +6196,7 @@ function actualizarMemoriaServidor(nuevoEstado) {
   }
 }
 
-function aplicarMemoria(memoria) {
+async function aplicarMemoria(memoria) {
   if (!memoria) return;
   window.memoriaUltima = memoria;
   if (window.modoActual !== memoria.modo) {
@@ -4827,7 +6204,7 @@ function aplicarMemoria(memoria) {
     return;
   }
   if (memoria.modo === 'biblia' && memoria.biblia) {
-    seleccionarEstadoBiblia(memoria.biblia);
+    await seleccionarEstadoBiblia(memoria.biblia);
   }
   if (memoria.modo === 'himnario' && memoria.himnario) {
     seleccionarEstadoHimnario(memoria.himnario);
@@ -4837,7 +6214,7 @@ function aplicarMemoria(memoria) {
   actualizarReferenciaBibliaEnVistaPrevia();
 }
 
-function seleccionarEstadoBiblia(biblia) {
+async function seleccionarEstadoBiblia(biblia) {
   if (!bibliaActual || !biblia.libro) return;
   libroActivo = biblia.libro;
   renderizarGrillaCapitulos(libroActivo);
@@ -4860,7 +6237,7 @@ function seleccionarEstadoBiblia(biblia) {
       versiculoActivoIndex = biblia.versiculo;
       resaltarCard(versiculoActivoIndex);
       actualizarReferenciaBibliaEnVistaPrevia();
-      enviarVersiculoAlProyector(versiculoActivoIndex);
+      await enviarVersiculoAlProyector(versiculoActivoIndex);
     }
   }
 }
@@ -4892,8 +6269,8 @@ async function seleccionarEstadoHimnario(himnario) {
 if (typeof io !== 'undefined') {
   document.addEventListener('DOMContentLoaded', function() {
     if (window.socket) {
-      window.socket.on('memoria_estado', aplicarMemoria);
-      window.socket.on('memoria_actualizada', function(payload) {
+      window.socket.on('memoria_estado', async (memoria) => await aplicarMemoria(memoria));
+      window.socket.on('memoria_actualizada', async function(payload) {
         // payload puede ser { memoria, clientId }
         let memoria = payload;
         let fromClientId = null;
@@ -4905,13 +6282,236 @@ if (typeof io !== 'undefined') {
         }
         // Si el cambio es propio, ignorar
         if (fromClientId && fromClientId === CLIENT_ID) return;
-        aplicarMemoria(memoria);
+        await aplicarMemoria(memoria);
       });
       solicitarMemoriaServidor();
     }
   });
 }
 // --- FIN: Sincronización de memoria con el servidor ---
+
+// --- Lógica de accordions para controles del Himnario ---
+function inicializarAccordionsHimnario() {
+  // Tamaño texto principal
+  const cardFontsize = document.getElementById('cardFontsizeHimnario');
+  const headerFontsize = cardFontsize?.querySelector('.accordion-header');
+  const contentFontsize = document.getElementById('contentFontsizeHimnario');
+  const sliderFontsize = document.getElementById('miniSliderFontsizeHimnario');
+  const valueFontsize = document.getElementById('miniFontsizeValueHimnario');
+  if (headerFontsize && contentFontsize) {
+    headerFontsize.addEventListener('click', () => {
+      contentFontsize.style.display = (contentFontsize.style.display === 'none' || !contentFontsize.style.display) ? 'block' : 'none';
+    });
+  }
+  if (sliderFontsize && valueFontsize) {
+    // Inicializar valor desde config
+    const pct = vwAPorcentaje(window.config.fontsizeHimnario || 5);
+    sliderFontsize.value = pct;
+    valueFontsize.textContent = pct + '%';
+    sliderFontsize.addEventListener('input', async () => {
+      valueFontsize.textContent = sliderFontsize.value + '%';
+      const vw = porcentajeAVw(parseInt(sliderFontsize.value));
+      window.config.fontsizeHimnario = vw;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'fontsizeHimnario',
+          valor: vw,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+  }
+
+  // Indicador de verso
+  const cardIndicador = document.getElementById('cardIndicadorVerso');
+  const headerIndicador = cardIndicador?.querySelector('.accordion-header');
+  const contentIndicador = document.getElementById('contentIndicadorVerso');
+  const sliderIndicador = document.getElementById('miniSliderIndicadorVerso');
+  const valueIndicador = document.getElementById('miniIndicadorVersoValue');
+  const checkIndicador = document.getElementById('miniCheckIndicadorVerso');
+  function actualizarEstadoIndicador() {
+    if (checkIndicador.checked) {
+      cardIndicador.classList.remove('disabled');
+    } else {
+      cardIndicador.classList.add('disabled');
+      contentIndicador.style.display = 'none';
+    }
+  }
+  if (headerIndicador && contentIndicador && checkIndicador) {
+    headerIndicador.addEventListener('click', () => {
+      if (checkIndicador.checked) {
+        contentIndicador.style.display = (contentIndicador.style.display === 'none' || !contentIndicador.style.display) ? 'block' : 'none';
+      }
+    });
+    checkIndicador.addEventListener('change', async () => {
+      actualizarEstadoIndicador();
+      window.config.showIndicadorVerso = checkIndicador.checked;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'showIndicadorVerso',
+          valor: checkIndicador.checked,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+    actualizarEstadoIndicador();
+  }
+  if (sliderIndicador && valueIndicador) {
+    // Inicializar valor desde config
+    const pct = vwAPorcentaje(window.config.indicadorVersoPct || 56);
+    sliderIndicador.value = pct;
+    valueIndicador.textContent = pct + '%';
+    sliderIndicador.addEventListener('input', async () => {
+      valueIndicador.textContent = sliderIndicador.value + '%';
+      const pctValue = parseInt(sliderIndicador.value);
+      window.config.indicadorVersoPct = pctValue;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'indicadorVersoPct',
+          valor: pctValue,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+  }
+
+  // Título del himno
+  const cardNombre = document.getElementById('cardNombreHimno');
+  const headerNombre = cardNombre?.querySelector('.accordion-header');
+  const contentNombre = document.getElementById('contentNombreHimno');
+  const sliderNombre = document.getElementById('miniSliderNombreHimno');
+  const valueNombre = document.getElementById('miniNombreHimnoValue');
+  const checkNombre = document.getElementById('miniCheckNombreHimno');
+  function actualizarEstadoNombre() {
+    if (checkNombre.checked) {
+      cardNombre.classList.remove('disabled');
+    } else {
+      cardNombre.classList.add('disabled');
+      contentNombre.style.display = 'none';
+    }
+  }
+  if (headerNombre && contentNombre && checkNombre) {
+    headerNombre.addEventListener('click', () => {
+      if (checkNombre.checked) {
+        contentNombre.style.display = (contentNombre.style.display === 'none' || !contentNombre.style.display) ? 'block' : 'none';
+      }
+    });
+    checkNombre.addEventListener('change', async () => {
+      actualizarEstadoNombre();
+      window.config.showNombreHimno = checkNombre.checked;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'showNombreHimno',
+          valor: checkNombre.checked,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+    actualizarEstadoNombre();
+  }
+  if (sliderNombre && valueNombre) {
+    // Inicializar valor desde config
+    const pct = vwAPorcentaje(window.config.nombreHimnoPct || 52);
+    sliderNombre.value = pct;
+    valueNombre.textContent = pct + '%';
+    sliderNombre.addEventListener('input', async () => {
+      valueNombre.textContent = sliderNombre.value + '%';
+      const pctValue = parseInt(sliderNombre.value);
+      window.config.nombreHimnoPct = pctValue;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'nombreHimnoPct',
+          valor: pctValue,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+  }
+
+  // Secciones
+  const cardSeccion = document.getElementById('cardSeccionActualTotal');
+  const headerSeccion = cardSeccion?.querySelector('.accordion-header');
+  const contentSeccion = document.getElementById('contentSeccionActualTotal');
+  const sliderSeccion = document.getElementById('miniSliderSeccionActualTotal');
+  const valueSeccion = document.getElementById('miniSeccionActualTotalValue');
+  const checkSeccion = document.getElementById('miniCheckSeccionActualTotal');
+  function actualizarEstadoSeccion() {
+    if (checkSeccion.checked) {
+      cardSeccion.classList.remove('disabled');
+    } else {
+      cardSeccion.classList.add('disabled');
+      contentSeccion.style.display = 'none';
+    }
+  }
+  if (headerSeccion && contentSeccion && checkSeccion) {
+    headerSeccion.addEventListener('click', () => {
+      if (checkSeccion.checked) {
+        contentSeccion.style.display = (contentSeccion.style.display === 'none' || !contentSeccion.style.display) ? 'block' : 'none';
+      }
+    });
+    checkSeccion.addEventListener('change', async () => {
+      actualizarEstadoSeccion();
+      window.config.showSeccionActualTotal = checkSeccion.checked;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'showSeccionActualTotal',
+          valor: checkSeccion.checked,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+    actualizarEstadoSeccion();
+  }
+  if (sliderSeccion && valueSeccion) {
+    // Inicializar valor desde config
+    const pct = vwAPorcentaje(window.config.seccionActualTotalPct || 57);
+    sliderSeccion.value = pct;
+    valueSeccion.textContent = pct + '%';
+    sliderSeccion.addEventListener('input', async () => {
+      valueSeccion.textContent = sliderSeccion.value + '%';
+      const pctValue = parseInt(sliderSeccion.value);
+      window.config.seccionActualTotalPct = pctValue;
+      
+      await guardarYEnviarConfig();
+      
+      // Emitir evento de socket para sincronizar con otros dispositivos
+      if (window.socket) {
+        window.socket.emit('configuracion_actualizada', {
+          tipo: 'seccionActualTotalPct',
+          valor: pctValue,
+          clientId: CLIENT_ID
+        });
+      }
+    });
+  }
+}
+
+// --- Función unificada para guardar y sincronizar configuración ---
+// Esta función maneja tanto Biblia como Himnario de manera consistente
 
 
 
@@ -4974,8 +6574,8 @@ socket.on('update_text', (data) => {
             // Ocultar indicadores de himno
             contadorSeccion.style.display = 'none';
             indicadorEstrofa.style.display = 'none';
-            // Quitar clase de versículo bíblico
-            textoPrincipal.classList.remove('versiculo-biblia');
+            // Aplicar clase de versículo bíblico para usar la misma fuente
+            textoPrincipal.classList.add('versiculo-biblia');
         } else {
             if (data.himnoData) {
                 // Modo himno
@@ -4994,11 +6594,6 @@ socket.on('update_text', (data) => {
                 indicadorEstrofa.classList.remove('visible');
                 // Manejar indicadores de himno
                 mostrarIndicadoresHimno(data.himnoData);
-                // Aseguramos que el indicador de versículo se oculte si no corresponde
-                if (!data.himnoData.verso) {
-                    indicadorEstrofa.style.display = 'none';
-                    indicadorEstrofa.classList.remove('visible');
-                }
             } else {
                 // Modo versículo normal
                 contenido.classList.remove('modo-himno');
@@ -5165,7 +6760,6 @@ socket.on('config', (data) => {
     console.log('🔍 Tipo de data:', typeof data);
     console.log('🔍 Data.config existe:', !!data.config);
     console.log('🔍 Data completa:', JSON.stringify(data));
-    
     // Verificar que los elementos existen antes de procesar
     if (!textoPrincipal) {
         console.error('❌ Elemento textoPrincipal no encontrado');
@@ -5175,77 +6769,71 @@ socket.on('config', (data) => {
         console.error('❌ Elemento referencia no encontrado');
         return;
     }
-    
-    if (data.config) {
-        console.log('🔍 Configuración recibida:', data.config);
-        
-        // Aplicar tamaño de fuente al texto principal
-        const fontSize = data.config.fontsize || 5;
-        console.log('🔤 Aplicando tamaño de fuente:', fontSize + 'vw');
-        
-        // Estrategia 1: Usar CSS custom properties
+    // --- NUEVO: Unificar acceso a config ---
+    const config = data.config || data;
+    // Guardar valores globales para usarlos en mostrarIndicadoresHimno
+    window.configProyectorHimnario = window.configProyectorHimnario || {};
+    if (typeof config.fontsize !== 'undefined') window.configProyectorHimnario.fontsize = config.fontsize;
+    if (typeof config.showIndicadorVerso !== 'undefined') window.configProyectorHimnario.showIndicadorVerso = config.showIndicadorVerso;
+    if (typeof config.indicadorVersoPct !== 'undefined') window.configProyectorHimnario.indicadorVersoPct = config.indicadorVersoPct;
+    if (typeof config.showNombreHimno !== 'undefined') window.configProyectorHimnario.showNombreHimno = config.showNombreHimno;
+    if (typeof config.nombreHimnoPct !== 'undefined') window.configProyectorHimnario.nombreHimnoPct = config.nombreHimnoPct;
+    if (typeof config.showSeccionActualTotal !== 'undefined') window.configProyectorHimnario.showSeccionActualTotal = config.showSeccionActualTotal;
+    if (typeof config.seccionActualTotalPct !== 'undefined') window.configProyectorHimnario.seccionActualTotalPct = config.seccionActualTotalPct;
+    // --- MODO HIMNARIO ---
+    if (typeof config.showIndicadorVerso !== 'undefined' || typeof config.showNombreHimno !== 'undefined' || typeof config.showSeccionActualTotal !== 'undefined') {
+        // Tamaño texto principal
+        const fontSize = config.fontsize || 5;
+        textoPrincipal.style.fontSize = fontSize + 'vw';
+        // Nombre del himno (esquina superior izquierda)
+        let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+        if (!tituloHimnoElement) {
+            tituloHimnoElement = document.createElement('div');
+            tituloHimnoElement.id = 'titulo-himno-proyector';
+            tituloHimnoElement.style.cssText = `
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                font-size: 2.3vw;
+                font-weight: bold;
+                color: #fff;
+                text-shadow: 0 2px 8px #000;
+                z-index: 10;
+                max-width: 40%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            `;
+            document.getElementById('contenido').appendChild(tituloHimnoElement);
+        }
+        // Solo actualizar estilos, NO el contenido
+        tituloHimnoElement.style.fontSize = (config.nombreHimnoPct || 2.3) + 'vw';
+        indicadorEstrofa.style.fontSize = (config.indicadorVersoPct || 2.5) + 'vw';
+        contadorSeccion.style.fontSize = (config.seccionActualTotalPct || 2.5) + 'vw';
+        // Visibilidad según config (pero no modificar el texto)
+        tituloHimnoElement.style.display = config.showNombreHimno ? 'block' : 'none';
+        indicadorEstrofa.style.display = config.showIndicadorVerso ? 'block' : 'none';
+        contadorSeccion.style.display = config.showSeccionActualTotal ? 'block' : 'none';
+        // Si no hay himno activo, ocultar visualmente
+        if (!window.ultimoHimnoData) {
+            tituloHimnoElement.style.display = 'none';
+            indicadorEstrofa.style.display = 'none';
+            contadorSeccion.style.display = 'none';
+        }
+        referencia.style.fontSize = (fontSize * 0.7) + 'vw';
+        return;
+    }
+    // --- FIN MODO HIMNARIO ---
+    // --- LÓGICA EXISTENTE PARA MODO BÍBLICO ---
+    if (config.fontsize) {
+        const fontSize = config.fontsize;
         textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
         textoPrincipal.classList.add('override-font-size');
-        
         const refFontSize = (fontSize * 0.7);
         referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
         referencia.classList.add('override-font-size');
-        
-        // Estrategia 2: También aplicar estilos inline como respaldo
         textoPrincipal.style.fontSize = fontSize + 'vw';
         referencia.style.fontSize = refFontSize + 'vw';
-        
-        console.log('🔤 Tamaño de fuente aplicado:', fontSize + 'vw');
-        
-        // Verificar que el estilo se aplicó
-        const computedStyle = window.getComputedStyle(textoPrincipal);
-        console.log('🔍 Tamaño de fuente computado:', computedStyle.fontSize);
-        
-        console.log('🔤 Tamaño de referencia aplicado:', refFontSize + 'vw');
-        
-        // Verificar que el estilo se aplicó
-        const refComputedStyle = window.getComputedStyle(referencia);
-        console.log('🔍 Tamaño de referencia computado:', refComputedStyle.fontSize);
-        
-    } else {
-        console.warn('⚠️ No se recibió data.config en el mensaje config');
-        console.log('🔍 Intentando procesar data directamente...');
-        
-        // Intentar procesar data directamente si no tiene la estructura esperada
-        if (data.fontsize) {
-            console.log('🔍 Procesando data directa con fontsize:', data.fontsize);
-            const fontSize = data.fontsize;
-            
-            // Estrategia 1: Usar CSS custom properties
-            textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
-            textoPrincipal.classList.add('override-font-size');
-            
-            const refFontSize = (fontSize * 0.7);
-            referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
-            referencia.classList.add('override-font-size');
-            
-            // Estrategia 2: También aplicar estilos inline como respaldo
-            textoPrincipal.style.fontSize = fontSize + 'vw';
-            referencia.style.fontSize = refFontSize + 'vw';
-            
-            // Verificar inmediatamente después de aplicar
-            setTimeout(() => {
-                const computedPrincipal = window.getComputedStyle(textoPrincipal);
-                const computedRef = window.getComputedStyle(referencia);
-                console.log('🔍 Verificación de estilos aplicados:', {
-                    fontSizeSolicitado: fontSize + 'vw',
-                    fontSizeAplicado: computedPrincipal.fontSize,
-                    refFontSizeSolicitado: refFontSize + 'vw',
-                    refFontSizeAplicado: computedRef.fontSize,
-                    styleInline: textoPrincipal.style.fontSize,
-                    refStyleInline: referencia.style.fontSize,
-                    customProperty: textoPrincipal.style.getPropertyValue('--override-font-size'),
-                    refCustomProperty: referencia.style.getPropertyValue('--override-ref-font-size')
-                });
-            }, 100);
-            
-            console.log('✅ Estilos aplicados desde data directa');
-        }
     }
 });
 
@@ -5261,10 +6849,11 @@ socket.on('detenerAudio', (data) => {
 
 /**
  * Muestra los indicadores específicos para himnos
- * @param {Object} himnoData - Datos del himno { esTitulo, numero, titulo, verso, estrofaIndex, totalEstrofas, seccionActual, totalSecciones }
+ * @param {Object} himnoData - Datos del himno { esTitulo, numero, titulo, verse, estrofaIndex, totalEstrofas, seccionActual, totalSecciones }
  */
 function mostrarIndicadoresHimno(himnoData) {
     console.log('[DEBUG] mostrarIndicadoresHimno - himnoData:', himnoData);
+    const cfg = window.configProyectorHimnario || {};
     // Refuerzo: ocultar siempre el indicador en el título o en la sección 0
     if (himnoData.esTitulo || himnoData.estrofaIndex === 0 || himnoData.seccionActual === 0) {
         textoPrincipal.classList.add('titulo-himno');
@@ -5283,12 +6872,13 @@ function mostrarIndicadoresHimno(himnoData) {
     // Mostrar contador de sección
     if (himnoData.seccionActual !== undefined && himnoData.totalSecciones !== undefined) {
         contadorSeccion.textContent = `${himnoData.seccionActual}/${himnoData.totalSecciones}`;
-        contadorSeccion.style.display = '';
+        contadorSeccion.style.display = cfg.showSeccionActualTotal ? 'block' : 'none';
         contadorSeccion.classList.add('visible');
+        contadorSeccion.style.fontSize = (cfg.seccionActualTotalPct || 2.5) + 'vw';
     } else {
         contadorSeccion.style.display = 'none';
     }
-    // Indicador de estrofa/verso/coro solo si estrofaIndex >= 1
+    // Indicador de estrofa/verse/coro solo si estrofaIndex >= 1
     let versoText = '';
     const totalVerses = himnoData.verses ? parseInt(himnoData.verses, 10) : undefined;
     if (himnoData.estrofaIndex >= 1) {
@@ -5307,10 +6897,11 @@ function mostrarIndicadoresHimno(himnoData) {
         }
     }
     console.log('[DEBUG] versoText calculado:', versoText);
-    if (versoText) {
+    if (versoText && cfg.showIndicadorVerso) {
         indicadorEstrofa.textContent = versoText;
-        indicadorEstrofa.style.display = '';
+        indicadorEstrofa.style.display = 'block';
         indicadorEstrofa.classList.add('visible');
+        indicadorEstrofa.style.fontSize = (cfg.indicadorVersoPct || 2.5) + 'vw';
         console.log('[DEBUG] Mostrando indicadorEstrofa:', versoText);
     } else {
         indicadorEstrofa.style.display = 'none';

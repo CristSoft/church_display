@@ -242,7 +242,6 @@ socket.on('config', (data) => {
     console.log('🔍 Tipo de data:', typeof data);
     console.log('🔍 Data.config existe:', !!data.config);
     console.log('🔍 Data completa:', JSON.stringify(data));
-    
     // Verificar que los elementos existen antes de procesar
     if (!textoPrincipal) {
         console.error('❌ Elemento textoPrincipal no encontrado');
@@ -252,77 +251,78 @@ socket.on('config', (data) => {
         console.error('❌ Elemento referencia no encontrado');
         return;
     }
-    
-    if (data.config) {
-        console.log('🔍 Configuración recibida:', data.config);
-        
-        // Aplicar tamaño de fuente al texto principal
-        const fontSize = data.config.fontsize || 5;
-        console.log('🔤 Aplicando tamaño de fuente:', fontSize + 'vw');
-        
-        // Estrategia 1: Usar CSS custom properties
+    // --- NUEVO: Unificar acceso a config ---
+    const config = data.config || data;
+    // --- MODO HIMNARIO ---
+    if (typeof config.showIndicadorVerso !== 'undefined' || typeof config.showNombreHimno !== 'undefined' || typeof config.showSeccionActualTotal !== 'undefined') {
+        // Tamaño texto principal
+        const fontSize = config.fontsize || 5;
+        textoPrincipal.style.fontSize = fontSize + 'vw';
+        // Nombre del himno (esquina superior izquierda)
+        let tituloHimnoElement = document.getElementById('titulo-himno-proyector');
+        if (!tituloHimnoElement) {
+            tituloHimnoElement = document.createElement('div');
+            tituloHimnoElement.id = 'titulo-himno-proyector';
+            tituloHimnoElement.style.cssText = `
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                font-size: 2.3vw;
+                font-weight: bold;
+                color: #fff;
+                text-shadow: 0 2px 8px #000;
+                z-index: 10;
+                max-width: 40%;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            `;
+            document.getElementById('contenido').appendChild(tituloHimnoElement);
+        }
+        if (config.showNombreHimno) {
+            tituloHimnoElement.style.display = 'block';
+            if (window.ultimoHimnoData) {
+                tituloHimnoElement.textContent = `${window.ultimoHimnoData.numero} - ${window.ultimoHimnoData.titulo}`;
+            }
+            tituloHimnoElement.style.fontSize = (config.nombreHimnoPct || 2.3) + 'vw';
+        } else {
+            tituloHimnoElement.style.display = 'none';
+        }
+        // Indicador de versos
+        if (config.showIndicadorVerso) {
+            indicadorEstrofa.style.display = 'block';
+            indicadorEstrofa.style.fontSize = (config.indicadorVersoPct || 2.5) + 'vw';
+        } else {
+            indicadorEstrofa.style.display = 'none';
+        }
+        // Sección actual/total
+        if (config.showSeccionActualTotal) {
+            contadorSeccion.style.display = 'block';
+            contadorSeccion.style.fontSize = (config.seccionActualTotalPct || 2.5) + 'vw';
+        } else {
+            contadorSeccion.style.display = 'none';
+        }
+        // Refuerzo: si no hay himno activo, ocultar nombre e indicadores
+        if (!window.ultimoHimnoData) {
+            tituloHimnoElement.style.display = 'none';
+            indicadorEstrofa.style.display = 'none';
+            contadorSeccion.style.display = 'none';
+        }
+        // Aplicar tamaño de fuente a referencia (si se usa)
+        referencia.style.fontSize = (fontSize * 0.7) + 'vw';
+        return;
+    }
+    // --- FIN MODO HIMNARIO ---
+    // --- LÓGICA EXISTENTE PARA MODO BÍBLICO ---
+    if (config.fontsize) {
+        const fontSize = config.fontsize;
         textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
         textoPrincipal.classList.add('override-font-size');
-        
         const refFontSize = (fontSize * 0.7);
         referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
         referencia.classList.add('override-font-size');
-        
-        // Estrategia 2: También aplicar estilos inline como respaldo
         textoPrincipal.style.fontSize = fontSize + 'vw';
         referencia.style.fontSize = refFontSize + 'vw';
-        
-        console.log('🔤 Tamaño de fuente aplicado:', fontSize + 'vw');
-        
-        // Verificar que el estilo se aplicó
-        const computedStyle = window.getComputedStyle(textoPrincipal);
-        console.log('🔍 Tamaño de fuente computado:', computedStyle.fontSize);
-        
-        console.log('🔤 Tamaño de referencia aplicado:', refFontSize + 'vw');
-        
-        // Verificar que el estilo se aplicó
-        const refComputedStyle = window.getComputedStyle(referencia);
-        console.log('🔍 Tamaño de referencia computado:', refComputedStyle.fontSize);
-        
-    } else {
-        console.warn('⚠️ No se recibió data.config en el mensaje config');
-        console.log('🔍 Intentando procesar data directamente...');
-        
-        // Intentar procesar data directamente si no tiene la estructura esperada
-        if (data.fontsize) {
-            console.log('🔍 Procesando data directa con fontsize:', data.fontsize);
-            const fontSize = data.fontsize;
-            
-            // Estrategia 1: Usar CSS custom properties
-            textoPrincipal.style.setProperty('--override-font-size', fontSize + 'vw');
-            textoPrincipal.classList.add('override-font-size');
-            
-            const refFontSize = (fontSize * 0.7);
-            referencia.style.setProperty('--override-ref-font-size', refFontSize + 'vw');
-            referencia.classList.add('override-font-size');
-            
-            // Estrategia 2: También aplicar estilos inline como respaldo
-            textoPrincipal.style.fontSize = fontSize + 'vw';
-            referencia.style.fontSize = refFontSize + 'vw';
-            
-            // Verificar inmediatamente después de aplicar
-            setTimeout(() => {
-                const computedPrincipal = window.getComputedStyle(textoPrincipal);
-                const computedRef = window.getComputedStyle(referencia);
-                console.log('🔍 Verificación de estilos aplicados:', {
-                    fontSizeSolicitado: fontSize + 'vw',
-                    fontSizeAplicado: computedPrincipal.fontSize,
-                    refFontSizeSolicitado: refFontSize + 'vw',
-                    refFontSizeAplicado: computedRef.fontSize,
-                    styleInline: textoPrincipal.style.fontSize,
-                    refStyleInline: referencia.style.fontSize,
-                    customProperty: textoPrincipal.style.getPropertyValue('--override-font-size'),
-                    refCustomProperty: referencia.style.getPropertyValue('--override-ref-font-size')
-                });
-            }, 100);
-            
-            console.log('✅ Estilos aplicados desde data directa');
-        }
     }
 });
 
